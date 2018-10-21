@@ -3,11 +3,11 @@ Spigot Minecraft Plugin, which adds many unrelated things.
 
 Main features can be can be divided into:
 
-1) Inventory:
-  • Armor autoequip (while pickup armor with better material)  
-  • Autoreplacing broken items (and saving renamed/mending items)
-  • When drinking potions bottle goes into inventory.
-  • Within a second after closing the chest on a swap of hands (F by default), all the contents are thrown in the sight direction.
+1) Inventory: 
+  • Armor autoequip (while pickup armor with better material) 
+  • Autoreplacing broken items (and saving renamed/mending items) 
+  • When drinking potions bottle goes into inventory. 
+  • Within a second after closing the chest on a swap of hands (F by default), all the contents are thrown in the sight direction. 
 2) Decorative:
   • Cleaning colored blocks in the cauldron.
   • Turning concrete powder into concrete by cauldron (and by click on it).
