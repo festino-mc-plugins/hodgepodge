@@ -43,3 +43,5 @@ TO DO:
   • Fix leashed.  
   • Bosses  
   • com.festp.Utils improvements (God object, which has 1,5k lines of code, but is this normal for Utils?)  
+  • Replace russian comments with english. Add different language support to plugin.
+  • Each function must be able to be turned on/off. 
