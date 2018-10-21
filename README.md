@@ -1,7 +1,7 @@
 # hodgepodge
 Spigot Minecraft Plugin, which adds many unrelated things.
 
-Main features can be can be divided into:
+Main features can be divided into:
 
 1) Inventory:  
   • Armor autoequip (while pickup armor with better material)  
