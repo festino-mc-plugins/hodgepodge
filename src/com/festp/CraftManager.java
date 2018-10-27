@@ -199,7 +199,7 @@ public class CraftManager implements Listener {
     	dragon_egg_from_dragon_egg.setIngredient('D', Material.DRAGON_EGG);
     	server.addRecipe(dragon_egg_from_dragon_egg);
 
-    	ShapelessRecipe grass_from_dirt = new ShapelessRecipe(key___grass, new ItemStack(Material.GRASS,1) );
+    	ShapelessRecipe grass_from_dirt = new ShapelessRecipe(key___grass, new ItemStack(Material.GRASS_BLOCK,1) );
     	grass_from_dirt.addIngredient(1, Material.DIRT);
     	grass_from_dirt.addIngredient(1, Material.BONE_MEAL);
     	server.addRecipe(grass_from_dirt);
@@ -317,17 +317,18 @@ public class CraftManager implements Listener {
 			//Storages
 			else if(matrix[0].getType().equals(Material.OBSIDIAN) && matrix[2].getType().equals(Material.OBSIDIAN)
 					&& matrix[6].getType().equals(Material.OBSIDIAN) && matrix[8].getType().equals(Material.OBSIDIAN)
-					/*&& Utils.is_shulker_box(matrix[1].getType()) && Utils.is_shulker_box(matrix[3].getType())
+					/*I tried to prevent buggy colored shulker box crafting, but event doesn't fire on craft, because it wasn't added above,
+					 * but craft exists, I think, because of Material.LEGACY_SHULKER_BOX (thx to spigot team?)
+					&& Utils.is_shulker_box(matrix[1].getType()) && Utils.is_shulker_box(matrix[3].getType())
 					&& Utils.is_shulker_box(matrix[5].getType()) && Utils.is_shulker_box(matrix[7].getType())*/
 					&& matrix[4] != null) {
 				if(Utils.is_colored_shulker_box(matrix[1].getType()) || Utils.is_colored_shulker_box(matrix[3].getType())
 					|| Utils.is_colored_shulker_box(matrix[5].getType()) || Utils.is_colored_shulker_box(matrix[7].getType()))
 					ci.setResult(null);
 				//is shulkerboxes empty
-				if( isShulkerBoxEmpty(matrix[1]) && isShulkerBoxEmpty(matrix[3]) && isShulkerBoxEmpty(matrix[5]) && isShulkerBoxEmpty(matrix[7])) {
+				if(isShulkerBoxEmpty(matrix[1]) && isShulkerBoxEmpty(matrix[3]) && isShulkerBoxEmpty(matrix[5]) && isShulkerBoxEmpty(matrix[7])) {
 					//banned items
 					if( !Utils.is_shulker_box(matrix[4].getType()) ) {
-						//ItemStack craft = new ItemStack(matrix[4].getType(), 1, matrix[4].getData().getData());
 						ItemStack craft = new ItemStack(Material.FIREWORK_STAR, 1);
 						craft.setData(matrix[4].getData());
 						craft = setStorageID(craft, StoragesFileManager.nextID);
@@ -380,12 +381,10 @@ public class CraftManager implements Listener {
 	
 	@EventHandler (priority = EventPriority.HIGHEST/*, ignoreCancelled = true*/)
     public void onCraft(CraftItemEvent event) {
-
-		System.out.println("CRAFT EVENT");
-		//if(event.isCancelled())
-		//	return;
-
 		
+		if(event.isCancelled())
+			return;
+
 		ItemStack craft_result = event.getCurrentItem();
 		if( Storage.getID(craft_result) >= 0 ) {
 			int id = StoragesFileManager.nextID++;
@@ -429,7 +428,6 @@ public class CraftManager implements Listener {
 							}
 				}
 				if(index_beetroot >= 0 && index_bowl >= 0) {
-					//ItemStack craft;
 					if(event.isShiftClick()) {
 						ItemStack[] player_inv = event.getWhoClicked().getInventory().getStorageContents();
 						int max_crafts = Math.min(matrix[index_beetroot].getAmount()/6, matrix[index_bowl].getAmount());
@@ -451,8 +449,6 @@ public class CraftManager implements Listener {
 					else {
 						matrix[index_beetroot].setAmount(matrix[index_beetroot].getAmount()-5);
 						event.getInventory().setMatrix(matrix);
-						//craft = new ItemStack(Material.BEETROOT_SOUP, 1);
-						//event.getInventory().setResult(craft);
 					}
 				}
 				else
@@ -495,13 +491,12 @@ public class CraftManager implements Listener {
 	}
 	
 	@Deprecated
+	//I can't understand how different planks can be used in vanilla
 	private void printSomeVanillaCrafts() {
     	Iterator<Recipe> recipes = Bukkit.recipeIterator();
     	while(recipes.hasNext()) {
     		Recipe recipe = recipes.next();
-    		if(recipe.getResult().getType() == Material.CAKE)
-    			System.out.println(((ShapedRecipe)recipe).getIngredientMap().size());
-    		else if(recipe instanceof ShapedRecipe) {
+    		if(recipe instanceof ShapedRecipe) {
     			if(recipe.getResult().getType().equals(Material.CHEST)) {
     				ShapedRecipe chest_recipe = (ShapedRecipe) recipe;
     				System.out.println(chest_recipe.getShape() +" "+ chest_recipe.getIngredientMap());
@@ -515,6 +510,7 @@ public class CraftManager implements Listener {
 	}
 	
 	private void addFurnaceCrafts() {
+		//remove vanilla recipes
     	Iterator<Recipe> recipes = Bukkit.recipeIterator();
     	while(recipes.hasNext()) {
     		Recipe recipe = recipes.next();
@@ -524,6 +520,7 @@ public class CraftManager implements Listener {
     		}
     		
     	}
+    	//add our armor smelting recipes
     	FurnaceRecipe nuggets_from_armor_IronBoots = new FurnaceRecipe(new ItemStack(Material.IRON_NUGGET,4), Material.IRON_BOOTS );
     	server.addRecipe(nuggets_from_armor_IronBoots);
     	FurnaceRecipe nuggets_from_armor_IronLeggings = new FurnaceRecipe(new ItemStack(Material.IRON_NUGGET,7), Material.IRON_LEGGINGS );
@@ -584,14 +581,14 @@ public class CraftManager implements Listener {
         		server.addRecipe(temp_recipe);
     		}
     	}
-    	//4 slabs -> 1 block (except quartz, sandstoneS, stone bricks, purpur)
+    	//4 slabs -> 1 block
     	for(int i=0; i < slabs_to_blocks.length; i++) {
         	NamespacedKey temp_key = new NamespacedKey(plugin, "4slab-"+gen_key_from_material(slabs_to_blocks[i]));
         	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 2) );
         	temp_recipe.addIngredient(4, slabs_to_blocks[i]);
     		server.addRecipe(temp_recipe);
     	}
-    	//6 slabs -> 1 block (except quartz, sandstoneS, stone bricks, purpur)
+    	//6 slabs -> 1 block
     	for(int i=0; i < slabs_to_blocks.length; i++) {
         	NamespacedKey temp_key = new NamespacedKey(plugin, "6slab-"+gen_key_from_material(slabs_to_blocks[i]));
         	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 3) );
@@ -627,6 +624,8 @@ public class CraftManager implements Listener {
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
     }*/
+	
+	//may be this must be in Storage class with isStorage() and getID()?
 	public static ItemStack setStorageID(ItemStack i, int ID) {
 		net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
