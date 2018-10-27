@@ -41,6 +41,9 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 	List<String> ru_ench_names;
 	List<Enchantment> enchantments;
 	
+	final static String name_token = "\"";
+	final static int max_name_length = 35;
+	
 	public CommandWorker(mainListener plugin) {
 		this.plugin = plugin;
 		en_item_names = Arrays.asList(new String[] { "diamond_pickaxe", "diamond_axe", "diamond_shovel", "diamond_hoe", "diamond_sword",
@@ -88,8 +91,6 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 	{
 		if(cmd.getName().equalsIgnoreCase("fest"))
 		{
-			//FireTime = Integer.parseInt(args[0]);
-			//SPEED = Double.parseDouble(args[0]);
 			if(args.length == 1)
 			{
 				if(args[0].equalsIgnoreCase("reload"))
@@ -97,11 +98,10 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 					reloadConfig();
 					Config.loadConfig();
 					sender.sendMessage(ChatColor.GREEN + "Конфиги обновлены.");
-					System.out.println("[FestPlugin] Config reloaded.");
 				}
 				if(args[0].equalsIgnoreCase("info"))
 				{
-					sender.sendMessage(ChatColor.LIGHT_PURPLE + "*Типо понятно для кого*");
+					sender.sendMessage(ChatColor.LIGHT_PURPLE + "Plugin description and source: https://github.com/festino/hodgepodge");
 				}
 				if(args[0].equalsIgnoreCase("biome"))
 				{
@@ -118,85 +118,7 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 					sender.sendMessage(ChatColor.GREEN + "Конфиги обновлены.");
 					System.out.println("[FestPlugin] Config reloaded.");
 				}
-				if(args[0].equalsIgnoreCase("date"))
-				{
-					for(OfflinePlayer p : Bukkit.getOfflinePlayers() )
-					{
-						if( args[1].equalsIgnoreCase( p.getName() ) )
-						{
-							sender.sendMessage(ChatColor.GREEN + "Log-ins " + p.getName() + "'s information:");
-							sender.sendMessage(ChatColor.GREEN + "First log-in: " + new Date(p.getFirstPlayed()) + " " + ((p.getFirstPlayed()/3600000+3)%24) + ":" + p.getFirstPlayed()/60000%60 + ":" + p.getFirstPlayed()/1000%60 ); //ms
-							sender.sendMessage(ChatColor.GREEN + "Last log-in: " + new Date(p.getLastPlayed()) + " " + ((p.getLastPlayed()/3600000+3)%24) + ":" + p.getLastPlayed()/60000%60 + ":" + p.getLastPlayed()/1000%60 );
-							return true;
-						}
-					}
-					sender.sendMessage(ChatColor.RED + "Игрок не найден.");
-					return false;
-				}
 				return true;
-			}
-			else if(args.length >= 1 && args[0].equalsIgnoreCase("el"))
-			{
-				if(!sender.isOp()) {
-					System.out.println("Лишь админы знают страшную тайну этой команды!");
-					return false;
-				}
-				Material m;
-				if(args.length == 9)
-				{
-					try {
-						m = Material.getMaterial(args[8]);
-					} catch (Exception e) {
-						m = Material.getMaterial(args[8]);
-					}
-					if(m == null) m = Material.LIGHT_GRAY_STAINED_GLASS;
-				}
-				else
-					m = Material.LIGHT_GRAY_STAINED_GLASS;
-				if(args.length >= 8)
-				{
-					double x;
-					String s = args[1];
-					if(s.charAt(0) == '~'){
-						s = '0'+s.substring(1);
-						x = ((Player)sender).getLocation().getBlockX()+Double.parseDouble(s)+0.5;}
-					else
-						x = Double.parseDouble(s);
-					double y;
-					s = args[2];
-					if(s.charAt(0) == '~'){
-						s = '0'+s.substring(1);
-						y = ((Player)sender).getLocation().getBlockY()+Double.parseDouble(s)+0.5;}
-					else
-						y = Double.parseDouble(s);
-					double z;
-					s = args[3];
-					if(s.charAt(0) == '~'){
-						s = '0'+s.substring(1);
-						z = ((Player)sender).getLocation().getBlockZ()+Double.parseDouble(s)+0.5;}
-					else
-						z = Double.parseDouble(s);
-					double a = Double.parseDouble(args[4]);
-					double b = Double.parseDouble(args[5]);
-					double c = Double.parseDouble(args[6]);
-					double r = Double.parseDouble(args[7]);
-					Location l = new Location(((Player)sender).getWorld(),x,y,z);
-					long count = 0;
-					for(int i=(int)Math.round(-r*a);i<=r*a;i++){
-						for(int j=(int)Math.round(-r*b);j<=r*b;j++){
-							for(int o=(int)Math.round(-r*c);o<=r*c;o++){
-								if(i*i/a/a+j*j/b/b+o*o/c/c <= r*r)
-								{
-									count += 1;
-									((Player)sender).getWorld().getBlockAt((int)Math.ceil(x+i)-1, (int)Math.ceil(y+j)-1, (int)Math.ceil(z+o)-1).setType(Material.LIGHT_GRAY_STAINED_GLASS);
-								}
-							}
-						}
-					}
-					sender.sendMessage(count + " блоков заменено");
-				}
-				else
-					sender.sendMessage(ChatColor.RED + "Использование: /fest el <x> <y> <z> <a> <b> <c> <r>");
 			}
 		}
 		//         /item <type> [damage] [enchantments, name, ...]
@@ -262,21 +184,21 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 					for(int i = 2; i < args.length; i++) {
 						String arg = args[i];
 						
-						//process names "part1 partk"
-						if(arg.startsWith("\"")) { // "name
+						//process names "part1 part2 part3"
+						if(arg.startsWith(name_token)) { // "name
 							String name = arg.substring(1);
-							while(!name.endsWith("\"")) { // name"
+							while(!name.endsWith(name_token)) { // name"
 								i++;
 								if(i >= args.length) {
-									sender.sendMessage(ChatColor.RED + "Unclosed quotes(\"..._): \"" + name);
+									sender.sendMessage(ChatColor.RED + "Unclosed quotes(" + name_token + "..._): " + name_token + name + ChatColor.GRAY + "...");
 									return false;
 						    	}
 								name = name + " " + args[i];
 							}
 							name = name.substring(0, name.length()-1);
-							if(name.length() > 35) {
-								sender.sendMessage(ChatColor.RED + "Max word length is 35 (current is "+name.length()+"). "
-							+"\""+ChatColor.GRAY+name.substring(0, 35)+ChatColor.RED+"|"+ChatColor.GRAY+name.substring(35)+ChatColor.RED+"\"");
+							if(name.length() > max_name_length) {
+								sender.sendMessage(ChatColor.RED + "Max word length is " + max_name_length + " (current is "+name.length()+"). "
+							+"\""+ChatColor.GRAY+name.substring(0, max_name_length)+ChatColor.RED+"|"+ChatColor.GRAY+name.substring(max_name_length)+ChatColor.RED+"\"");
 								return false;
 							}
 							meta.setDisplayName(name);
@@ -386,7 +308,7 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 			else if(args.length > 2) {
 				boolean unclosed_quotes = false;
 				for(int i = args.length-1; i >= 2; i--) {
-					if(args[i].endsWith("\"")) {
+					if(args[i].endsWith(name_token)) {
 						unclosed_quotes = false;
 						break;
 					}
