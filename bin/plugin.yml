@@ -1,12 +1,21 @@
-name: FestPlugin
+name: HodgePodge
+version: 1.0.1
+authors: [FEST_Channel, EvilGeniys]
+
+description: Hodgepodge of ideas. We are trying to improve Minecraft gameplay or make the game more convenient.
+website: https://github.com/festino/hodgepodge
+
 main: com.festp.mainListener
-autor: FEST_Channel
-version: 1.2.0
+
 commands:
          fest:
+           description: Allows to reload config, get plugin info.
          enderchest:
-         ec:
-         boss:
+           description: All interactions with shared enderchests. (may be need some permisions)
+           aliases: [ec]
          item:
-         el:
+           description: Give enchanted/renamed item. Simple convenient /give.
+           default: op
+         boss:
+           description: Deprecated, will be moved to separate plugin.
 api-version: 1.13
