@@ -28,6 +28,7 @@ Main features can be divided into:
   • Pumps like IndustrialCraft and BuildCraft pumps, which are dispensers with a special core inside. To work requires nether fences as a pipe, empty buckets to fill and at least one block of fluid beneath.  
   • Shared enderchests / enderchest groups. One enderchest inventory for several people. There are also channels without administrators and entry restrictions.  
   • Storages - there are 2 types: bottomless (collect items of one type(Material), can grab items drom inventories, have GUI) and multitype (like shulker box that can be opened from inventory by click and can't die or despawn while dropped).
+  • Tomes (summon minecarts, boats and horses)  
 5) Craft changes: (all changes are added in CraftManager, but it should have its own config files)  
   • Clay craft.  
   • Sandstone into sand, redsand, slabs and stairs into blocks, pocket borsch, chorus from chorus flower and more.  
@@ -40,10 +41,13 @@ Main features can be divided into:
 (rus info: https://vk.com/@mine_surser-plugin-v1)
 
 TO DO:  
-  • Fix leashed.  
-  • com.festp.Utils improvements (God object, which has 1,5k lines of code, but is this normal for Utils?)  
+  • Bosses will be moved to separate plugin.  
+  • Fix leashed.    
+  • Fix russian names in shared EC.   
   • Replace russian comments with english. Add different language support to plugin.  
   • Each function must be able to be turned on/off.  
-  • Bosses will be moved to separate plugin.  
-  • Final tomes test (there may be bugs with saddles and custom horses)  
-  • Soul stone crafts  
+  • Soul stone crafts    
+  • Food rebalance?  
+  • Increase tripwire length.  
+  • com.festp.Utils improvements (God object, which has 1,5k lines of code, but is this normal for Utils?) 
+  • ? Coming soon ?
