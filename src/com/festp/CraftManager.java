@@ -29,6 +29,7 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.festp.remain.SoulStone;
 import com.festp.remain.SummonerTome;
@@ -77,7 +78,7 @@ public class CraftManager implements Listener {
 		addSomeCrafts();
 		addStairsAndSlabsCrafts();
 		SoulStone.addSoulStoneCrafts(plugin);
-		SummonerTome.addTomeCrafts(plugin);
+		SummonerTome.addTomeCrafts();
 	}
 	
 	public void giveRecipe(Player p, String recipe) {
@@ -96,6 +97,13 @@ public class CraftManager implements Listener {
 		for(NamespacedKey recipe_name : recipe_names) {
 			giveRecipe(p, recipe_name);
 		}
+	}
+	
+	public boolean addCraftbookRecipe(NamespacedKey key) {
+		if (recipe_names.contains(key))
+			return false;
+		recipe_names.add(key);
+		return true;
 	}
 	
 	private void addSomeCrafts() {
@@ -601,6 +609,7 @@ public class CraftManager implements Listener {
 		int index = m.toString().lastIndexOf("_");
 		return m.toString().substring(0, index < 0 ? m.toString().length() : index);
 	}
+
 	
 	/*public static ItemStack addAttributes(ItemStack i, int ID){
         net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);

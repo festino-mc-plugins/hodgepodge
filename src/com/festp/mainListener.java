@@ -107,6 +107,7 @@ import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.menu.InventoryMenu;
 import com.festp.remain.InteractHandler;
+import com.festp.remain.LeashManager;
 import com.festp.remain.Others;
 import com.festp.remain.Sleeping;
 import com.festp.remain.SoulStone;
@@ -153,12 +154,13 @@ public class mainListener extends JavaPlugin implements Listener
 {
 	Config conf;
 	ActiveAmSpawnBlocking spawnblock;
+	private CraftManager craft_manager;
 
 	public List<AdminChannelPlayer> admin_ecplayers = new ArrayList<>();
 	public EnderChestGroup ecgroup = new EnderChestGroup(this);
 	public EnderFileStorage ecstorage;
-	private static int groupticks = 0;
-	private static int maxgroupticks = 3*60*20; //3 minutes
+	private int groupticks = 0;
+	private int maxgroupticks = 3*60*20; //3 minutes
 
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
@@ -171,12 +173,15 @@ public class mainListener extends JavaPlugin implements Listener
 	
 	public void onEnable()
 	{
+    	PluginManager pm = getServer().getPluginManager();
+    	
 		InventoryMenu.setPlugin(this);
 		BeamedPair.setPlugin(this);
 		Utils.setPlugin(this);
 		Storage.pl = this;
 		getServer().getPluginManager().registerEvents(this, this);
 		
+		//would better getting main world from server config
 		for(World temp_world : getServer().getWorlds())
 			if(temp_world.getWorldType() == WorldType.NORMAL && temp_world.getEnvironment() == Environment.NORMAL) {
 				mainworld = temp_world;
@@ -187,6 +192,7 @@ public class mainListener extends JavaPlugin implements Listener
 		conf = new Config(this);
 		spawnblock = new ActiveAmSpawnBlocking();
 		Config.loadConfig();
+    	craft_manager = new CraftManager(this, getServer());
 		
     	File ECpluginFolder = new File("plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator") + enderdir);
 		if (ECpluginFolder.exists() == false) {
@@ -214,8 +220,6 @@ public class mainListener extends JavaPlugin implements Listener
 		for(int i=0; i<54; i++) {
 			Storage.empty_inventory[i] = null;
 		}
-		
-    	PluginManager pm = getServer().getPluginManager();
     	
     	CommandWorker command_worker = new CommandWorker(this);
     	getCommand("fest").setExecutor(command_worker);
@@ -240,10 +244,6 @@ public class mainListener extends JavaPlugin implements Listener
     	ecgroup.loadEnderChests(ecstorage, ECpluginFolder.list());
     	
     	Sleeping sl = new Sleeping(this);
-    	
-    	CraftManager cm = new CraftManager(this, getServer());
-    	cm.addCrafts();
-    	pm.registerEvents(cm, this);
 
     	DropActions drop_actions = new DropActions(this);
     	pm.registerEvents(drop_actions, this);
@@ -251,7 +251,8 @@ public class mainListener extends JavaPlugin implements Listener
     	InventoryHandler ih = new InventoryHandler();
     	pm.registerEvents(ih, this);
 
-    	InteractHandler ih2 = new InteractHandler(this);
+    	LeashManager lm = new LeashManager();
+    	InteractHandler ih2 = new InteractHandler(this, lm);
     	pm.registerEvents(ih2, this);
 
     	Others features = new Others(this);
@@ -266,19 +267,13 @@ public class mainListener extends JavaPlugin implements Listener
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
     	
+    	craft_manager.addCrafts();
+    	pm.registerEvents(craft_manager, this);
+    	
 		System.out.println("[FestPlugin] Fest Plugin started successfully.");
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
-
-	    		
 				public void run() {
-					//mainworld.getBlockAt(-109, 72, 139).getState();
-					/*Block b = mainworld.getBlockAt(-2198, 40, -1360);
-					Chunk ch = b.getChunk();
-					if(getServer().getPlayer("FEST_Channel") != null && getServer().getPlayer("FEST_Channel").isOnline()
-							&& getServer().getPlayer("FEST_Channel").getLocation().distanceSquared(b.getLocation()) < 4)
-						System.out.println(ch);*/
-					
 					for(Boss boss : bH.bosslist)
 					{
 						boss.bossTick();
@@ -308,6 +303,8 @@ public class mainListener extends JavaPlugin implements Listener
 					
 					//items in cauldrons
 					ih2.onTick();
+					//lasso and jumping rope
+					lm.tick();
 					
 					//shulker and chest items dropping on 'F' (default)
 					ih.onTick();
@@ -322,6 +319,11 @@ public class mainListener extends JavaPlugin implements Listener
 				}
 			},0L,1L);
 		
+	}
+	
+	public CraftManager getCraftManager()
+	{
+		return craft_manager;
 	}
 	
 	public void onDisable()
