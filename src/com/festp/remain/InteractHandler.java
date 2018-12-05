@@ -54,15 +54,16 @@ public class InteractHandler implements Listener {
 	List<BlockState> cauls = new ArrayList<>();
 	List<Integer> caulticks = new ArrayList<>();
 
-	List<LeashedPlayer> leashed_players = new ArrayList<>();
 	List<CooldownPlayer> left_rotate_cooldown = new ArrayList<>();
 	
 	mainListener plugin;
 	Server server;
+	LeashManager leash_manager;
 	
-	public InteractHandler(mainListener pl) {
+	public InteractHandler(mainListener pl, LeashManager lm) {
 		this.plugin = pl;
 		this.server = pl.getServer();
+		this.leash_manager = lm;
 	}
 	
 	private LivingEntity spawnSaddleBeacon(Location l) {
@@ -70,15 +71,15 @@ public class InteractHandler implements Listener {
 	}
 	
 	public void onTick() {
-		for(int i=0;i<caulticks.size();i++)
-			caulticks.set(i, caulticks.get(i)+1);
+		for(int i = 0; i<caulticks.size(); i++)
+			caulticks.set(i, caulticks.get(i) + 1);
 		for(World w : server.getWorlds())
 		{
 			for(Entity e : w.getEntitiesByClass(Item.class))
 			{
 				Block b = w.getBlockAt(e.getLocation());
-				if(b.getType() == Material.CAULDRON){
-					BlockState cauldron = b.getState();
+				if(b.getType() == Material.CAULDRON) {
+					BlockState cauldron = b.getState(); //TO DO: use Levelled BlockData
 					if(cauldron.getData().getData() > 0) {
 						int i = cauls.indexOf(cauldron);
 						if(i >= 0) {
@@ -120,12 +121,6 @@ public class InteractHandler implements Listener {
 			}
 			
 			
-			for(int i = leashed_players.size()-1; i >=0; i--) {
-				LeashedPlayer lp = leashed_players.get(i);
-				if(!lp.tick()) {
-					leashed_players.remove(i);
-				}
-			}
 
 			for(int i = left_rotate_cooldown.size()-1; i >=0; i--) {
 				CooldownPlayer cp = left_rotate_cooldown.get(i);
@@ -152,14 +147,8 @@ public class InteractHandler implements Listener {
 					}
 					//leashed players
 					else if(Utils.hasDataField(helmet, LeashedPlayer.beacon_id)) {
-						boolean found = false;
-						for(LeashedPlayer lp : leashed_players) {
-							if(lp.workaround == e) {
-								found = true;
-								break;
-							}
-						}
-						if(!found || !e.isLeashed()) {
+						
+						if(!leash_manager.isWorkaroundActive(e) || !e.isLeashed()) {
 							e.getWorld().dropItem(e.getLocation(), new ItemStack(Material.LEAD, 1));
 							e.remove();
 						}
@@ -172,9 +161,11 @@ public class InteractHandler implements Listener {
 	
 	@EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event){
-       Entity rightclicked = event.getRightClicked();
+		if(event.isCancelled()) return;
+		
+        Entity rightclicked = event.getRightClicked();
         //if(rightclick instanceof Player)
-       if(rightclicked instanceof LivingEntity) {
+        if(rightclicked instanceof LivingEntity) {
     	   //ride on entity
     	   ItemStack hat = ((LivingEntity)rightclicked).getEquipment().getHelmet();
     	   if(rightclicked.getPassengers().size() == 0 && hat != null && hat.getType() == Material.SADDLE) {
@@ -183,52 +174,30 @@ public class InteractHandler implements Listener {
         	   temp.addPassenger(event.getPlayer());
         	   return;
     	   }
-       }
+        }
        
-	   for(int i = leashed_players.size()-1; i >= 0; i--) {
-		   LeashedPlayer lp = leashed_players.get(i);
-		   if(lp.leashed == rightclicked || lp.workaround == rightclicked) {
-			   if(lp.isCooldownless()) {
-				   lp.workaround.remove();
-				   event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(), new ItemStack(Material.LEAD, 1));
-				   leashed_players.remove(i);
-			   }
-			   return;
-		   }
-	   }
-       
-       ItemStack hand = event.getPlayer().getInventory().getItemInMainHand() != null ? event.getPlayer().getInventory().getItemInMainHand()
+        ItemStack hand = event.getPlayer().getInventory().getItemInMainHand() != null ? event.getPlayer().getInventory().getItemInMainHand()
     		   : (event.getPlayer().getInventory().getItemInOffHand() != null ? event.getPlayer().getInventory().getItemInOffHand() : null );
-       if(hand != null) {
-    	   if(hand.getType() == Material.LEAD && rightclicked instanceof Player) {
-    		   addLeashed(event.getPlayer(), rightclicked);
-        	   if(event.getPlayer().getGameMode() != GameMode.CREATIVE)
-        		   hand.setAmount(hand.getAmount()-1);
-        	   return;
-    	   }
-
-           if(hand.getType() == Material.NAME_TAG) {
-        	   if(hand.getItemMeta().hasDisplayName() && hand.getItemMeta().getDisplayName() == rightclicked.getCustomName())
-        		   event.setCancelled(true);
-           }
-       }
        
+        boolean cancelled = leash_manager.click(rightclicked, event.getPlayer(), hand);
+        if(cancelled) {
+        	event.setCancelled(true);
+        	return;
+        }
+        
+        if(hand != null) {
+        	if(hand.getType() == Material.NAME_TAG) {
+            	if(hand.getItemMeta().hasDisplayName() && hand.getItemMeta().getDisplayName() == rightclicked.getCustomName())
+        	    	event.setCancelled(true);
+        	}
+        }
     }
-	
-	/*@EventHandler
-	public void onEntityDismount(EntityDismountEvent event) {
-		System.out.println("DISMOUNTED");
-		System.out.println(event.getDismounted()+"   "+event.getEntity()+"   "+event.getEntityType());
-		if(event.getDismounted() instanceof Bat && event.getDismounted().getCustomName().equals(" ")) {
-			System.out.println("KILL");
-			event.getDismounted().remove();
-		}
-	}*/
 	
 	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
+		if(event.isCancelled() && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 		if(event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
 			return;
 		if(event.hasBlock() && event.getItem() != null) {
@@ -262,7 +231,7 @@ public class InteractHandler implements Listener {
 						event.getItem().setType(washed.getType());
 					} else {*/
 						event.getItem().setAmount(event.getItem().getAmount()-1);
-						event.getPlayer().getInventory().addItem(washed);
+						event.getPlayer().getInventory().addItem(washed); //TO DO: replace all of "Inventory.addItem()" with working function #thx1.13 
 					Utils.lower_cauldron_water(d.getBlock().getState());
 	                //d.getData().setData((byte) (d.getData().getData()-1));
 	                //d.update();
@@ -368,68 +337,47 @@ public class InteractHandler implements Listener {
 					}
 				}
 			}
-			
-			//jump rope
-			if(event.getItem().getType() == Material.LEAD) {
-				if(event.getAction() == Action.RIGHT_CLICK_BLOCK && Utils.isFence(event.getClickedBlock().getType())) {
-					ItemStack hand = event.getItem();
-					Player player = event.getPlayer();
-					
-					if(player.isLeashed()) return;
-					
-					List <Entity> entities = event.getPlayer().getNearbyEntities(15, 15, 15);
-					for(Entity e : entities)
-						if(e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
-							return;
-					
-					event.setCancelled(true);
-					Location hitch_loc = event.getClickedBlock().getLocation();
-					LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
-					addLeashed(hitch, event.getPlayer());
-			    	if(event.getPlayer().getGameMode() != GameMode.CREATIVE)
-			    		hand.setAmount(hand.getAmount()-1);
-				}
-				else if(event.getAction() == Action.RIGHT_CLICK_BLOCK && !Utils.isInteractable(event.getClickedBlock().getType())
-						|| event.getAction() == Action.RIGHT_CLICK_AIR) {
-					//spawn flying beacon, which will die on collide(top or bottom)
-					//(and spawn leash hitch if collides with fence - directly or above(air, water, e.t.c); miss lead if lava)
-				}
-			}
 		} //has both block and item
+
+		//jump rope and lasso
+		if(event.getItem() != null && event.getItem().getType() == Material.LEAD) {
+			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && Utils.isFence(event.getClickedBlock().getType())) {
+				ItemStack hand = event.getItem();
+				Player player = event.getPlayer();
+				
+				if(player.isLeashed()) return;
+				
+				List <Entity> entities = event.getPlayer().getNearbyEntities(15, 15, 15);
+				for(Entity e : entities)
+					if(e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
+						return;
+				
+				event.setCancelled(true);
+				Location hitch_loc = event.getClickedBlock().getLocation();
+				LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
+				leash_manager.addLeashed(hitch, event.getPlayer());
+		    	if(event.getPlayer().getGameMode() != GameMode.CREATIVE)
+		    		hand.setAmount(hand.getAmount()-1);
+			}
+			else if(event.getAction() == Action.RIGHT_CLICK_AIR
+					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !Utils.isInteractable(event.getClickedBlock().getType())) {
+				leash_manager.throwLasso(event.getPlayer());
+			}
+			else if(event.getAction() == Action.LEFT_CLICK_AIR)
+			{
+				leash_manager.throwTargetLasso(event.getPlayer());
+			}
+		}
 	}
 	
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		for(int i = leashed_players.size()-1; i >= 0; i--) {
-			LeashedPlayer lp = leashed_players.get(i);
-			if(lp.workaround.getLeashHolder() == event.getPlayer()) {
-				lp.workaround.remove();
-				lp.workaround.getWorld().dropItem(event.getPlayer().getLocation(), new ItemStack(Material.LEAD, 1));
-				leashed_players.remove(i);
-			}
-		}
+		leash_manager.removeByLeashHolder(event.getPlayer());
 	}
 
 	@EventHandler
 	public void onEntityUnleash(EntityUnleashEvent event) {
-		if( ((LivingEntity)event.getEntity()).isLeashed() &&
-				((LivingEntity)event.getEntity()).getLeashHolder() instanceof CraftLeash/*LeashHitch*/ && event.getReason() == UnleashReason.PLAYER_UNLEASH) {
-			for(int i = leashed_players.size()-1; i >= 0; i--) {
-				LeashedPlayer lp = leashed_players.get(i);
-				if(lp.workaround == event.getEntity()) {
-					lp.workaround.remove();
-					//lp.workaround.getLeashHolder().getWorld().dropItem(lp.workaround.getLeashHolder().getLocation(), new ItemStack(Material.LEAD, 1));
-					leashed_players.remove(i);
-				}
-			}
-		}
-	}
-	
-	public void addLeashed(Entity holder, Entity leashed) {
-		for(LeashedPlayer lp : leashed_players)
-			if(lp.workaround.getLeashHolder() == holder)
-				return;
-		leashed_players.add(new LeashedPlayer(holder, leashed));
+		leash_manager.onUnleash(event);
 	}
 	
 	public boolean is_left_click_on_cooldown(Player p) {
