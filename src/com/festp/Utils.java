@@ -16,6 +16,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -70,18 +71,20 @@ public class Utils {
 		return false;
 	}
 	
+	public static Vector throwVector(Location loc, double throw_power) {
+		throw_power = 0.2*throw_power;
+		double yaw = ( loc.getYaw() + 90 ) /180*Math.PI,
+		pitch = ( loc.getPitch() ) /180*Math.PI;
+		double vec_x = Math.cos(yaw)*Math.cos(pitch)*throw_power,
+			vec_y = -Math.sin(pitch)*throw_power,
+			vec_z = Math.sin(yaw)*Math.cos(pitch)*throw_power;
+		return new Vector(vec_x,vec_y,vec_z);
+	}
+	
 	public static Item drop(Location loc, ItemStack stack, double throw_power) {
 		if(stack != null && stack.getType() != Material.AIR) {
-			throw_power = 0.2*throw_power;
 			Item it = loc.getWorld().dropItem(loc, stack);
-			/*double yaw = ( ((CraftPlayer)event.getPlayer()).getHandle().yaw + 90 ) /180*Math.PI,
-				pitch = ( ((CraftPlayer)event.getPlayer()).getHandle().pitch) /180*Math.PI;*/
-			double yaw = ( loc.getYaw() + 90 ) /180*Math.PI,
-			pitch = ( loc.getPitch() ) /180*Math.PI;
-			double vec_x = Math.cos(yaw)*Math.cos(pitch)*throw_power,
-				vec_y = -Math.sin(pitch)*throw_power,
-				vec_z = Math.sin(yaw)*Math.cos(pitch)*throw_power;
-			it.setVelocity(new Vector(vec_x,vec_y,vec_z));
+			it.setVelocity(throwVector(loc, throw_power));
 			it.setPickupDelay(30);
 			return it;
 		}
@@ -133,8 +136,8 @@ public class Utils {
         return false;
 	}
 	
-	public static LivingEntity spawnBeacon(Location l, String type, Class<? extends LivingEntity> entity) {
-		LivingEntity beacon = (LivingEntity) l.getWorld().spawn(l, entity);
+	public static <T extends LivingEntity> T spawnBeacon(Location l, String type, Class<T> entity) {
+		T beacon = l.getWorld().spawn(l, entity);
  		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
  		beacon.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000000, 5, false, false));
  		beacon.setAI(false);
@@ -150,6 +153,11 @@ public class Utils {
  		else if(beacon instanceof Bat) {
  			Bat bat = (Bat)beacon;
  			//bat.setAwake(true);
+ 		}
+ 		else if(beacon instanceof ArmorStand) {
+ 			ArmorStand stand = (ArmorStand)beacon;
+ 			stand.setVisible(false);
+ 			stand.setSmall(true);
  		}
  		ItemStack identificator = new ItemStack(Material.STONE_BUTTON);
  		identificator = setData(identificator, type, "yea");
