@@ -103,6 +103,7 @@ import com.festp.enderchest.ECTabCompleter;
 import com.festp.enderchest.EnderChestGroup;
 import com.festp.enderchest.EnderChestHandler;
 import com.festp.enderchest.EnderFileStorage;
+import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.menu.InventoryMenu;
@@ -170,6 +171,8 @@ public class mainListener extends JavaPlugin implements Listener
 	public static String storagesdir = "Storages";
 	
 	public World mainworld = null;
+	
+	ExpHoppers eh;
 	
 	public void onEnable()
 	{
@@ -266,6 +269,9 @@ public class mainListener extends JavaPlugin implements Listener
     	
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
+
+    	eh = new ExpHoppers(getServer());
+    	pm.registerEvents(eh, this); //TO DO: try add canceling interact system
     	
     	craft_manager.addCrafts();
     	pm.registerEvents(craft_manager, this);
@@ -274,7 +280,7 @@ public class mainListener extends JavaPlugin implements Listener
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
-					for(Boss boss : bH.bosslist)
+					for(Boss boss : bH.bosslist) //TO DO: BossHandler.onTick()
 					{
 						boss.bossTick();
 					}
@@ -296,6 +302,7 @@ public class mainListener extends JavaPlugin implements Listener
 						groupticks = 0;
 					}
 					
+					//skip night by sleep
 					sl.onTick();
 					
 					//fill cauldrons, feed animals and pump liquids
@@ -303,6 +310,7 @@ public class mainListener extends JavaPlugin implements Listener
 					
 					//items in cauldrons
 					ih2.onTick();
+					
 					//lasso and jumping rope
 					lm.tick();
 					
@@ -315,7 +323,11 @@ public class mainListener extends JavaPlugin implements Listener
 					//save horse data to tome
 					st.onTick();
 					
+					//beam, unload, save, process
 					handler_storage.onTick();
+					
+					//drag xp
+					eh.onTick();
 				}
 			},0L,1L);
 		
@@ -328,6 +340,7 @@ public class mainListener extends JavaPlugin implements Listener
 	
 	public void onDisable()
 	{
+		eh.save();
 		ecgroup.saveEnderChests(ecstorage);
 		stlist.saveStorages();
 		for(Player p : getServer().getOnlinePlayers()) {
