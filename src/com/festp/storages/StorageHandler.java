@@ -329,8 +329,8 @@ public class StorageHandler implements Listener {
 			if(cursor != null && cursor.getType() != Material.AIR) {
 				if(st.getType() == StorageType.BOTTOMLESS) {
 					System.out.println(st.unlim_inv.getMaterial()+" "+ cursor.getType());
-					if(st.unlim_inv.getMaterial() != cursor.getType() && BottomlessInventory.isAllowedMaterial(cursor.getType())) {
-						if(st.isEmpty()) {
+					if(st.unlim_inv.getMaterial() != cursor.getType()) {
+						if(st.isEmpty() && BottomlessInventory.isAllowedMaterial(cursor.getType())) {
 							st.unlim_inv.setMaterial(cursor.getType());
 							event.setCancelled(true);
 						}
