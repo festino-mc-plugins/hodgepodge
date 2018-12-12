@@ -42,8 +42,8 @@ Main features can be divided into:
   • "/item" — simplied /give, can give only tools, weapon and armor(damageable items), supports durability in percents and all the enchantments.  
   • (deprecated) "/boss" — spawning, reconfiguring and removing bosses.  
 
-* - Also it can detect enchantments of required level(=, < and >) and item names. Syntax: "mc:" or "minecraft:" search as substring of SPIGOT MATERIAL(also exist "armor", "tool" and "all" filters), '&' for intersection, '|' for union of conditions, "n:" or "name:" detects name, "e:" or "ench:" detects enchantment. Example: "iron & shovel & dur=3 | diam & shov" will grab iron shovels with unbreaking 3 and any diamond shovels.
-** - Hopper named "xp": when contains empty bottles, collects XP; once stored N xp turns bottle into xp bottle. Grab only bottles(even player can't put anything else). If you pick up all the bottles or destroy the hopper, it throws out the stored experience.
+* Also it can detect enchantments of required level(=, < and >) and item names. Syntax: "mc:" or "minecraft:" search as substring of SPIGOT MATERIAL(also exist "armor", "tool" and "all" filters), '&' for intersection, '|' for union of conditions, "n:" or "name:" detects name, "e:" or "ench:" detects enchantment. Example: "iron & shovel & dur=3 | diam & shov" will grab iron shovels with unbreaking 3 and any diamond shovels.  
+** Hopper named "xp": when contains empty bottles, collects XP; once stored N xp turns bottle into xp bottle. Grab only bottles(even player can't put anything else). If you pick up all the bottles or destroy the hopper, it throws out the stored experience.
 
 (rus info: https://vk.com/@mine_surser-plugin-v1)
 
