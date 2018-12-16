@@ -30,6 +30,7 @@ import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.SkeletonHorse;
 import org.bukkit.entity.Turtle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -913,7 +914,7 @@ public class SummonerTome implements Listener {
 		
 		if(inv instanceof AbstractHorseInventory) {
 			AbstractHorseInventory hinv = (AbstractHorseInventory)inv;
-			if(hinv.getHolder() != null && wasSummoned((Horse)hinv.getHolder()))
+			if(hinv.getHolder() != null && !(hinv.getHolder() instanceof SkeletonHorse) && wasSummoned((Horse)hinv.getHolder()))
 				if(slot == 0)
 				{
 					if(action != InventoryAction.CLONE_STACK && action != InventoryAction.UNKNOWN)
