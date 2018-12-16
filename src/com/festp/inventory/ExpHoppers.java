@@ -42,7 +42,7 @@ public class ExpHoppers implements Listener {
 	private static final String filepath = "plugins/"+mainListener.pluginname+"/"+filename;
 	private static final char F_SEP = '|', F_END = '\n';
 	private static final int XP_ANOUNT = 18; //3-11 xp from one bottle
-	private static final double STORE_HEIGHT = 0.7; //3-11 xp from one bottle
+	private static final double STORE_HEIGHT = 12.0 / 16;
 	private static final Material EXP_BOTTLE = Material.EXPERIENCE_BOTTLE, EMPTY_BOTTLE = Material.GLASS_BOTTLE;
 
 	private List<PairBlockXP> hoppers = new ArrayList<>();
@@ -55,7 +55,7 @@ public class ExpHoppers implements Listener {
 		if (block.getType() != Material.HOPPER)
 			return;
 		Hopper hopper = (Hopper) block.getState();
-		if (!hopper.getCustomName().toLowerCase().equals(hopper_name))
+		if (hopper.getCustomName() == null || !hopper.getCustomName().toLowerCase().equals(hopper_name))
 			return;
 		Inventory hinv = hopper.getInventory();
 		ItemStack[] items =  hinv.getContents();
