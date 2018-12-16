@@ -17,8 +17,11 @@ import org.bukkit.inventory.ItemStack;
 import com.festp.Utils;
 
 public class LeashManager {
-	public static final double R = 8, R_SQUARE = R*R, R_BREAK_SQUARE = 140, PULL_MARGIN = 1, PULL_R2 = (R-PULL_MARGIN)*(R-PULL_MARGIN);
-	private static final double THROW_POWER = 10;
+	public static final double R = 8, R_SQUARE = R*R,
+			R_BREAK_SQUARE = 140,
+			LASSO_BREAK_SQUARE = 20 * 20,
+			PULL_MARGIN = 1, PULL_R2 = (R-PULL_MARGIN)*(R-PULL_MARGIN);
+	private static final double THROW_POWER = 6.5;
 	private List<LeashedPlayer> leashed_players = new ArrayList<>();
 	private List<LeashLasso> thrown_lasso = new ArrayList<>();
 	

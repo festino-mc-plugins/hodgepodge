@@ -1,5 +1,8 @@
 package com.festp.remain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -27,20 +30,21 @@ public class LeashedPlayer {
 	
 	//!onGround, Ep = mgh, Ek = mv^2/2, distance = l, vx -> vertical flat, which contains both player and leashHolder
 	//Ep = Gh, Ek = v^2
-	private static final double G = 15, kspeed = 0.1d, E_friction = /*0.998*/1  //2g
-			/*, R_PULL = 6, R_PULL_SQUARE = R_PULL*R_PULL*/, R = 8, R_SQUARE = R*R, R_BREAK_SQUARE = 140, PULL_MARGIN = 1, PULL_R2 = (R-PULL_MARGIN)*(R-PULL_MARGIN);
+	private static final double G = 15, kspeed = 0.1d, E_friction = /*0.998*/1;  //2g
 	private double last_fall_h = 0, E = 0;
 	private Vector Vold = new Vector();
 	private boolean up_dir = false;
 	
-	public LeashedPlayer(Entity holder, Entity leashed) {
+	public LeashedPlayer(Entity holder, Entity leashed)
+	{
 		cooldown_break = ticks_break;
 		workaround = (LivingEntity) Utils.spawnBeacon(leashed.getLocation(), beacon_id, Bat.class);
 		this.leashed = leashed;
 		workaround.setLeashHolder(holder);
 	}
 	
-	public boolean tick() {
+	public boolean tick()
+	{
 		if(cooldown_new > 0) {
 			cooldown_new -= 1;
 		}
@@ -54,12 +58,12 @@ public class LeashedPlayer {
 			leashed.setVelocity(velocity);
 			workaround.setVelocity(velocity.multiply(-1));*/
 			double dist2 = leashed.getLocation().distanceSquared(workaround.getLeashHolder().getLocation());
-			if(dist2 > R_BREAK_SQUARE) {
+			if(dist2 > LeashManager.R_BREAK_SQUARE) {
 				leashed.getWorld().dropItem(leashed.getLocation(), new ItemStack(Material.LEAD, 1));
 				removeWorkaround();
 				return false;
 			}
-			else if(dist2 > PULL_R2) { //R_SQUARE
+			else if(dist2 > LeashManager.PULL_R2) { //R_SQUARE
 				Vector velocity = calc_velocity_to_LeashHolder();
 				Block b = leashed.getLocation().getBlock();
 				int dx = (int)Math.signum(velocity.getX()), dz = (int)Math.signum(velocity.getZ());
@@ -117,11 +121,11 @@ public class LeashedPlayer {
 		Vector velocity = new Vector( dx, dy, dz); //to center
 
 		double distance_k;
-		if(distance < R_SQUARE) {
-			distance_k = 1 - distance / R_SQUARE;
+		if(distance < LeashManager.R_SQUARE) {
+			distance_k = 1 - distance / LeashManager.R_SQUARE;
 			velocity.multiply(new Vector(1, -1, 1));
 		} else
-			distance_k = distance / R_SQUARE - 1;
+			distance_k = distance / LeashManager.R_SQUARE - 1;
 		velocity.multiply(distance_k*pull_k);
 		
 		Vector old_velocity = leashed.getVelocity();
@@ -149,4 +153,5 @@ public class LeashedPlayer {
 			workaround.getLeashHolder().remove();
 		workaround.remove();
 	}
+	
 }

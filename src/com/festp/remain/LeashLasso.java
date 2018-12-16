@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import com.festp.Utils;
+import com.mysql.jdbc.V1toV2StatementInterceptorAdapter;
 
 //spawn thrown beacon, which will die on collide(top or bottom)
 //(and spawn leash hitch if collides with fence - directly or above(air, water, e.t.c); miss lead if lava; (despawn delay if cactus))
@@ -57,9 +58,7 @@ public class LeashLasso {
 
 		//if top of projectile in sticky block
 		if (Utils.contains(STICKY_BLOCKS, projectile.getLocation().add(0, projectile.getHeight(), 0).getBlock().getType())) {
-			projectile.setGravity(false);
-			projectile.setVelocity(new Vector());
-			despawn_delay = MAX_DESPAWN_DELAY;
+			process_sticky();
 		}
 	}
 	
@@ -77,7 +76,7 @@ public class LeashLasso {
 				return false;
 			}
 		}
-		workaround.teleport(projectile.getLocation().add(0, LEAD_LOWERING, 0));
+		teleport_workaround();
 		workaround.setVelocity(projectile.getVelocity());
 		Location current_pos = projectile.getLocation();
 		double d = current_pos.distanceSquared(last_pos);
@@ -96,10 +95,7 @@ public class LeashLasso {
 		}
 		//collide cactus/slime block -> return with delay
 		if (getFacedBlock(current_pos, STICKY_BLOCKS) != null) {
-			System.out.println(getFacedBlock(current_pos, STICKY_BLOCKS));
-			projectile.setGravity(false);
-			projectile.setVelocity(new Vector());
-			despawn_delay = MAX_DESPAWN_DELAY;
+			process_sticky();
 			return true;
 		}
 		//collide lava/fire -> kill
@@ -162,6 +158,20 @@ public class LeashLasso {
 		despawnLasso();
 	}
 	
+	private void teleport_workaround()
+	{
+		workaround.teleport(projectile.getLocation().add(0, LEAD_LOWERING, 0));
+	}
+	
+	private void process_sticky()
+	{
+		projectile.setGravity(false);
+		projectile.teleport(getFacingLocation());
+		projectile.setVelocity(new Vector());
+		teleport_workaround();
+		despawn_delay = MAX_DESPAWN_DELAY;
+	}
+	
 	/** @return <b>true</b> - true if moves to X/Z center of block */
 	private static boolean isToCenter(Location loc, Vector velocity)
 	{
@@ -179,50 +189,87 @@ public class LeashLasso {
 	{
 		return axis_dist(loc) + EPSILON <= projectile.getWidth() * 0.5 + FENCE_HALF_WIDTH /*&& isToCenter(loc, velocity)*/;
 	}
+	
+	private boolean almostZero(double d)
+	{
+		return -EPSILON < d && d < EPSILON;
+	}
+	
 	private Block getFacedBlock(Location loc, Material[] type)
 	{
-		double dx = loc.getX() - (int) loc.getX();
-		double dy = loc.getY() - (int) loc.getZ();
-		double dz = loc.getY() - (int) loc.getZ();
-		double half_width = projectile.getWidth() * 0.5;
-		double height = projectile.getHeight();
+		Vector new_v = projectile.getVelocity();
+		double x1 = old_velocity.getX(), x2 = new_v.getX();
+		double y1 = old_velocity.getY(), y2 = new_v.getY();
+		double z1 = old_velocity.getZ(), z2 = new_v.getZ();
 		Block main_block = loc.getBlock();
-		//negative X
-		if (-EPSILON < dx - half_width && dx - half_width < EPSILON) {
-			Block faced = main_block.getRelative(-1, 0, 0);
+		//x moving had stopped
+		if (!almostZero(x1) && almostZero(x2)) {
+			Block faced;
+			if (x1 < 0)
+				faced = main_block.getRelative(-1, 0, 0);
+			else
+				faced = main_block.getRelative(1, 0, 0);
 			if (Utils.contains(type, faced.getType()))
 				return faced;
 		}
-		//positive X
-		if (-EPSILON < dx + half_width - 1 && dx + half_width - 1 < EPSILON) {
-			Block faced = main_block.getRelative(1, 0, 0);
+		//y moving had stopped
+		//y rebound
+		if (!almostZero(y1) && almostZero(y2) || y1 * y2 < 0) {
+			Block faced;
+			if (y1 < 0)
+				faced = main_block.getRelative(0, -1, 0);
+			else
+				faced = main_block.getRelative(0, 1, 0);
 			if (Utils.contains(type, faced.getType()))
 				return faced;
 		}
-		//negative Y
-		if (-EPSILON < dy && dy < EPSILON) {
-			Block faced = main_block.getRelative(0, -1, 0);
-			if (Utils.contains(type, faced.getType()))
-				return faced;
-		}
-		//positive Y
-		if (-EPSILON < dy + height - 1 && dy + height - 1 < EPSILON) {
-			Block faced = main_block.getRelative(0, 1, 0);
-			if (Utils.contains(type, faced.getType()))
-				return faced;
-		}
-		//negative Z
-		if (-EPSILON < dz - half_width && dz - half_width < EPSILON) {
-			Block faced = main_block.getRelative(0, 0, -1);
-			if (Utils.contains(type, faced.getType()))
-				return faced;
-		}
-		//positive Z
-		if (-EPSILON < dz + half_width - 1 && dz + half_width - 1 < EPSILON) {
-			Block faced = main_block.getRelative(0, 0, 1);
+		//z moving had stopped
+		if (!almostZero(z1) && almostZero(z2)) {
+			Block faced;
+			if (z1 < 0)
+				faced = main_block.getRelative(0, 0, -1);
+			else
+				faced = main_block.getRelative(0, 0, 1);
 			if (Utils.contains(type, faced.getType()))
 				return faced;
 		}
 		return null;
+	}
+	private Location getFacingLocation()
+	{
+		double v1 = old_velocity.lengthSquared();
+		double v2 = projectile.getVelocity().lengthSquared();
+		Location result = last_pos.clone();
+		//(loc_old * v_old + loc_new * v_new) / (v_old + v_new)
+		System.out.println(v1 +" "+ v2 + " -> " + result.getX() * v1 +" + "+projectile.getLocation().getX() * v2 +" * " + 1 / (v1 + v2) + " = " + (result.getX() * v1 + projectile.getLocation().getX() * v2) / (v1 * v2));
+		result.multiply(v1).add(projectile.getLocation().multiply(v2)).multiply(1 / (v1 + v2));
+		
+		Vector new_v = projectile.getVelocity();
+		double x1 = old_velocity.getX(), x2 = new_v.getX();
+		double y1 = old_velocity.getY(), y2 = new_v.getY();
+		double z1 = old_velocity.getZ(), z2 = new_v.getZ();
+		//x moving had stopped
+		if (!almostZero(x1) && almostZero(x2)) {
+			if (x1 < 0)
+				result.setX(Math.floor(result.getX()));
+			else
+				result.setX(Math.ceil(result.getX()));
+		}
+		//y moving had stopped
+		//y rebound
+		if (!almostZero(y1) && almostZero(y2) || y1 * y2 < 0) {
+			if (y1 < 0)
+				result.setY(Math.floor(result.getY()));
+			else
+				result.setY(Math.ceil(result.getY()));
+		}
+		//z moving had stopped
+		if (!almostZero(z1) && almostZero(z2)) {
+			if (z1 < 0)
+				result.setZ(Math.floor(result.getZ()));
+			else
+				result.setZ(Math.ceil(result.getZ()));
+		}
+		return result;
 	}
 }
