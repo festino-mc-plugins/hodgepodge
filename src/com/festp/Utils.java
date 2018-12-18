@@ -19,9 +19,13 @@ import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Snowball;
+import org.bukkit.entity.SplashPotion;
 import org.bukkit.entity.Turtle;
+import org.bukkit.entity.Vex;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,6 +46,7 @@ import net.minecraft.server.v1_13_R2.Particles;//.EnumParticle;
 public class Utils {
 	private static JavaPlugin plug;
 	private static UnsafeValues legacy;
+	public static final double EPSILON = 0.0001;
 	
 	public static void setPlugin(JavaPlugin pl) {
 		plug = pl;
@@ -81,6 +86,54 @@ public class Utils {
 		return new Vector(vec_x,vec_y,vec_z);
 	}
 	
+	/**Java implementation of Minecraft parabola path calculating (https://bukkit.org/threads/setvelocity-vector-and-parabolic-motion.86661/)*/
+	public static Vector throwVector(Location from, Location to, double heightGain, Class clazz) //class instead of EntityType
+    {
+        double gravity;
+        if (clazz == SplashPotion.class)
+			gravity = 0.115;
+        else if (clazz == Snowball.class)
+			gravity = 0.075;
+        else
+			gravity = 0.075;
+        
+        // Block locations
+        double endGain = to.getY() - from.getY();
+        double dx = to.getX() - from.getX();
+        double dz = to.getZ() - from.getZ();
+        double horizDist = Math.sqrt(dx * dx + dz * dz);
+ 
+        // Height gain
+        double gain = heightGain;
+ 
+        double maxGain = gain > (endGain + gain) ? gain : (endGain + gain);
+
+        // Vertical velocity
+        double vy = Math.sqrt(maxGain * gravity);
+        
+        // Solve quadratic equation for velocity
+        double a = -horizDist * horizDist / (4 * maxGain); //always negative
+        double b = horizDist; //always positive
+        double c = -endGain;
+
+        if (-EPSILON <= a && a <= EPSILON)
+            return new Vector(0, vy, 0);
+        double slope = -b / (2 * a) - Math.sqrt(b * b - 4 * a * c) / (2 * a);
+        
+        // Horizontal velocity
+        double vh = vy / slope;
+ 
+        // Calculate horizontal direction
+        double dirx = dx / horizDist;
+        double dirz = dz / horizDist;
+ 
+        // Horizontal velocity components
+        double vx = vh * dirx;
+        double vz = vh * dirz;
+ 
+        return new Vector(vx, vy, vz);
+    }
+	
 	public static Item drop(Location loc, ItemStack stack, double throw_power) {
 		if(stack != null && stack.getType() != Material.AIR) {
 			Item it = loc.getWorld().dropItem(loc, stack);
@@ -114,6 +167,9 @@ public class Utils {
 				  +dec.format(v.getY())+"; "
 				  +dec.format(v.getZ())+")")
 				.replace(',', '.');
+	}
+	public static String locationToString(Location l) {
+		return vectorToString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
 	
 	public static boolean hasDataField(ItemStack i, String field) {
@@ -154,14 +210,22 @@ public class Utils {
  			Bat bat = (Bat)beacon;
  			//bat.setAwake(true);
  		}
- 		else if(beacon instanceof ArmorStand) {
+ 		else if(beacon instanceof Vex) {
+ 			Vex vex = (Vex)beacon;
+ 			vex.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
+ 			vex.getEquipment().setItemInOffHand(new ItemStack(Material.AIR));
+ 		}
+
+	 	ItemStack identificator = new ItemStack(Material.STONE_BUTTON);
+	 	identificator = setData(identificator, type, "yea");
+ 		if(beacon instanceof ArmorStand) {
  			ArmorStand stand = (ArmorStand)beacon;
  			stand.setVisible(false);
  			stand.setSmall(true);
+ 	 		beacon.getEquipment().setChestplate(identificator);
+ 		} else {
+ 	 		beacon.getEquipment().setHelmet(identificator);
  		}
- 		ItemStack identificator = new ItemStack(Material.STONE_BUTTON);
- 		identificator = setData(identificator, type, "yea");
- 		beacon.getEquipment().setHelmet(identificator);
  		return beacon;
 	}
 	
