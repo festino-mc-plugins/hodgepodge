@@ -194,10 +194,10 @@ public class InteractHandler implements Listener {
     }
 	
 	@SuppressWarnings("deprecation")
-	@EventHandler
+	@EventHandler//(ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
-		if(event.isCancelled() && event.getAction() != Action.RIGHT_CLICK_AIR) return;
+		if(event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
 		if(event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
 			return;
 		if(event.hasBlock() && event.getItem() != null) {
@@ -288,7 +288,6 @@ public class InteractHandler implements Listener {
 						left_rotate_cooldown.add(new CooldownPlayer(event.getPlayer(), Config.LEFT_ROTATE_COOLDOWN));
 					byte dur = (byte) ((Math.random()*(event.getItem().getEnchantmentLevel(Enchantment.DURABILITY)+1)) > 1 ? 0 : 1);
 					event.getItem().setDurability((short) (event.getItem().getDurability()+dur));
-					//System.out.println(event.getItem().getDurability()+" "+event.getItem().getType().getMaxDurability());
 					if(event.getItem().getDurability() > event.getItem().getType().getMaxDurability())
 						if(event.getHand() == EquipmentSlot.HAND)
 							event.getPlayer().getInventory().setItemInMainHand(null);
@@ -341,9 +340,9 @@ public class InteractHandler implements Listener {
 
 		//jump rope and lasso
 		if(event.getItem() != null && event.getItem().getType() == Material.LEAD) {
+			ItemStack hand = event.getItem();
+			Player player = event.getPlayer();
 			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && Utils.isFence(event.getClickedBlock().getType())) {
-				ItemStack hand = event.getItem();
-				Player player = event.getPlayer();
 				
 				if(player.isLeashed()) return;
 				
@@ -356,16 +355,20 @@ public class InteractHandler implements Listener {
 				Location hitch_loc = event.getClickedBlock().getLocation();
 				LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
 				leash_manager.addLeashed(hitch, event.getPlayer());
-		    	if(event.getPlayer().getGameMode() != GameMode.CREATIVE)
+		    	if(player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if(event.getAction() == Action.RIGHT_CLICK_AIR
 					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !Utils.isInteractable(event.getClickedBlock().getType())) {
 				leash_manager.throwLasso(event.getPlayer());
+		    	if(player.getGameMode() != GameMode.CREATIVE)
+		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if(event.getAction() == Action.LEFT_CLICK_AIR)
 			{
 				leash_manager.throwTargetLasso(event.getPlayer());
+		    	if(player.getGameMode() != GameMode.CREATIVE)
+		    		hand.setAmount(hand.getAmount()-1);
 			}
 		}
 	}

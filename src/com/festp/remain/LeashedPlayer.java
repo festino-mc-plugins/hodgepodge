@@ -27,6 +27,7 @@ public class LeashedPlayer {
 	private static final int ticks_new = 60;
 	private int cooldown_break = 0;
 	private static final int ticks_break = 20;
+	private int cooldown_remove = 0;
 	
 	//!onGround, Ep = mgh, Ek = mv^2/2, distance = l, vx -> vertical flat, which contains both player and leashHolder
 	//Ep = Gh, Ek = v^2
@@ -53,12 +54,8 @@ public class LeashedPlayer {
 		}
 		else if(workaround.isLeashed() && !workaround.isDead() && !leashed.isDead()  && workaround.getWorld() == leashed.getWorld() && workaround.getLeashHolder().getWorld() == leashed.getWorld()
 				&& !(leashed instanceof Player && !((Player)leashed).isOnline() ) ) {
-			/*((Bat)workaround).setAwake(true);
-			Vector velocity = calc_velocity();
-			leashed.setVelocity(velocity);
-			workaround.setVelocity(velocity.multiply(-1));*/
 			double dist2 = leashed.getLocation().distanceSquared(workaround.getLeashHolder().getLocation());
-			if(dist2 > LeashManager.R_BREAK_SQUARE) {
+			if(dist2 > LeashManager.R_BREAK_SQUARE && cooldown_remove <= 0) {
 				leashed.getWorld().dropItem(leashed.getLocation(), new ItemStack(Material.LEAD, 1));
 				removeWorkaround();
 				return false;
@@ -72,25 +69,24 @@ public class LeashedPlayer {
 						velocity.add(new Vector(0, 0.3, 0));
 				leashed.setVelocity(velocity);
 			}
+			
 			workaround.teleport(leashed);
-			/* TELEPORT TO PIG OR SOMETHING SAME
-			if(dist2 > 100) {
-				workaround.remove();
-				return false;
-			}
-			else if(dist2 > 64) {
-				Vector velocity = calc_velocity_to_LeashFake();
-				leashed.teleport(workaround);
-				leashed.setVelocity(velocity);
-				//workaround.setVelocity(velocity.multiply(-1));
-			}
-			else {
-				workaround.teleport(leashed);
-			}*/
 			if(leashed instanceof Player) {
 				Player p = (Player)leashed;
 				if(p.isSneaking()) {
 					cooldown_new = ticks_new;
+					removeWorkaround();
+				}
+			}
+			
+			if (cooldown_remove > 0)
+			{
+				if (dist2 <= LeashManager.PULL_R2)
+					cooldown_remove = 0;
+				cooldown_remove--;
+				if (cooldown_remove <= 0 && leashed instanceof LivingEntity && LeashManager.canLeashEntity(leashed)) 
+				{
+					((LivingEntity)leashed).setLeashHolder(workaround.getLeashHolder());
 					removeWorkaround();
 				}
 			}
@@ -101,6 +97,11 @@ public class LeashedPlayer {
 			return false;
 		}
 		return true;
+	}
+	
+	public void setRemoveCooldown(int ticks)
+	{
+		cooldown_remove = ticks;
 	}
 	
 	private Vector calc_dist() {
@@ -131,7 +132,7 @@ public class LeashedPlayer {
 		Vector old_velocity = leashed.getVelocity();
 		old_velocity.add(new Vector(0, -0.01, 0));
 		
-		System.out.printf(Utils.vectorToString(leashed.getVelocity())+" "+Utils.vectorToString(velocity));
+		System.out.printf(Utils.toString(leashed.getVelocity())+" "+Utils.toString(velocity));
 		
 		boolean codirectional = Math.signum(old_velocity.getY()) == Math.signum(velocity.getY());
 		if(codirectional)
@@ -139,7 +140,7 @@ public class LeashedPlayer {
 		else
 			velocity.add(old_velocity.multiply(E_friction));
 		
-		System.out.println("vec: "+Utils.vectorToString(velocity));
+		System.out.println("vec: "+Utils.toString(velocity));
 		
 		return velocity;
 	}

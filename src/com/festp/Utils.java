@@ -47,6 +47,9 @@ public class Utils {
 	private static JavaPlugin plug;
 	private static UnsafeValues legacy;
 	public static final double EPSILON = 0.0001;
+	//we have some Minecraft magic constants
+	public static final double THROW_POWER_K = 0.2,
+		DECELERATION_H = 0.91, DECELERATION_V = 0.98, ACCELERATION_V = -0.08;
 	
 	public static void setPlugin(JavaPlugin pl) {
 		plug = pl;
@@ -77,7 +80,7 @@ public class Utils {
 	}
 	
 	public static Vector throwVector(Location loc, double throw_power) {
-		throw_power = 0.2*throw_power;
+		throw_power = THROW_POWER_K * throw_power;
 		double yaw = ( loc.getYaw() + 90 ) /180*Math.PI,
 		pitch = ( loc.getPitch() ) /180*Math.PI;
 		double vec_x = Math.cos(yaw)*Math.cos(pitch)*throw_power,
@@ -86,52 +89,82 @@ public class Utils {
 		return new Vector(vec_x,vec_y,vec_z);
 	}
 	
-	/**Java implementation of Minecraft parabola path calculating (https://bukkit.org/threads/setvelocity-vector-and-parabolic-motion.86661/)*/
-	public static Vector throwVector(Location from, Location to, double heightGain, Class clazz) //class instead of EntityType
+	/** Minecraft parabola path calculating.
+	 * @return <b>null</b> - if projectile can't reach target location. */
+	public static Vector throwVector(Location from, Location to, double power)
     {
-        double gravity;
-        if (clazz == SplashPotion.class)
-			gravity = 0.115;
-        else if (clazz == Snowball.class)
-			gravity = 0.075;
-        else
-			gravity = 0.075;
-        
-        // Block locations
-        double endGain = to.getY() - from.getY();
+		power = THROW_POWER_K * power;
         double dx = to.getX() - from.getX();
+        double dy = to.getY() - from.getY();
         double dz = to.getZ() - from.getZ();
-        double horizDist = Math.sqrt(dx * dx + dz * dz);
- 
-        // Height gain
-        double gain = heightGain;
- 
-        double maxGain = gain > (endGain + gain) ? gain : (endGain + gain);
-
-        // Vertical velocity
-        double vy = Math.sqrt(maxGain * gravity);
+        double dh = Math.sqrt(dx * dx + dz * dz);
         
-        // Solve quadratic equation for velocity
-        double a = -horizDist * horizDist / (4 * maxGain); //always negative
-        double b = horizDist; //always positive
-        double c = -endGain;
-
-        if (-EPSILON <= a && a <= EPSILON)
-            return new Vector(0, vy, 0);
-        double slope = -b / (2 * a) - Math.sqrt(b * b - 4 * a * c) / (2 * a);
+        if (dh < EPSILON)
+            return new Vector(0, power, 0);
         
-        // Horizontal velocity
-        double vh = vy / slope;
- 
-        // Calculate horizontal direction
-        double dirx = dx / horizDist;
-        double dirz = dz / horizDist;
- 
-        // Horizontal velocity components
-        double vx = vh * dirx;
-        double vz = vh * dirz;
+        // lets solve in terms of h and y - approximately find angle of max dy and root with smaller angle
+        double v0 = power;
+        double min_vh = dh * (1 - DECELERATION_H);
+        if (v0 < min_vh + EPSILON)
+        	return null;
+
+        int precision = 20;
+        double min_angle = -Math.acos(min_vh / v0),
+        		max_angle = dy_extremum_point(dh, v0, precision, -min_angle),
+        		mid_angle;
+        double max_dy = dy_by_angle(dh, v0, max_angle);
+        if (max_dy < dy + EPSILON)
+        	return null;
+        
+        double vh = v0, vy = 0, dy_calc;
+        for (int i = 0; i < precision; i++)
+        {
+        	mid_angle = (min_angle + max_angle) / 2;
+        	vh = v0 * Math.cos(mid_angle);
+        	vy = v0 * Math.sin(mid_angle);
+        	dy_calc = dy(dh, vh, vy); // function increases from left to right point
+        	if (dy_calc < dy)
+        		min_angle = mid_angle;
+        	else
+        		max_angle = mid_angle;
+        }
+        
+        // return to x and z
+        double vx = vh * dx / dh;
+        double vz = vh * dz / dh;
  
         return new Vector(vx, vy, vz);
+    }
+	private static double dy_n(double v0_y, double n)
+    {
+		double pow = Math.pow(DECELERATION_V, n), k = (1 - pow) / (1 - DECELERATION_V);
+    	return k * v0_y + ACCELERATION_V * DECELERATION_V / (1 - DECELERATION_V) * (n - k);
+    }
+	private static double n(double dh, double vh_0)
+    {
+		double t = 1 - (1 - DECELERATION_H) * dh / vh_0;
+    	return Math.log(t) / Math.log(DECELERATION_H);
+    }
+	private static double dy(double dh, double v0_h, double v0_y) {
+    	return dy_n(v0_y, n(dh, v0_h));
+    }
+	private static double dy_by_angle(double dh, double v0, double angle) {
+    	return dy_n(v0 * Math.sin(angle), n(dh, v0 * Math.cos(angle)));
+    }
+	/**@return angle of max dy*/
+	private static double dy_extremum_point(double dh, double v0, int iterations, double start_angle)
+    {
+		double min_angle = -start_angle, max_angle = start_angle, mid_angle;
+		Vector v = new Vector();
+		for (int i = 0; i < iterations; i++)
+		{
+        	mid_angle = (min_angle + max_angle) / 2;
+        	if (dy_by_angle(dh, v0, mid_angle) < dy_by_angle(dh, v0, mid_angle + EPSILON))
+        		min_angle = mid_angle;
+        	else
+        		max_angle = mid_angle;
+		}
+    	return (min_angle + max_angle) / 2;
     }
 	
 	public static Item drop(Location loc, ItemStack stack, double throw_power) {
@@ -161,15 +194,18 @@ public class Utils {
         return i;
 	}
 	
-	public static String vectorToString(Vector v) {
+	public static String toString(Vector v) {
+		if (v == null)
+			return "(null)";
 		DecimalFormat dec = new DecimalFormat("#0.00");
 		return ("("+dec.format(v.getX())+"; "
 				  +dec.format(v.getY())+"; "
 				  +dec.format(v.getZ())+")")
 				.replace(',', '.');
 	}
-	public static String locationToString(Location l) {
-		return vectorToString(new Vector(l.getX(), l.getY(), l.getZ()));
+	public static String toString(Location l) {
+		if (l == null) return toString((Vector)null);
+		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
 	
 	public static boolean hasDataField(ItemStack i, String field) {

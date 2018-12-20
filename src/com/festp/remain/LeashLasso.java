@@ -1,5 +1,8 @@
 package com.festp.remain;
 
+import java.util.function.Predicate;
+
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -7,6 +10,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
@@ -14,6 +18,7 @@ import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Turtle;
 import org.bukkit.entity.Vex;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import com.festp.Utils;
@@ -21,15 +26,17 @@ import com.mysql.jdbc.V1toV2StatementInterceptorAdapter;
 
 //spawn thrown beacon, which will die on collide(top or bottom)
 //(and spawn leash hitch if collides with fence - directly or above(air, water, e.t.c); miss lead if lava; (despawn delay if cactus))
+//returns on player quit (TO DO)
 public class LeashLasso {
 	public static final String BEACON_ID = "beacon_lasso";
 	private static LeashManager manager = null;
-	private static final Class<? extends LivingEntity> projectile_class = ArmorStand.class; //Bats are the only ones (?) who don't collide, but can't move
-	private static final Class<? extends LivingEntity> beacon_class = Bat.class; //parrots can't move player
-	private static final double LEAD_LOWERING = -0.8, FENCE_HALF_WIDTH = (4 / 16) / 2, EPSILON = 0.001;
-	private static final int MAX_DESPAWN_DELAY = 20;
+	public static final Class<? extends LivingEntity> projectile_class = ArmorStand.class;
+	private static final Class<? extends LivingEntity> beacon_class = Bat.class; //Bats(also Vexes and parrots) are the only ones who don't collide, but can't move
+	private static final double LEAD_LOWERING = -0.8, FENCE_HALF_WIDTH = (4 / 16) / 2, MOB_LEASH_R = 0.1, EPSILON = 0.001;
+	private static final int STICKY_DESPAWN_DELAY = 20, REMOVE_COOLDOWN = 60;
 	private static final Material[] STICKY_BLOCKS = { Material.CACTUS, Material.SLIME_BLOCK };
 	
+	Entity holder;
 	LivingEntity projectile;
 	LivingEntity workaround;
 	Location last_pos;
@@ -44,9 +51,10 @@ public class LeashLasso {
 	
 	public LeashLasso(Entity holder, Vector velocity)
 	{
-		last_pos = holder.getLocation();
+		this.holder = holder;
 		old_velocity = velocity;
-		Location spawn_loc = holder.getLocation().add(0, holder.getHeight() * 0.9, 0); //Eye location for any Entity, not only LivingEntity
+		Location spawn_loc = getThrowLocation(holder);
+		last_pos = spawn_loc;
 		
 		projectile = Utils.spawnBeacon(spawn_loc, BEACON_ID, projectile_class);
 		projectile.setGravity(true);
@@ -84,17 +92,17 @@ public class LeashLasso {
 			
 		Block current = projectile.getLocation().getBlock();
 		//unleash/break distance -> return lead
-		if (!workaround.isLeashed()) {
+		if (!workaround.isLeashed() || projectile.getWorld() != holder.getWorld() || workaround.getWorld() != holder.getWorld()) {
 			despawnLasso();
 			return false;
 		}
-		if(projectile.getLocation().distanceSquared(workaround.getLeashHolder().getLocation()) > LeashManager.LASSO_BREAK_SQUARE) {
+		if(projectile.getLocation().distanceSquared(holder.getLocation()) > LeashManager.LASSO_BREAK_SQUARE) {
 			dropLead();
 			despawnLasso();
 			return false;
 		}
 		//collide cactus/slime block -> return with delay
-		if (getFacedBlock(current_pos, STICKY_BLOCKS) != null) {
+		if (getFacedBlock(last_pos, STICKY_BLOCKS) != null) {
 			process_sticky();
 			return true;
 		}
@@ -135,13 +143,23 @@ public class LeashLasso {
 				return false;
 			}
 		}
+		
+		for (Entity e : projectile.getNearbyEntities(MOB_LEASH_R, MOB_LEASH_R, MOB_LEASH_R))
+			if (e instanceof LivingEntity && LeashManager.canLeashEntity(e))
+			{
+				leashEntity((LivingEntity)e);
+				despawnLasso();
+				return false;
+			}
+		
 		last_pos = current_pos;
+		old_velocity = projectile.getVelocity();
 		return true;
 	}
 	
 	private void dropLead()
 	{
-		Item lead = projectile.getWorld().dropItem(workaround.getLeashHolder().getLocation(), new ItemStack(Material.LEAD, 1));
+		Item lead = holder.getWorld().dropItem(holder.getLocation(), new ItemStack(Material.LEAD, 1));
 		lead.setPickupDelay(0);
 	}
 	private void despawnLasso()
@@ -150,11 +168,17 @@ public class LeashLasso {
 		projectile.remove();
 	}
 	
+	private void leashEntity(LivingEntity e)
+	{
+		//e.setLeashHolder(holder);
+		manager.addLeashed(holder, e, REMOVE_COOLDOWN);
+	}
+	
 	private void spawnLeashHitch(Block b)
 	{
 		Location hitch_loc = b.getLocation();
 		LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
-		manager.addLeashed(hitch, workaround.getLeashHolder());
+		manager.addLeashed(hitch, holder, REMOVE_COOLDOWN);
 		despawnLasso();
 	}
 	
@@ -169,7 +193,12 @@ public class LeashLasso {
 		projectile.teleport(getFacingLocation());
 		projectile.setVelocity(new Vector());
 		teleport_workaround();
-		despawn_delay = MAX_DESPAWN_DELAY;
+		despawn_delay = STICKY_DESPAWN_DELAY;
+	}
+	
+	public static Location getThrowLocation(Entity holder)
+	{
+		return holder.getLocation().add(0, holder.getHeight() * 0.9, 0); //Eye location for any Entity, not only LivingEntity
 	}
 	
 	/** @return <b>true</b> - true if moves to X/Z center of block */
@@ -214,7 +243,7 @@ public class LeashLasso {
 		}
 		//y moving had stopped
 		//y rebound
-		if (!almostZero(y1) && almostZero(y2) || y1 * y2 < 0) {
+		if (!almostZero(y1) && almostZero(y2) || y2 - y1 > 0) {
 			Block faced;
 			if (y1 < 0)
 				faced = main_block.getRelative(0, -1, 0);
@@ -241,7 +270,6 @@ public class LeashLasso {
 		double v2 = projectile.getVelocity().lengthSquared();
 		Location result = last_pos.clone();
 		//(loc_old * v_old + loc_new * v_new) / (v_old + v_new)
-		System.out.println(v1 +" "+ v2 + " -> " + result.getX() * v1 +" + "+projectile.getLocation().getX() * v2 +" * " + 1 / (v1 + v2) + " = " + (result.getX() * v1 + projectile.getLocation().getX() * v2) / (v1 * v2));
 		result.multiply(v1).add(projectile.getLocation().multiply(v2)).multiply(1 / (v1 + v2));
 		
 		Vector new_v = projectile.getVelocity();
