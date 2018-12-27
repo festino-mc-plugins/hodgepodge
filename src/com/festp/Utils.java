@@ -79,17 +79,34 @@ public class Utils {
 		return false;
 	}
 	
-	public static Vector throwVector(Location loc, double throw_power) {
+	public static void noGravityTemp(LivingEntity e, int ticks)
+	{
+		e.removePotionEffect(PotionEffectType.LEVITATION);
+		if (ticks > 0)
+			e.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, 255));
+	}
+
+	/** @return Vector in the <i>location</i> direction(using its yaw and pitch)*/
+	public static Vector throwVector(Location location, double throw_power) {
 		throw_power = THROW_POWER_K * throw_power;
-		double yaw = ( loc.getYaw() + 90 ) /180*Math.PI,
-		pitch = ( loc.getPitch() ) /180*Math.PI;
+		double yaw = ( location.getYaw() + 90 ) /180*Math.PI,
+		pitch = ( location.getPitch() ) /180*Math.PI;
 		double vec_x = Math.cos(yaw)*Math.cos(pitch)*throw_power,
 			vec_y = -Math.sin(pitch)*throw_power,
 			vec_z = Math.sin(yaw)*Math.cos(pitch)*throw_power;
 		return new Vector(vec_x,vec_y,vec_z);
 	}
 	
-	/** Minecraft parabola path calculating.
+	public static Vector nextTickVelocity(Vector v)
+	{
+		Vector new_v = new Vector();
+		new_v.setX(DECELERATION_H * v.getX());
+		new_v.setY(DECELERATION_V * (v.getY() - ACCELERATION_V));
+		new_v.setZ(DECELERATION_H * v.getZ());
+		return new_v;
+	}
+	
+	/** Minecraft parabola path calculating. Doesn't consider obstacles. (as if the world is empty)
 	 * @return <b>null</b> - if projectile can't reach target location. */
 	public static Vector throwVector(Location from, Location to, double power)
     {
