@@ -20,8 +20,8 @@ import com.festp.Utils;
 
 public class LeashedPlayer {
 	public static final String beacon_id = "leashing";
-	private static final double G = 2, DIST_CLIMBING = 0.3,
-			NO_TAN = -1;
+	private static final double G = 15, DIST_CLIMBING = 0.3, kspeed = 0.1d, E_friction = /*0.998*/1;  //2g
+	private static final float kxz = 0.05f, ky = 0.08f;
 	LivingEntity workaround;
 	Entity leashed;
 	private int cooldown_new = 0;
@@ -30,9 +30,10 @@ public class LeashedPlayer {
 	private static final int ticks_break = 20;
 	private int cooldown_remove = 0;
 
+	private Vector old_vel = new Vector();
 	private Location old_loc;
-	private Vector old_velocity = new Vector();
-	private double old_tan = NO_TAN;
+	private double last_fall_h = 0, E = 0;
+	private boolean up_dir = false;
 	
 	public LeashedPlayer(Entity holder, Entity leashed)
 	{
@@ -55,10 +56,6 @@ public class LeashedPlayer {
 				&& !(leashed instanceof Player && !((Player)leashed).isOnline() ) ) {
 			double dist2 = leashed.getLocation().distanceSquared(workaround.getLeashHolder().getLocation());
 			System.out.printf("   xyz: "+Utils.toString(new Vector(leashed.getLocation().getX(), leashed.getLocation().getY(), leashed.getLocation().getZ())));
-			if (dist2 > LeashManager.PULL_R2 && leashed instanceof LivingEntity)
-				Utils.noGravityTemp((LivingEntity)leashed, 50);
-			else
-				Utils.noGravityTemp((LivingEntity)leashed, 0);
 				
 			if(dist2 > LeashManager.R_BREAK_SQUARE && cooldown_remove <= 0) {
 				leashed.getWorld().dropItem(leashed.getLocation(), new ItemStack(Material.LEAD, 1));
@@ -74,8 +71,6 @@ public class LeashedPlayer {
 						velocity.add(new Vector(0, 0.3, 0));
 				leashed.setVelocity(velocity);
 			}
-			else
-				old_tan = NO_TAN;
 			
 			workaround.teleport(leashed);
 			if(leashed instanceof Player) {
@@ -105,8 +100,8 @@ public class LeashedPlayer {
 		}
 		
 		old_loc = leashed.getLocation();
-		old_velocity = leashed.getVelocity();
-		workaround.setVelocity(old_velocity); //more actual leash render
+		old_vel = leashed.getVelocity();
+		workaround.setVelocity(old_vel); //more actual leash render
 		return true;
 	}
 	
@@ -116,77 +111,111 @@ public class LeashedPlayer {
 	}
 	
 	private Vector calc_velocity_to_LeashHolder() {
-		//get leash constraints <- offset from attachment point
 		Location loc_holder = workaround.getLeashHolder().getLocation(), loc_leashed = leashed.getLocation();
-		double x0 = loc_holder.getX(), y0 = loc_holder.getY(), z0 = loc_holder.getZ();
-		double x1 = loc_leashed.getX(), y1 = loc_leashed.getY(), z1 = loc_leashed.getZ();
-		double dx = x0 - x1, dy = y0 - y1, dz = z0 - z1;
-		
-		//tangential velocity
-		double dh = loc_leashed.getY() - old_loc.getY();
-		double sign = Math.signum(dy) * ((old_velocity.angle(new Vector(dx, 0, dz)) > Math.PI / 2) ? 1 : -1);
-		Vector tan_velocity = new Vector(sign*dx, -(dx*dx + dz*dz) / dy, sign*dz);
-		if (old_tan == NO_TAN)
-			old_tan = old_velocity.length() * Math.cos(tan_velocity.angle(old_velocity));
-		double tan = Math.sqrt( Math.abs(old_tan*old_tan - 2*G*dh) ); // V2 = sqrt(V1*V1 - 2*g*dh) - law of energy conservation
-		
-		//centripetal velocity
-		Vector cen_velocity = new Vector(dx, dy, dz);
-		double cen = 0;
-		
-		//get player influence <- head angles(pitch): stop swinging(15 degrees from the bottom), climb up(15 degrees from the top), alter the direction(any other angles)
-		float from_top = 15, from_bottom = 15;
-		Location cam = leashed.getLocation();
-		float pitch = cam.getPitch();
-		if (pitch >= 90 - from_bottom)
-			tan = tan * Utils.DECELERATION_H;
-		else if (pitch <= -90 + from_top)
-		{
-			//under attachment point
-			if (dx*dx + dz*dz < DIST_CLIMBING)
-				cen = 0.1; //2 blocks per second
-			tan = tan * Utils.DECELERATION_H;
+		Vector velocity = new Vector( (loc_holder.getX()-loc_leashed.getX())*kxz,
+									  (loc_holder.getY()-loc_leashed.getY())*ky,
+									  (loc_holder.getZ()-loc_leashed.getZ())*kxz );
+		if(velocity.getY() <= 0) {
+			//levitation, other lifts
+			//velocity.setY(0.0d); //gravity works?
+			velocity.multiply(2);
+			//double move_x, move_z = velocity.getZ();
+			//leashed.teleport(leashed.getLocation().add(move_x, 0, move_z));
 		}
-		else
-		{
-			//increase tan(angle-depending), consider perpendicular to the vertical plane
+		else {
+			/*if(loc_holder.distanceSquared(loc_leashed) > R_SQUARE) {
+				System.out.println(loc_leashed);
+				
+				//XZ
+				double dx = loc_holder.getX() - loc_leashed.getX(), dz = loc_holder.getZ() - loc_leashed.getZ(), length_xz_square = dx*dx + dz*dz;
+				if( length_xz_square > R_SQUARE) {
+					double xz_mult = Math.sqrt( R_SQUARE/ (length_xz_square+1) );
+					loc_leashed.setX(loc_holder.getX()+dx*xz_mult);
+					loc_leashed.setZ(loc_holder.getZ()+dz*xz_mult);
+				}
+				dx = loc_holder.getX() - loc_leashed.getX();
+				dz = loc_holder.getZ() - loc_leashed.getZ();
+				length_xz_square = dx*dx + dz*dz;
+				//Y
+				loc_leashed.setY(loc_holder.getY()-Math.sqrt(R_SQUARE-length_xz_square));
+				leashed.teleport(loc_leashed);
+				workaround.teleport(leashed);
+
+				System.out.println(loc_leashed);
+			}*/
+			
+			//NOT Ep = Gh, Ek = v^2
+			//old V => dV => new V(rope acceleration) + dVxz; 
+
+			double dy = loc_holder.getY() - loc_leashed.getY();
+			double fall_h = LeashManager.R - dy, Ep = G*fall_h;
+			double dh = fall_h - last_fall_h;
+
+			//if zero??? division
+			double dx = loc_holder.getX()-loc_leashed.getX(), dz = loc_holder.getZ()-loc_leashed.getZ(), xz_length = Math.sqrt(dx*dx + dz*dz);
+			
+			if(Math.abs(dh) > 1d) {
+				E = Ep + leashed.getVelocity().lengthSquared();
+				if(E < 1d)
+					E = 0;
+				up_dir = false;
+				dh = 0;
+			}
+			//else if(dh > 0.001d) {
+			else if( old_vel.getX()*dx < 0 || old_vel.getZ()*dz < 0) {
+				up_dir = true;
+			}
+			else if(E < Ep) {
+				up_dir = false;
+			}
+			last_fall_h = fall_h;
+
+			double abs_kx = Math.abs(dx), abs_kz = Math.abs(dz);
+			if(abs_kx > abs_kz) { 
+				dz = dz / abs_kx;
+				dx = Math.signum(dx);
+			}
+			else {
+				dx = dx / abs_kz;
+				dz = Math.signum(dz);
+			}
+
+			double dist_k = loc_leashed.distanceSquared(loc_holder)/LeashManager.R_SQUARE;
+			double V = dist_k*Math.sqrt(Math.abs(E - Ep));//, h_R = Math.abs(fall_h) / R;//, h_R = Math.max(fall_h, 0) / R;
+			//double sin_a = 1 - h_R; if(sin_a < 0) sin_a = 1; double cos_a = Math.sqrt(1 - sin_a*sin_a);
+			double sin_a = dy/Math.sqrt(xz_length*xz_length + dy*dy), cos_a = Math.sqrt(1 - sin_a*sin_a);
+			double Vxz = V*sin_a, Vy = -V*cos_a;
+
+			//if(fall_h < 0.001d)
+			//	Vy = -Vy;
+			
+			Vector Vnew = new Vector(Vxz*dx, Vy, Vxz*dz);
+			
+			if(up_dir)
+				Vnew.multiply(-1d);
+			
+			dist_k = dist_k - 1;
+			Vector Vcenter = new Vector(dx*cos_a, Math.abs(fall_h)*sin_a, dz*cos_a);
+			Vcenter.multiply(dist_k*2);
+			Vnew.add(Vcenter);
+
+			Vnew.multiply(kspeed);
+			System.out.println("v new:   "+Vnew+"   v center: "+Vcenter+"(dist_k:"+dist_k+")");
+			
+			Vector player_move = leashed.getVelocity().subtract(old_vel).setY(0);
+			
+			velocity = Vnew.add(player_move);
+			
+			if(E < 1d)
+				velocity.setX(0).setZ(0);
+
+			//System.out.println("E: "+E+"   Ep: "+Ep+"   h: "+fall_h+"   dh: "+dh+"   UP: "+(up_dir ? "true" : "false") );
+			//System.out.println("V: "+V+" Vxz: "+Vxz+"("+kx+"; "+kz+") Vy: "+Vy);
+			System.out.println("v total: "+velocity);
+			
+			E = E*E_friction;
 		}
-		
-		
-		//get environmental influence <- bubbles, cobweb, slime blocks
-		//but also catch player movement, that should be filtered(but it ISN'T now)
-		//alter tan, consider perpendicular to the vertical plane
-		Vector expected_v = Utils.nextTickVelocity(old_velocity);
-		Vector actual_v = leashed.getVelocity();
-		Vector difference = actual_v.subtract(expected_v);
-
-		tan_velocity.normalize();
-		tan_velocity = tan_velocity.multiply(tan);
-		
-		//final calculations
-		double angle_v = sign * tan / (2 * Math.PI * LeashManager.R);
-		double alpha = 0; //alpha is the angle between Oxy and plane of swinging
-		if (dx*dz != 0)
-			alpha = (new Vector(dx, 0, dz)).angle(new Vector (1, 0 , 0));
-		if (dz < 0)
-			alpha = 2*Math.PI - alpha;
-
-		double start_angle = (new Vector(dx, -dy, dz)).angle(new Vector(0, 1, 0));
-		double xz = -LeashManager.R * Math.sin(angle_v + start_angle);
-		double y = y0 + LeashManager.R * Math.cos(angle_v + start_angle);
-		
-		double x = x0 + xz * Math.cos(alpha);
-		double z = z0 + xz * Math.sin(alpha);
-		Vector new_velocity = new Vector(x - x1, y - y1, z - z1); //tan component, circle motion
-		new_velocity = new_velocity.add(cen_velocity.multiply(cen));
-		//circle rotation around Oy
-
-		System.out.printf("old_tan: "+old_tan+", new_tan: "+tan+", vec: "+Utils.toString(old_velocity)+" -> "+Utils.toString(new_velocity)+" ("+(int)sign+")");
-		System.out.printf(Utils.toString(new Vector(x, y, z)) +" - "+Utils.toString(new Vector(x1, y1, z1)));
-		System.out.println("alpha: "+alpha+", start: "+start_angle+", sin new: "+Math.sin(angle_v + start_angle)+", sin/cos alpha: "+Math.sin(alpha)+"/"+Math.cos(alpha));
-		old_tan = tan;
-		
-		return new_velocity;
+		return velocity;
 	}
 
 	public boolean isCooldownless() {
