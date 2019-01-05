@@ -56,5 +56,5 @@ TO DO:
   • Soul stone crafts    
   • Food rebalance?  
   • Increase tripwire length.  
-  • com.festp.Utils improvements (God object, which has 1,5k lines of code, but is this normal for Utils?) 
+  • com.festp.Utils improvements (God object, which has 1.7k lines of code, but is this normal for Utils?) 
   • ? Coming soon ?
