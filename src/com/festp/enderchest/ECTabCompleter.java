@@ -1,6 +1,7 @@
 package com.festp.enderchest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,10 @@ import com.festp.mainListener;
 
 public class ECTabCompleter implements TabCompleter {
 	public static mainListener plugin;
+	private static final String ADMIN_CREATE = "acreate",
+			CREATE = "create", DELETE = "delete", CHANGE_OWNER = "changeowner", KICK = "kick",
+			INVITE = "invite", ACCEPT = "accept", LEAVE = "leave";
+	public static final String CMD_FULL = "enderchest", CMD_REDUCED = "ec";
 	
 	public ECTabCompleter(mainListener plugin) {
 		this.plugin = plugin;
@@ -20,87 +25,101 @@ public class ECTabCompleter implements TabCompleter {
 	
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-		if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 1)
+		if( cmd.getName().equalsIgnoreCase(CMD_REDUCED) || cmd.getName().equalsIgnoreCase(CMD_FULL) )
 		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
+			if(args.length == 1)
 			{
-				Player p = (Player)sender;
-				List<String> list;
-				if(plugin.ecgroup.getByNick(p.getName()) == null) list = (List<String>) plugin.getConfig().getList("enderchest.allungroupTips");
-				else if(plugin.ecgroup.getByNick(p.getName()).getOwner() == p.getName()) list = (List<String>) plugin.getConfig().getList("enderchest.allownerTips");
-				else list = (List<String>) plugin.getConfig().getList("enderchest.allgroupTips");
-				if(sender.isOp() && !list.contains("acreate")) list.add("acreate");
-				if(list == null) {
-					list = empty;
+				List<String> empty = new ArrayList<>();
+				if(sender instanceof Player)
+				{
+					Player p = (Player)sender;
+					List<String> list;
+					//ungrouped
+					if(plugin.ecgroup.getByNick(p.getName()) == null) list = (List<String>) plugin.getConfig().getList("enderchest.allungroupTips");
+					//owner
+					else if(plugin.ecgroup.getByNick(p.getName()).getOwner().equals(p.getName())) list = (List<String>) plugin.getConfig().getList("enderchest.allownerTips");
+					//member
+					else list = (List<String>) plugin.getConfig().getList("enderchest.allgroupTips");
+					if(sender.isOp() && !list.contains(ADMIN_CREATE)) list.add(ADMIN_CREATE);
+					if(list == null) {
+						list = empty;
+					}
+					return autocomplete(list,args[0]);
 				}
-				return autocomplete(list,args[0]);
 			}
-		}
-		//-create, +-delete, +kick, +invite, +accept, -info, +-leave, +changeowner
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("invite"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
+			//-create, +-delete, +kick, +invite, +accept, -info, +-leave, +changeowner
+			else if(args.length == 2)
 			{
-				Player p = (Player)sender;
-				EnderChest ec = plugin.ecgroup.getByNick(p.getName());
-				List<String> list = getUninvitedNames(ec,p.getName());
-				return (list == null ? empty : autocomplete(list,args[1]));
-			}
-		}
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("accept"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
-			{
-				Player p = (Player)sender;
-				List<String> list = new ArrayList<>();
-				if(plugin.ecgroup.getByNick(p.getName()) == null) list = getGroupnames(plugin.ecgroup,p.getName());
-				list.addAll(getAdminGroupnames(plugin.ecgroup,p.getName()));
-				return (list == null ? empty : autocomplete(list,args[1]));
-			}
-		}
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("kick"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
-			{
-				Player p = (Player)sender;
-				EnderChest ec = plugin.ecgroup.getByNick(p.getName());
-				List<String> list = getInvitedNames(ec,p.getName());
-				return (list == null ? empty : autocomplete(list,args[1]));
-			}
-		}
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("changeowner"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
-			{
-				Player p = (Player)sender;
-				EnderChest ec = plugin.ecgroup.getByNick(p.getName());
-				List<String> list = getInGroupNames(ec,p.getName());
-				return (list == null ? empty : autocomplete(list,args[1]));
-			}
-		}
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("leave"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(sender instanceof Player)
-			{
-				Player p = (Player)sender;
-				EnderChest ec = plugin.ecgroup.getByNick(p.getName());
-				List<String> list = getInGroupNames(ec,p.getName());
-				return (list == null ? empty : autocomplete(list,args[1]));
-			}
-		}
-		else if( (cmd.getName().equalsIgnoreCase("ec") || cmd.getName().equalsIgnoreCase("enderchest") ) && args.length == 2 && args[0].equalsIgnoreCase("delete"))
-		{
-			List<String> empty = new ArrayList<>();
-			if(!(sender instanceof Player) || ((Player)sender).isOp())
-			{
-				List<String> list = getAllGroupnames(plugin.ecgroup);
-				return (list == null ? empty : autocomplete(list,args[1]));
+				if (args[0].equalsIgnoreCase(INVITE))
+				{
+					List<String> empty = new ArrayList<>();
+					if(sender instanceof Player)
+					{
+						Player p = (Player)sender;
+						EnderChest ec = plugin.ecgroup.getByNick(p.getName());
+						List<String> list = getUninvitedNames(ec,p.getName());
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(ACCEPT))
+				{
+					List<String> empty = new ArrayList<>();
+					if(sender instanceof Player)
+					{
+						Player p = (Player)sender;
+						List<String> list = new ArrayList<>();
+						if(plugin.ecgroup.getByNick(p.getName()) == null) list = getGroupnames(plugin.ecgroup,p.getName());
+						list.addAll(getAdminGroupnames(plugin.ecgroup,p.getName()));
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(KICK))
+				{
+					List<String> empty = new ArrayList<>();
+					if(sender instanceof Player)
+					{
+						Player p = (Player)sender;
+						EnderChest ec = plugin.ecgroup.getByNick(p.getName());
+						List<String> list = getInvitedNames(ec,p.getName());
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(CHANGE_OWNER))
+				{
+					List<String> empty = new ArrayList<>();
+					if(sender instanceof Player)
+					{
+						Player p = (Player)sender;
+						EnderChest ec = plugin.ecgroup.getByNick(p.getName());
+						List<String> list = getInGroupNames(ec,p.getName());
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(LEAVE))
+				{
+					List<String> empty = new ArrayList<>();
+					if(sender instanceof Player)
+					{
+						Player p = (Player)sender;
+						EnderChest ec = plugin.ecgroup.getByNick(p.getName());
+						List<String> list = getInGroupNames(ec,p.getName());
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(DELETE))
+				{
+					List<String> empty = new ArrayList<>();
+					if(!(sender instanceof Player) || ((Player)sender).isOp())
+					{
+						List<String> list = getAllGroupnames(plugin.ecgroup);
+						return (list == null ? empty : autocomplete(list, args[1]));
+					}
+				}
+				else if(args[0].equalsIgnoreCase(ADMIN_CREATE) || args[0].equalsIgnoreCase(CREATE))
+				{
+					List<String> list = Arrays.asList("");
+					return list;
+				}
 			}
 		}
 		
