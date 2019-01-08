@@ -94,9 +94,6 @@ import org.bukkit.util.Vector;
 import com.festp.amethyst.ActiveAmSpawnBlocking;
 import com.festp.amethyst.PathfinderGoalAvoidAmBlocks;
 import com.festp.amethyst.PathfinderGoalAvoidAmEntities;
-import com.festp.boss.Boss;
-import com.festp.boss.BossHandler;
-import com.festp.boss.RandomLoot;
 import com.festp.dispenser.DropActions;
 import com.festp.enderchest.AdminChannelPlayer;
 import com.festp.enderchest.ECTabCompleter;
@@ -231,10 +228,6 @@ public class mainListener extends JavaPlugin implements Listener
     	StorageHandler handler_storage = new StorageHandler(this);
     	pm.registerEvents(handler_storage, this);
     	
-    	BossHandler bH = new BossHandler(this);
-    	getCommand("boss").setExecutor(bH);
-    	pm.registerEvents(bH, this);
-    	
     	EnderChestHandler ecH = new EnderChestHandler(this);
     	//pm.registerEvents(new EnderChestHandler(this), this);
     	pm.registerEvents(ecH, this);
@@ -280,11 +273,6 @@ public class mainListener extends JavaPlugin implements Listener
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
-					for(Boss boss : bH.bosslist) //TO DO: BossHandler.onTick()
-					{
-						boss.bossTick();
-					}
-					
 					for(World w : getServer().getWorlds())
 			    	{
 			    		for(Entity e : w.getEntities())

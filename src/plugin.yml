@@ -16,6 +16,4 @@ commands:
          item:
            description: Give enchanted/renamed item. Simple convenient /give.
            default: op
-         boss:
-           description: Deprecated, will be moved to separate plugin.
 api-version: 1.13
