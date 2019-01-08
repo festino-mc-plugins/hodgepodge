@@ -18,6 +18,7 @@ public class ECTabCompleter implements TabCompleter {
 			CREATE = "create", DELETE = "delete", CHANGE_OWNER = "changeowner", KICK = "kick",
 			INVITE = "invite", ACCEPT = "accept", LEAVE = "leave";
 	public static final String CMD_FULL = "enderchest", CMD_REDUCED = "ec";
+	private static final List<String> no_completion = Arrays.asList("");
 	
 	public ECTabCompleter(mainListener plugin) {
 		this.plugin = plugin;
@@ -115,15 +116,10 @@ public class ECTabCompleter implements TabCompleter {
 						return (list == null ? empty : autocomplete(list, args[1]));
 					}
 				}
-				else if(args[0].equalsIgnoreCase(ADMIN_CREATE) || args[0].equalsIgnoreCase(CREATE))
-				{
-					List<String> list = Arrays.asList("");
-					return list;
-				}
 			}
 		}
-		
-		return null;
+
+		return no_completion;
 	}
 
 	private List<String> getUninvitedNames(EnderChest ec, String name) {
