@@ -31,7 +31,7 @@ Main features can be divided into:
   • Diamond blocks frighten monsters, and blocks spawn of them while red-powered.  
   • Pumps like IndustrialCraft and BuildCraft pumps, which are dispensers with a special core inside. To work requires nether fences as a pipe, empty buckets to fill and at least one block of fluid beneath.  
   • Shared enderchests / enderchest groups. One enderchest inventory for several people. There are also channels without administrators and entry restrictions.  
-  • Storages - there are 2 types: bottomless (collect items of one type(Material), can grab items drom inventories, have GUI) and multitype (like shulker box that can be opened from inventory by click and can't die or despawn while dropped).
+  • Storages - there are 2 types: bottomless (collect items of one type(Material), can grab items drom inventories, have GUI) and multitype (like shulker box that can be opened from inventory by click and can't die or despawn while dropped).  
   • Tomes (summon minecarts, boats and horses)  
   • Soul stones: ...  
 5) Craft changes: (all changes are added in CraftManager, but it should have its own config files)  
@@ -56,5 +56,5 @@ TO DO:
   • Soul stone crafts    
   • Food rebalance?  
   • Increase tripwire length.  
-  • com.festp.Utils improvements (God object, which has 1,5k lines of code, but is this normal for Utils?) 
+  • com.festp.Utils improvements (God object, which has 1.7k lines of code, but is this normal for Utils?) 
   • ? Coming soon ?
