@@ -33,6 +33,7 @@ import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -116,7 +117,7 @@ public class StorageHandler implements Listener {
 			if(opened_inv == null) continue;
 			boolean updated = false;
 			for(Inventory inv : new Inventory[] {opened_inv.getBottomInventory(), opened_inv.getTopInventory()}) {
-				updated = process_grab_inv(inv);
+				updated |= process_grab_inv(inv);
 			}
 			if(updated) {
 				p.updateInventory();
@@ -152,20 +153,26 @@ public class StorageHandler implements Listener {
 		}
 	}
 	
+	public boolean grabbing_inv(Inventory inv) {
+		return !(inv.getType() == InventoryType.ANVIL || inv.getType() == InventoryType.BEACON || inv.getType() == InventoryType.BREWING
+				 || inv.getType() == InventoryType.CRAFTING || inv.getType() == InventoryType.WORKBENCH
+				 || inv.getType() == InventoryType.ENCHANTING || inv.getType() == InventoryType.FURNACE || inv.getType() == InventoryType.MERCHANT);
+	}
+	
 	public boolean process_grab_inv(Inventory inv) {
-		if(inv == null) return false;
+		if (inv == null || !grabbing_inv(inv)) return false;
 		ItemStack[] stacks = inv.getContents();
 		boolean updated = false;
-		for(int i = 0; i < stacks.length; i++) {
+		for (int i = 0; i < stacks.length; i++) {
 			boolean updated_storage = false;
-			if(stacks[i] == null) continue;
+			if (stacks[i] == null) continue;
 			int storage_id = Storage.getID(stacks[i]);
-			if(storage_id >= 0) {
+			if (storage_id >= 0) {
 				Storage st = plugin.stlist.get(storage_id);
-				if(!canGrabInventory(inv, st)) continue;
+				if (!canGrabInventory(inv, st)) continue;
 				Pair<Boolean, ItemStack[]> upd_stacks = st.unlim_inv.grabInventory(stacks);
 				updated_storage = upd_stacks.first;
-				if(updated_storage) {
+				if (updated_storage) {
 					updated = true;
 					stacks = upd_stacks.second;
 					ItemMeta storage_meta = stacks[i].getItemMeta();
@@ -174,7 +181,7 @@ public class StorageHandler implements Listener {
 				}
 			}
 		}
-		if(updated) {
+		if (updated) {
 			inv.setContents(stacks);
 		}
 		return updated;
@@ -187,12 +194,13 @@ public class StorageHandler implements Listener {
         for(ItemStack is : e.getInventory().getContents()) {
         	int id = Storage.getID(is);
         	if(id >= 0) {
-        		plugin.stlist.get(id);
+        		plugin.stlist.tryLoad(id);
         	}
         }
     }
 
-	//deny crafting firework from firework star and etc
+	//deny crafting fireworks from firework star and etc
+	//TO DO: add a tag for items that can't be used in crafting (but what is about recurrent upgrades?)
 	@EventHandler
 	public void onPrepareItemCraft(PrepareItemCraftEvent event) {
 		for(ItemStack is : event.getInventory().getMatrix()) {
@@ -212,8 +220,8 @@ public class StorageHandler implements Listener {
 				event.setCancelled(true);
 				Storage st = plugin.stlist.get(id);
 				if(st == null) {
-					System.err.println("Storage(ID="+id+") could not load");
-					//delete storage tag from itemstack
+					plugin.getLogger().severe("Storage(ID="+id+") could not load (on interact)");
+					//delete storage tag from itemstack or create new storage - configurable?
 					return;
 				}
 				if(st.getType() == StorageType.MULTITYPE) // || st.getType() == StorageType.BOTTOMLESS && st.unlim_inv.isDefined()
@@ -307,8 +315,9 @@ public class StorageHandler implements Listener {
 	//Storage logic
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onInventoryClick(InventoryClickEvent event) {
-		if(event.isCancelled()) return;
-		if(event.getClick() == ClickType.CREATIVE) return;
+		if (event.isCancelled()) return;
+		if (event.getClick() == ClickType.CREATIVE) return; //TO DO: fix creative inv clicks
+		if ((event.getClick() == ClickType.LEFT || event.getClick() == ClickType.SHIFT_LEFT) && !grabbing_inv(event.getClickedInventory())) return;
 		/*  =left to transfer item
 	    -right to open inventory/open settings menu
 	    =shift-left to transfer item
@@ -320,7 +329,7 @@ public class StorageHandler implements Listener {
 		if( id_current >= 0 ) {
 			Storage st = plugin.stlist.get(id_current);
 			if(st == null) {
-				System.err.println("Storage(ID="+id_current+") could not load");
+				plugin.getLogger().severe("Storage(ID="+id_current+") could not load (on inv click: "+event.getClick()+")");
 				//delete storage tag from itemstack?
 				return;
 			}
@@ -417,7 +426,8 @@ public class StorageHandler implements Listener {
 		//Multitype only allowed
 		Storage st = plugin.stlist.findByInventory(event.getView().getTopInventory());
 		if(st != null && st.getType() == StorageType.MULTITYPE) {
-			switch(event.getType()) {
+			switch(event.getType())
+			{
 			case EVEN:
 			case SINGLE:
 				if(!st.isAllowed(event.getOldCursor()))
@@ -427,6 +437,7 @@ public class StorageHandler implements Listener {
 		}
 	}
 
+	//immortality of storage
 	@EventHandler
 	public void onEntityDamage(EntityDamageEvent event) {
 		if(event.getEntityType() != EntityType.DROPPED_ITEM) return;
@@ -445,518 +456,4 @@ public class StorageHandler implements Listener {
 			drop.remove();*/
 		}
 	}
-
-	/*@EventHandler
-	public void onCreativeInventoryClick(InventoryCreativeEvent event) {
-		onInventoryClick(event);
-	}*/
-
-	/*public void onInventoryDrag(InventoryDragEvent event) {
-		Storage st = plugin.stlist.findByInventory(event.getView().getTopInventory());
-		if(st == null) return;
-		if(st.getType() != StorageType.BOTTOMLESS) return;
-		
-		BottomlessInventory unlim_inv = st.unlim_inv;
-		switch(event.getType()) {
-		case EVEN:
-		case SINGLE:
-			Integer[] raw_slots = (Integer[]) event.getRawSlots().toArray();
-			ItemStack[] items = (ItemStack[]) event.getNewItems().values().toArray();
-			for(int i=0; i < raw_slots.length; i++) {
-				if(items[i] != null && items[i].getType() == unlim_inv.getMaterial() && raw_slots[i] < event.getView().getTopInventory().getSize()) {
-					unlim_inv.changeAmount(items[i].getAmount());
-				}
-			}
-			break;
-		}
-	}*/
-
-	/*
-	//Storage logic
-	@EventHandler(priority=EventPriority.LOWEST)
-	public void onInventoryClick(InventoryClickEvent event) {
-		if(event.isCancelled()) return;
-		/*  =left to transfer item
-	    -right to open inventory/open settings menu
-	    =shift-left to transfer item
-	    =drop to drop item
-	    -control-drop to drop items from inventory* /
-		ItemStack current_item = event.getCurrentItem(), cursor = event.getCursor();
-		
-		int id_current = Storage.getID( current_item );
-		if( id_current >= 0 ) {
-			Storage st = plugin.stlist.get(id_current);
-			if(st == null) {
-				System.err.println("Storage(ID="+id_current+") could not load");
-				//delete storage tag from itemstack?
-				return;
-			}
-
-			//CHANGE STORAGE TYPE / ADD ITEMS
-			if(cursor != null && cursor.getType() != Material.AIR) {
-				if(st.getType() == StorageType.BOTTOMLESS) {
-					
-					if(st.unlim_inv.getMaterial() != current_item.getType()) {
-						if(st.isEmpty()) {
-							plugin.stlist.storages.remove(st);
-							if(current_item.getItemMeta().getEnchantLevel(Enchantment.ARROW_INFINITE) == 1) //BOTTOMLESS
-								plugin.stlist.storages.add(new Storage(StoragesFileManager.nextID, plugin.mainworld.getFullTime(), current_item.getType()));
-							event.setCancelled(true);
-						}
-					}
-					else {
-						event.setCancelled(true);
-						st.unlim_inv.changeAmount(current_item.getAmount());
-						event.setCursor(null);
-						updating_invs.add(event.getClickedInventory());
-					}
-					
-					current_item.getItemMeta().setLore(st.unlim_inv.getLore());
-				}
-			}
-			
-			//OPEN INV/SETTINGS, DROP INV
-			else
-			switch(event.getClick())
-			{
-			case RIGHT:
-				if(st.getType() == StorageType.MULTITYPE) {
-					event.getWhoClicked().openInventory(st.getInventory());
-				}
-				else if(st.getType() == StorageType.BOTTOMLESS) {
-					//settings
-					//autotake(deny, on move, always), item(can't change if isn't empty),
-					event.getWhoClicked().openInventory(st.unlim_inv.getMenu());
-				}
-				st.grabbing_inventory = event.getClickedInventory();
-				event.setCancelled(true);
-				break;
-			case DROP:
-				st.grabbing_inventory = null;
-				break;
-			case CONTROL_DROP:
-				event.setCancelled(true);
-				st.drop(event.getWhoClicked().getEyeLocation());
-				break;
-			default:
-				//MOVE STORAGE TO NEW INV
-				if(event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-					if(event.getClickedInventory() != event.getView().getTopInventory()) {
-						if(event.getView().getTopInventory().firstEmpty() >= 0)
-							st.grabbing_inventory = event.getView().getTopInventory();
-					}
-					else if(event.getClickedInventory() != event.getView().getBottomInventory()) {
-						if(event.getView().getBottomInventory().firstEmpty() >= 0)
-							st.grabbing_inventory = event.getView().getTopInventory();
-					}
-					if(canGrabInventory(st)) {
-						st.unlim_inv.grabInventory();
-						current_item.getItemMeta().setLore(st.unlim_inv.getLore());
-					}
-				}
-				//MOVE STORAGE TO NEW INV
-				else if(event.getAction() == InventoryAction.PLACE_ONE || event.getAction() == InventoryAction.PLACE_ALL
-						|| event.getAction() == InventoryAction.PLACE_SOME || event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
-					st.grabbing_inventory = event.getClickedInventory();
-					if(canGrabInventory(st)) {
-						st.unlim_inv.grabInventory();
-						current_item.getItemMeta().setLore(st.unlim_inv.getLore());
-					}
-				}
-				else {
-					boolean opened = false;
-					if(st.getInventory().getViewers().contains(event.getWhoClicked()))
-						opened = true;
-					st.getInventory().getViewers().clear();
-					if(opened)
-						event.getWhoClicked().openInventory(st.getInventory());
-				}
-			}
-		}
-
-		//MOVE STORAGE TO NEW INV
-		int id_cursor = Storage.getID( event.getCursor() );
-		if( id_cursor >= 0 ) {
-			Storage st = plugin.stlist.get(id_cursor);
-			if(st == null) {
-				System.err.println("Storage(ID="+id_cursor+") could not load");
-				return;
-			}
-			if(st.getType() == StorageType.BOTTOMLESS)
-				if(event.getAction() == InventoryAction.PLACE_ONE || event.getAction() == InventoryAction.PLACE_ALL || event.getAction() == InventoryAction.PLACE_SOME
-				|| event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
-					st.grabbing_inventory = event.getClickedInventory();
-					if(canGrabInventory(st)) {
-						st.unlim_inv.grabInventory();
-						cursor.getItemMeta().setLore(st.unlim_inv.getLore());
-					}
-				}
-		}
-
-		event.setCurrentItem(current_item);
-		event.getWhoClicked().setItemOnCursor(cursor);
-		//updating_invs.add(event.getClickedInventory());
-		/*updating_invs.add(event.getView().getBottomInventory());
-		updating_invs.add(event.getView().getTopInventory());* /
-
-		Storage st = plugin.stlist.findByInventory(event.getView().getTopInventory());
-		if(st == null) return;
-		
-		if(id_cursor >= 0) {
-			event.setCancelled(true);
-			return; //block all storage interacts - TO DO: allow move inside bottom inv
-		}
-		
-		if(st.getType() == StorageType.MULTITYPE) {
-			System.out.println("top "+event.getView().getTopInventory()+" clicked: "+event.getClickedInventory());
-			System.out.println("cursor "+event.getCursor()+" current: "+event.getCurrentItem());
-			switch(event.getAction())
-			{
-			case PLACE_ALL:
-			case PLACE_ONE:
-			case PLACE_SOME:
-			case SWAP_WITH_CURSOR:
-				if(event.getView().getTopInventory() == event.getClickedInventory())
-					if(!st.isAllowed(event.getCurrentItem())) {
-						System.out.println("LMB CANCELLED");
-						event.setCancelled(true);
-						//updating_invs.add(event.getClickedInventory());
-						return;
-					}
-				break;
-			case MOVE_TO_OTHER_INVENTORY:
-				if(event.getView().getTopInventory() != event.getClickedInventory())
-					if(!st.isAllowed(event.getCurrentItem())) {
-						System.out.println("MOVE CANCELLED");
-						event.setCancelled(true);
-						//updating_invs.add(event.getClickedInventory());
-						return;
-					}
-				break;
-			case COLLECT_TO_CURSOR:
-			case DROP_ALL_SLOT:
-			case DROP_ONE_SLOT:
-			case PICKUP_ALL: 
-			case PICKUP_HALF:
-			case PICKUP_ONE:
-			case PICKUP_SOME:
-			default:
-				break;
-			}
-			//((Player)event.getWhoClicked()).updateInventory();
-			st.setEdited(true);
-		}
-	}
-
-	/*
-	//Storage logic
-	@EventHandler
-	public void onInventoryClick(InventoryClickEvent event) {
-		/*  =left to transfer item
-	    -right to open inventory
-	    =shift-left to transfer item
-	    -shift-right to open settings menu
-	    =drop to drop item
-	    -control-drop to drop items from inventory* /
-		System.out.println("START: "+event.getCursor()+" "+event.getCurrentItem());
-		
-		int id = Storage.getID( event.getCurrentItem() );
-		if( id >= 0 ) {
-			Storage st = plugin.stlist.get(id);
-			if(st == null) {
-				System.err.println("Storage(ID="+id+") could not load");
-				//delete storage tag from itemstack
-				return;
-			}
-			
-			//open
-			if(event.getClick() == ClickType.RIGHT) {
-				if(st.getType() == StorageType.MULTITYPE || st.getType() == StorageType.BOTTOMLESS && st.unlim_inv.isDefined())
-					event.getWhoClicked().openInventory(st.getInventory());
-				event.setCancelled(true);
-			}
-			//settings
-			else if(event.getClick() == ClickType.SHIFT_RIGHT && st.getType() == StorageType.BOTTOMLESS) {
-				//autotake(deny, on move, always), item(can't change if isn't empty),
-				
-				ItemStack material_button = st.unlim_inv.genMaterialButton();
-				ItemStack grab_button = st.unlim_inv.genGrabButton();
-				
-				InventoryMenu new_menu = new InventoryMenu(st.unlim_inv, new ItemStack[] {
-						grab_button, null, null, null, null, null, null, null, material_button},
-						"Storage settings", 3);
-				
-				event.getWhoClicked().openInventory(new_menu.getGUI());
-				
-				event.setCancelled(true);
-			}
-			else if(event.getClick() == ClickType.CONTROL_DROP) {
-				st.drop(event.getWhoClicked().getEyeLocation());
-				event.setCancelled(true);
-			}
-		}
-
-
-		
-		//if(!(event.getView().getTopInventory() == event.getClickedInventory() || event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)) return;
-
-		/*change bottomless if changed bottomless, deny forbidden materials
-		update if changed multitype* /
-		Storage st = plugin.stlist.findByInventory(event.getView().getTopInventory());
-		if(st == null) return;
-		
-		if(id >= 0) return; //block all storage interacts - TO DO: allow move inside bottom inv
-		
-		if(st.getType() == StorageType.BOTTOMLESS) {
-			BottomlessInventory unlim_inv = st.unlim_inv;
-			int max_stack = st.unlim_inv.getMaterial().getMaxStackSize();
-			
-			/*if(!st.isAllowed(current_item)) {
-				event.setCancelled(true);
-				return;
-			}* /
-			
-			ItemStack current_item = event.getCurrentItem(), cursor = event.getCursor();
-
-			Inventory storage_inv = event.getView().getTopInventory();
-			
-			switch(event.getAction())
-			{
-			case MOVE_TO_OTHER_INVENTORY:
-				//emit
-				event.setCancelled(true);
-				if(event.getClickedInventory() != storage_inv) { //if allowed, move all to storage
-					if(st.isAllowed(event.getCursor())) {
-						unlim_inv.changeAmount(cursor.getAmount());
-						cursor.setAmount(0);
-						st.edited = true;
-					}
-				}
-				else { //find free space in player inventory, prior completing stacks
-					int first_empty = -1;
-					Inventory player_inv = event.getClickedInventory();
-					int amount = cursor.getAmount();
-					for(int i=0; i < player_inv.getSize(); i++) {
-						if(player_inv.getItem(i) == null) {
-							if(first_empty < 0)
-								first_empty = i;
-						}
-						else if(player_inv.getItem(i).getType() == unlim_inv.getMaterial()) {
-							int damount = Math.min(amount, max_stack-player_inv.getItem(i).getAmount());
-							player_inv.getItem(i).setAmount(player_inv.getItem(i).getAmount()+damount);
-							amount -= damount;
-							if(amount == 0)
-								break;
-						}
-					}
-					if(amount > 0 && first_empty >= 0) {
-						player_inv.setItem(first_empty, new ItemStack(unlim_inv.getMaterial(), amount));
-						amount = 0;
-					}
-					cursor.setAmount(amount);
-					st.edited = true;
-				}
-				break;
-			case COLLECT_TO_CURSOR:
-				//emit
-				event.setCancelled(true);
-				if(event.getClickedInventory() != storage_inv) { //complete stack from storage, start from the least stacks 
-					if(st.isAllowed(cursor)) {
-						ItemStack[] stacks = storage_inv.getContents();
-						Arrays.sort(stacks, new Comparator<ItemStack>() {
-						    @Override
-							public int compare(ItemStack a, ItemStack b) {
-						    	if(a == null)
-						    		return -1;
-						    	else if(b == null)
-						    		return 1;
-						        return a.getAmount() - b.getAmount(); 
-						    } 
-						});
-						int amount = max_stack - cursor.getAmount();
-						for(int i=0; i<stacks.length; i++) {
-							System.out.println(stacks[i]);
-							if(stacks[i] == null)
-								break;
-							int damount = Math.min(amount, max_stack-stacks[i].getAmount());
-							cursor.setAmount(cursor.getAmount()+damount);
-							unlim_inv.changeAmount(-damount);
-							stacks[i].setAmount(stacks[i].getAmount()-damount);
-							if(stacks[i].getAmount() == 0)
-								stacks[i] = new ItemStack(unlim_inv.getMaterial(), Math.min(max_stack, unlim_inv.getAmount()-unlim_inv.getCurrentPageAmount(storage_inv)+damount));
-							amount -= damount;
-							if(amount == 0)
-								break;
-						}	
-						st.edited = true;
-					}
-				}
-				else { //get TO CURSOR from player inv
-					ItemStack[] stacks = event.getWhoClicked().getInventory().getContents();
-					int amount = max_stack - cursor.getAmount();
-					for(int i=9; i >= 0; i+=(i<9 ? -1 : 1)) {
-						if(i >= stacks.length) i = 8;
-						if(stacks[i] == null)
-							continue;
-						int damount = Math.min(amount, max_stack-stacks[i].getAmount());
-						cursor.setAmount(cursor.getAmount()+damount);
-						stacks[i].setAmount(stacks[i].getAmount()-damount);
-						amount -= damount;
-						if(amount == 0)
-							break;
-					}	
-				}
-				break;
-			case DROP_ONE_SLOT:
-				//change
-				if(event.getClickedInventory() == storage_inv) {
-					unlim_inv.changeAmount(-1);
-					st.edited = true;
-				}
-				break;
-			case DROP_ALL_SLOT:
-				//change
-				if(event.getClickedInventory() == storage_inv) {
-					unlim_inv.changeAmount(-current_item.getAmount());
-					st.edited = true;
-				}
-				break;
-			case PICKUP_HALF:
-				if( event.getClickedInventory() == storage_inv) {
-					event.setCancelled(true);
-					int amount = current_item.getAmount();
-					int damount = (amount+1)/2;
-					cursor.setType(unlim_inv.getMaterial());
-					System.out.println(cursor);
-					cursor.setAmount(damount);
-					System.out.println(cursor);
-					unlim_inv.changeAmount(-damount);
-					current_item.setAmount(amount-damount);
-					System.out.println(damount+" "+(amount-damount)+" "+current_item.getAmount());
-					if(current_item.getAmount() == 0)
-						event.setCurrentItem(new ItemStack(unlim_inv.getMaterial(), Math.min(max_stack, unlim_inv.getAmount()-unlim_inv.getCurrentPageAmount(storage_inv)+damount)));
-					st.edited = true;
-				}
-				break;
-			case PICKUP_ONE:
-				if( event.getClickedInventory() == storage_inv) {
-					event.setCancelled(true);
-					cursor.setType(unlim_inv.getMaterial());
-					cursor.setAmount(1);
-					unlim_inv.changeAmount(-1);
-					current_item.setAmount(current_item.getAmount()-1);
-					if(current_item.getAmount() == 0)
-						event.setCurrentItem(new ItemStack(unlim_inv.getMaterial(), Math.min(max_stack, unlim_inv.getAmount()-unlim_inv.getCurrentPageAmount(storage_inv)+1)));
-					st.edited = true;
-				}
-				break;
-			case PICKUP_ALL:
-			case PICKUP_SOME:
-				if( event.getClickedInventory() == storage_inv) {
-					event.setCancelled(true);
-					int amount = current_item.getAmount();
-					cursor.setType(unlim_inv.getMaterial());
-					cursor.setAmount(amount);
-					unlim_inv.changeAmount(-amount);
-					event.setCurrentItem(new ItemStack(unlim_inv.getMaterial(), Math.min(max_stack, unlim_inv.getAmount()-unlim_inv.getCurrentPageAmount(storage_inv)+amount)));
-					st.edited = true;
-				}
-				break;
-			case PLACE_ONE:
-				//check if top inv clicked and item is allowed
-				//storage one
-				if( event.getClickedInventory() == storage_inv) {
-					event.setCancelled(true);
-					if(st.isAllowed(cursor)) {
-						int damount = Math.min(1, max_stack-current_item.getAmount());
-						current_item.setAmount(cursor.getAmount()+damount);
-						
-						unlim_inv.changeAmount(1);
-						cursor.setAmount(cursor.getAmount()-1);
-						st.edited = true;
-					}
-				}
-				break;
-			case PLACE_ALL:
-			case PLACE_SOME:
-				//check if top inv clicked and item is allowed
-				//storage all
-			case SWAP_WITH_CURSOR:
-				if(event.getClickedInventory() == storage_inv) {
-					if(st.isAllowed(cursor)) {
-						int damount = Math.min(cursor.getAmount(), max_stack-current_item.getAmount());
-						current_item.setAmount(cursor.getAmount()+damount);
-						
-						unlim_inv.changeAmount(cursor.getAmount());
-						cursor.setAmount(0);
-						st.edited = true;
-					}
-					event.setCancelled(true);
-				}
-
-				//check if allowed, change if allowed
-				/*int old_amount = st.unlim_inv.getPageAmount();
-				int new_amount = st.unlim_inv.getCurrentPageAmount(event.getView(), 0, storage_inv.getSize());
-				System.out.println(old_amount+" "+new_amount);
-				if(old_amount != new_amount) {
-					st.unlim_inv.changeAmount(new_amount-old_amount);
-					st.edited = true;
-					int empty_slot = storage_inv.firstEmpty(), free_amount = st.unlim_inv.getAmount() - new_amount;
-					free_amount = (free_amount > st.unlim_inv.getMaterial().getMaxStackSize()) ? st.unlim_inv.getMaterial().getMaxStackSize() : free_amount;
-					if(empty_slot >= 0 && free_amount > 0) {
-						storage_inv.setItem(empty_slot, new ItemStack(st.unlim_inv.getMaterial(), free_amount));
-					}
-				}* /
-				break;
-			default:
-				break;
-			}
-			event.setCurrentItem(current_item);
-			event.setCursor(cursor);
-			//event.getWhoClicked().setItemOnCursor(cursor);
-		}
-		else if(st.getType() == StorageType.MULTITYPE) {
-			switch(event.getAction())
-			{
-			case PLACE_ALL:
-			case PLACE_ONE:
-			case PLACE_SOME:
-			case SWAP_WITH_CURSOR:
-			case MOVE_TO_OTHER_INVENTORY:
-				if(event.getView().getTopInventory() != event.getClickedInventory())
-					if(!st.isAllowed(event.getCurrentItem())) {
-						event.setCancelled(true);
-						return;
-					}
-			case COLLECT_TO_CURSOR:
-			case DROP_ALL_SLOT:
-			case DROP_ONE_SLOT:
-			case PICKUP_ALL: 
-			case PICKUP_HALF:
-			case PICKUP_ONE:
-			case PICKUP_SOME:
-				st.edited = true;
-			default:
-				break;
-			}
-		}
-		
-		//change storage type if empty
-		id = Storage.getID(event.getCursor());
-		if(id >= 0) {
-			st = plugin.stlist.get(id);
-			if(st.isEmpty()) {
-				if(st.unlim_inv.getMaterial() != event.getCurrentItem().getType()) {
-					plugin.stlist.storages.remove(st);
-					if(event.getCursor().getItemMeta().getEnchantLevel(Enchantment.ARROW_INFINITE) == 1) //BOTTOMLESS
-						plugin.stlist.storages.add(new Storage(StoragesFileManager.nextID, plugin.mainworld.getFullTime(), event.getCurrentItem().getType()));
-					else if(event.getCursor().getItemMeta().getEnchantLevel(Enchantment.DIG_SPEED) == 1) //MULTITYPE
-						plugin.stlist.storages.add(new Storage(StoragesFileManager.nextID, plugin.mainworld.getFullTime()));
-					event.setCancelled(true);
-				}
-			}
-		}
-		System.out.println("END: "+event.getCursor()+" "+event.getCurrentItem());
-	}
-	*/
 }
