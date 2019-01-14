@@ -246,7 +246,15 @@ public class Utils {
 	}
 	
 	public static <T extends LivingEntity> T spawnBeacon(Location l, String type, Class<T> entity) {
-		T beacon = l.getWorld().spawn(l, entity);
+		T beacon;
+ 		if(entity == Vex.class) { //doesn't work without the consumer
+ 			beacon = l.getWorld().spawn(l, entity, (vex) -> {
+ 				vex.getEquipment().setItemInMainHand(null);
+            });
+ 		}
+ 		else
+ 			beacon = l.getWorld().spawn(l, entity);
+ 			
  		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
  		beacon.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000000, 5, false, false));
  		beacon.setAI(false);
@@ -254,6 +262,7 @@ public class Utils {
  		beacon.setCollidable(false);
  		beacon.setGravity(false);
  		beacon.setInvulnerable(true);
+ 		
  		if(beacon instanceof Turtle) {
  			Turtle turtle = (Turtle)beacon;
  			turtle.setBaby();
@@ -262,11 +271,6 @@ public class Utils {
  		else if(beacon instanceof Bat) {
  			Bat bat = (Bat)beacon;
  			//bat.setAwake(true);
- 		}
- 		else if(beacon instanceof Vex) {
- 			Vex vex = (Vex)beacon;
- 			vex.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
- 			vex.getEquipment().setItemInOffHand(new ItemStack(Material.AIR));
  		}
 
 	 	ItemStack identificator = new ItemStack(Material.STONE_BUTTON);
@@ -280,21 +284,6 @@ public class Utils {
  	 		beacon.getEquipment().setHelmet(identificator);
  		}
  		return beacon;
-	}
-	
-	public static Entity spawnBeacon_old(Location l, String name) {
-		Bat temp = l.getWorld().spawn(l, Bat.class);
-		if(name != null)
-			temp.setCustomName(name);
- 		temp.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
- 		temp.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000000, 5, false, false));
- 		//temp.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( 10000 );
- 		temp.setAI(false);
- 		temp.setSilent(true);
- 		temp.setCollidable(false);
- 		temp.setGravity(false);
- 		temp.setInvulnerable(true);
- 		return temp;
 	}
 	
 	public static boolean contains_all_of(String str, String... args) {
