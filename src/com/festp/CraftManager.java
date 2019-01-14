@@ -25,6 +25,8 @@ import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.RecipeChoice.MaterialChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BlockStateMeta;
@@ -42,7 +44,8 @@ import net.minecraft.server.v1_13_R2.NBTTagCompound;
 public class CraftManager implements Listener {
 	Server server;
 	mainListener plugin;
-	
+
+	ItemStack zero_storage_bottomless, zero_storage_multitype; //references, instances
 	ItemMeta storage_meta_bottomless, storage_meta_multitype;
 	int items_limit = 64*54;
 	int items_stacks_limit = 54;
@@ -54,21 +57,24 @@ public class CraftManager implements Listener {
 		this.plugin = plugin;
 		this.server = server;
 		
-		ItemStack someneeded_it = new ItemStack(Material.STONE, 1);
-		someneeded_it.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
-		someneeded_it = setStorageID(someneeded_it, 0);
-		storage_meta_bottomless = someneeded_it.getItemMeta();
-		storage_meta_bottomless.setDisplayName("Storage"); //Хранилище
-		storage_meta_bottomless.setLore(Arrays.asList("0 items"));
-		storage_meta_bottomless.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		 // Zero storages
+		zero_storage_bottomless = new ItemStack(Material.FIREWORK_STAR, 1);
+			storage_meta_bottomless = zero_storage_bottomless.getItemMeta();
+			storage_meta_bottomless.setDisplayName("Storage");
+			storage_meta_bottomless.setLore(Arrays.asList("0 items"));
+			storage_meta_bottomless.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		zero_storage_bottomless.setItemMeta(storage_meta_bottomless);
+		zero_storage_bottomless.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
+		zero_storage_bottomless = setStorageID(zero_storage_bottomless, 0);
 		
-		ItemStack someneeded_it2 = new ItemStack(Material.STONE, 1);
-		someneeded_it2.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
-		someneeded_it2 = setStorageID(someneeded_it2, 0);
-		storage_meta_multitype = someneeded_it2.getItemMeta();
-		storage_meta_multitype.setDisplayName("Storage"); //Хранилище
-		storage_meta_multitype.setLore(Arrays.asList("Smart storage. Maybe smarter than you.")); //Storage's stupidon't!
-		storage_meta_multitype.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		zero_storage_multitype = new ItemStack(Material.FIREWORK_STAR, 1);
+			storage_meta_multitype = zero_storage_multitype.getItemMeta();
+			storage_meta_multitype.setDisplayName("Storage");
+			storage_meta_multitype.setLore(Arrays.asList("Smart storage. Maybe smarter than you.")); //Storage's stupidon't!
+			storage_meta_multitype.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+		zero_storage_multitype.setItemMeta(storage_meta_multitype);
+		zero_storage_multitype.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
+		zero_storage_multitype = setStorageID(zero_storage_multitype, 0);
 	}
 	
 	public void addCrafts() {
@@ -278,20 +284,29 @@ public class CraftManager implements Listener {
     	ShapelessRecipe smooth_redsandstone_from_andstone = new ShapelessRecipe(key___smooth_redsandstone, new ItemStack(Material.SMOOTH_RED_SANDSTONE,4) );
     	smooth_redsandstone_from_andstone.addIngredient(4, Material.CUT_RED_SANDSTONE);
     	server.addRecipe(smooth_redsandstone_from_andstone);
+    	
+    	RecipeChoice.MaterialChoice shulker_list = new MaterialChoice(Arrays.asList(
+    			Material.SHULKER_BOX,
+    			Material.BLACK_SHULKER_BOX, Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX, Material.CYAN_SHULKER_BOX,
+    			Material.GRAY_SHULKER_BOX, Material.GREEN_SHULKER_BOX, Material.LIGHT_BLUE_SHULKER_BOX, Material.LIGHT_GRAY_SHULKER_BOX,
+    			Material.LIME_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX, Material.ORANGE_SHULKER_BOX, Material.PINK_SHULKER_BOX,
+    			Material.PURPLE_SHULKER_BOX, Material.RED_SHULKER_BOX, Material.WHITE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX));
 
-    	ShapedRecipe storage_bottomless = new ShapedRecipe(key___storage_bottomless, new ItemStack(Material.FIREWORK_STAR,1) );
+    	ShapedRecipe storage_bottomless = new ShapedRecipe(key___storage_bottomless, zero_storage_bottomless); //new ItemStack(Material.FIREWORK_STAR,1)
     	storage_bottomless.shape(new String[]{"OSO", "SES", "OSO"});
     	storage_bottomless.setIngredient('O', Material.OBSIDIAN);
-    	storage_bottomless.setIngredient('S', Material.SHULKER_BOX);
-    	storage_bottomless.setIngredient('E', Material.ENDER_PEARL);
+    	storage_bottomless.setIngredient('S', shulker_list);
+    	storage_bottomless.setIngredient('E', Material.ENDER_CHEST);
     	server.addRecipe(storage_bottomless);
 
-    	ShapedRecipe storage_multitype = new ShapedRecipe(key___storage_multitype, new ItemStack(Material.FIREWORK_STAR,1) );
+    	ShapedRecipe storage_multitype = new ShapedRecipe(key___storage_multitype, zero_storage_multitype);
     	storage_multitype.shape(new String[]{"OSO", "SES", "OSO"});
     	storage_multitype.setIngredient('O', Material.OBSIDIAN);
-    	storage_multitype.setIngredient('S', Material.SHULKER_BOX);
+    	storage_multitype.setIngredient('S', shulker_list);
     	storage_multitype.setIngredient('E', Material.ENDER_EYE);
-    	server.addRecipe(storage_multitype);
+    	//need upgrades
+    	//server.addRecipe(storage_multitype);
+    	
 	}
 	
 	@EventHandler
@@ -299,16 +314,16 @@ public class CraftManager implements Listener {
 		CraftingInventory ci = event.getInventory();
 		ItemStack[] matrix = ci.getMatrix();
 		//craft grid test
-		if(matrix.length == 9 && matrix[0] != null && matrix[1] != null && matrix[2] != null && matrix[3] != null
+		if (matrix.length == 9 && matrix[0] != null && matrix[1] != null && matrix[2] != null && matrix[3] != null
 				&& matrix[5] != null && matrix[6] != null && matrix[7] != null && matrix[8] != null) {
 			//Top pump module
-			if(matrix[0].getType().equals(Material.REDSTONE_BLOCK) && matrix[2].getType().equals(Material.REDSTONE_BLOCK)
+			if (matrix[0].getType().equals(Material.REDSTONE_BLOCK) && matrix[2].getType().equals(Material.REDSTONE_BLOCK)
 					&& matrix[6].getType().equals(Material.REDSTONE_BLOCK) && matrix[8].getType().equals(Material.REDSTONE_BLOCK)
 					&& matrix[1].getType().equals(Material.BLAZE_ROD) && matrix[3].getType().equals(Material.BLAZE_ROD)
 					&& matrix[5].getType().equals(Material.BLAZE_ROD) && matrix[7].getType().equals(Material.BLAZE_ROD)
 					&& matrix[4] != null && matrix[4].getType().equals(Material.NETHER_STAR))
 			{
-				if(matrix[1].hasItemMeta() && matrix[3].hasItemMeta() && matrix[5].hasItemMeta() && matrix[7].hasItemMeta()
+				if (matrix[1].hasItemMeta() && matrix[3].hasItemMeta() && matrix[5].hasItemMeta() && matrix[7].hasItemMeta()
 					&& matrix[1].getItemMeta().hasLore() && matrix[3].getItemMeta().hasLore() && matrix[5].getItemMeta().hasLore() && matrix[7].getItemMeta().hasLore()
 					&& ( Utils.contains_all_of(matrix[1].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[1].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
 					&& ( Utils.contains_all_of(matrix[3].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[3].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
@@ -319,45 +334,27 @@ public class CraftManager implements Listener {
 				}
 				else
 				{
-					ci.setResult(new ItemStack(Material.AIR));
-				}
-			}
-			//Storages
-			else if(matrix[0].getType().equals(Material.OBSIDIAN) && matrix[2].getType().equals(Material.OBSIDIAN)
-					&& matrix[6].getType().equals(Material.OBSIDIAN) && matrix[8].getType().equals(Material.OBSIDIAN)
-					/*I tried to prevent buggy colored shulker box crafting, but event doesn't fire on craft, because it wasn't added above,
-					 * but craft exists, I think, because of Material.LEGACY_SHULKER_BOX (thx to spigot team?)
-					&& Utils.is_shulker_box(matrix[1].getType()) && Utils.is_shulker_box(matrix[3].getType())
-					&& Utils.is_shulker_box(matrix[5].getType()) && Utils.is_shulker_box(matrix[7].getType())*/
-					&& matrix[4] != null) {
-				if(Utils.is_colored_shulker_box(matrix[1].getType()) || Utils.is_colored_shulker_box(matrix[3].getType())
-					|| Utils.is_colored_shulker_box(matrix[5].getType()) || Utils.is_colored_shulker_box(matrix[7].getType()))
 					ci.setResult(null);
-				//is shulkerboxes empty
-				if(isShulkerBoxEmpty(matrix[1]) && isShulkerBoxEmpty(matrix[3]) && isShulkerBoxEmpty(matrix[5]) && isShulkerBoxEmpty(matrix[7])) {
-					//banned items
-					if( !Utils.is_shulker_box(matrix[4].getType()) ) {
-						ItemStack craft = new ItemStack(Material.FIREWORK_STAR, 1);
-						craft.setData(matrix[4].getData());
-						craft = setStorageID(craft, StoragesFileManager.nextID);
-						if(matrix[4].getType() == Material.ENDER_PEARL) {
-							craft.setItemMeta(storage_meta_bottomless.clone());
-						}
-						else if(matrix[4].getType() == Material.ENDER_EYE) {
-							craft.setItemMeta(storage_meta_multitype.clone());
-						}
-						else return;
-						ci.setResult(craft);
-					}
-					
 				}
 			}
 		}
+		//Storages
+		if (Storage.isStorage(ci.getResult()))
+		{
+			int empty_boxes = 0, boxes = 0;
+			for (int i = 0; i < matrix.length; i++)
+				if (Utils.is_shulker_box(matrix[i].getType()))
+				{
+					boxes++;
+					if (isShulkerBoxEmpty(matrix[i]))
+						empty_boxes++;
+				}
+			if (boxes != empty_boxes)
+				ci.setResult(null);
+		}
 		else {
-			//Storage
-			
 			//borsch
-			if(ci.getResult() != null && ci.getResult().getType() == Material.BEETROOT_SOUP) {
+			if (ci.getResult() != null && ci.getResult().getType() == Material.BEETROOT_SOUP) {
 				boolean have_beetroot = false, have_bowl = false;
 				for(int i = 0; i < matrix.length; i++) {
 					if(matrix[i] != null)
@@ -377,9 +374,8 @@ public class CraftManager implements Listener {
 								break;
 							}
 				}
-				if(!have_beetroot || !have_bowl) {
-					ItemStack craft = new ItemStack(Material.AIR, 1);
-					ci.setResult(craft);
+				if (!have_beetroot || !have_bowl) {
+					ci.setResult(null);
 				}
 			}
 			//else if()
@@ -394,7 +390,7 @@ public class CraftManager implements Listener {
 			return;
 
 		ItemStack craft_result = event.getCurrentItem();
-		if( Storage.getID(craft_result) >= 0 ) {
+		if( Storage.isStorage(craft_result) ) {
 			int id = StoragesFileManager.nextID++;
 			craft_result = setStorageID(craft_result, id);
 			Storage st;
@@ -490,10 +486,11 @@ public class CraftManager implements Listener {
 		}
 	}
 	
-	private boolean isShulkerBoxEmpty(ItemStack sb) {
+	private boolean isShulkerBoxEmpty(ItemStack sb)
+	{
 		ItemStack[] inv = ((ShulkerBox)((BlockStateMeta) sb.getItemMeta()).getBlockState()).getInventory().getContents();
-		for(ItemStack is : inv)
-			if(is != null)
+		for (ItemStack is : inv)
+			if (is != null)
 				return false;
 		return true;
 	}
