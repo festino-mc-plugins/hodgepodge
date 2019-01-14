@@ -44,6 +44,10 @@ public class StoragesList {
 		return st;
 	}
 	
+	public void tryLoad(int id) {
+		get(id);
+	}
+	
 	public Storage findByInventory(Inventory inv) {
 		for(Storage st : storages) {
 			if(st.getType() == StorageType.MULTITYPE) {
