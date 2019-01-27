@@ -163,21 +163,24 @@ public class mainListener extends JavaPlugin implements Listener
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
 	
-	public static String pluginname = "FestPlugin";
-	public static String enderdir = "EnderChestGroups";
-	public static String storagesdir = "Storages";
+	public static String pluginname;
+	public static final String enderdir = "EnderChestGroups";
+	public static final String storagesdir = "Storages";
 	
 	public World mainworld = null;
 	
-	ExpHoppers eh;
+	ExpHoppers eh; 
+	LeashManager lm;
 	
 	public void onEnable()
 	{
+		pluginname = getName();
     	PluginManager pm = getServer().getPluginManager();
     	
 		InventoryMenu.setPlugin(this);
 		BeamedPair.setPlugin(this);
 		Utils.setPlugin(this);
+		Utils.onEnable();
 		Storage.pl = this;
 		getServer().getPluginManager().registerEvents(this, this);
 		
@@ -247,7 +250,7 @@ public class mainListener extends JavaPlugin implements Listener
     	InventoryHandler ih = new InventoryHandler();
     	pm.registerEvents(ih, this);
 
-    	LeashManager lm = new LeashManager();
+    	lm = new LeashManager(this);
     	InteractHandler ih2 = new InteractHandler(this, lm);
     	pm.registerEvents(ih2, this);
 
@@ -269,7 +272,6 @@ public class mainListener extends JavaPlugin implements Listener
     	craft_manager.addCrafts();
     	pm.registerEvents(craft_manager, this);
     	
-		System.out.println("[FestPlugin] Fest Plugin started successfully.");
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
@@ -328,6 +330,9 @@ public class mainListener extends JavaPlugin implements Listener
 	
 	public void onDisable()
 	{
+		lm.onDisable();
+		Utils.onDisable();
+		
 		eh.save();
 		ecgroup.saveEnderChests(ecstorage);
 		stlist.saveStorages();
