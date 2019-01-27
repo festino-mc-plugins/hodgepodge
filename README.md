@@ -48,12 +48,10 @@ Main features can be divided into:
 (rus info: https://vk.com/@mine_surser-plugin-v1)
 
 TO DO:  
-  • Bosses will be moved to separate plugin.  
-  • Fix leashed and add a lasso.    
-  • Fix russian names in shared EC.   
   • Replace russian comments with english. Add different language support to plugin.  
   • Each function must be able to be turned on/off.  
   • Soul stone crafts    
+
   • Food rebalance?  
   • Increase tripwire length.  
   • com.festp.Utils improvements (God object, which has 1.7k lines of code, but is this normal for Utils?) 
