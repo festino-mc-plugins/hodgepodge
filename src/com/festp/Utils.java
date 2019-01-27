@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.UnsafeValues;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -34,6 +35,8 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import com.festp.storages.Storage;
@@ -44,16 +47,38 @@ import net.minecraft.server.v1_13_R2.NBTTagCompound;
 import net.minecraft.server.v1_13_R2.Particles;//.EnumParticle;
 
 public class Utils {
-	private static JavaPlugin plug;
+	private static JavaPlugin plugin;
 	private static UnsafeValues legacy;
 	public static final double EPSILON = 0.0001;
 	//we have some Minecraft magic constants
 	public static final double THROW_POWER_K = 0.2,
 		DECELERATION_H = 0.91, DECELERATION_V = 0.98, ACCELERATION_V = -0.08;
+	private static Team team_no_collide;
 	
 	public static void setPlugin(JavaPlugin pl) {
-		plug = pl;
+		plugin = pl;
 		legacy = pl.getServer().getUnsafe();
+	}
+	
+	public static Team getNoCollideTeam()
+	{
+		return team_no_collide;
+	}
+
+	public static void onEnable()
+	{
+		//create no collide turtle team
+		String team_name = "HPTempNoCollide"; //HP is HodgePodge, limit of 16 characters
+		Server server = plugin.getServer();
+		Scoreboard sb = server.getScoreboardManager().getMainScoreboard();
+		team_no_collide = sb.getTeam(team_name);
+		if (team_no_collide == null)
+			team_no_collide = sb.registerNewTeam(team_name);
+		team_no_collide.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+	}
+	public static void onDisable()
+	{
+		team_no_collide.unregister(); //if plugin will be removed anywhen
 	}
 
 	public static Material from_legacy(MaterialData md) {
@@ -105,10 +130,17 @@ public class Utils {
 		new_v.setZ(DECELERATION_H * v.getZ());
 		return new_v;
 	}
-	
+
 	/** Minecraft parabola path calculating. Doesn't consider obstacles. (as if the world is empty)
+	 * Choose the way that is shorter and faster, with smaller angle (instead of mortar shot)
 	 * @return <b>null</b> - if projectile can't reach target location. */
 	public static Vector throwVector(Location from, Location to, double power)
+	{
+		return throwVector(from, to, power, true);
+	}
+	/** Minecraft parabola path calculating. Doesn't consider obstacles. (as if the world is empty)
+	 * @return <b>null</b> - if projectile can't reach target location. */
+	public static Vector throwVector(Location from, Location to, double power, boolean choose_shorter)
     {
 		power = THROW_POWER_K * power;
         double dx = to.getX() - from.getX();
@@ -132,6 +164,12 @@ public class Utils {
         double max_dy = dy_by_angle(dh, v0, max_angle);
         if (max_dy < dy + EPSILON)
         	return null;
+        
+        if (!choose_shorter) {
+        	double temp = max_angle;
+        	max_angle = -min_angle;
+        	min_angle = temp;
+        }
         
         double vh = v0, vy = 0, dy_calc;
         for (int i = 0; i < precision; i++)
@@ -245,7 +283,7 @@ public class Utils {
         return false;
 	}
 	
-	public static <T extends LivingEntity> T spawnBeacon(Location l, String type, Class<T> entity) {
+	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity, String beacon_id, boolean gravity) {
 		T beacon;
  		if(entity == Vex.class) { //doesn't work without the consumer
  			beacon = l.getWorld().spawn(l, entity, (vex) -> {
@@ -256,34 +294,42 @@ public class Utils {
  			beacon = l.getWorld().spawn(l, entity);
  			
  		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
- 		beacon.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000000, 5, false, false));
- 		beacon.setAI(false);
+ 		beacon.setInvulnerable(true);
+ 		if (!gravity) {
+ 	 		beacon.setAI(false);
+ 	 		beacon.setGravity(false);
+ 		}
  		beacon.setSilent(true);
  		beacon.setCollidable(false);
- 		beacon.setGravity(false);
- 		beacon.setInvulnerable(true);
  		
  		if(beacon instanceof Turtle) {
  			Turtle turtle = (Turtle)beacon;
  			turtle.setBaby();
  			turtle.setAgeLock(true);
  		}
- 		else if(beacon instanceof Bat) {
- 			Bat bat = (Bat)beacon;
- 			//bat.setAwake(true);
- 		}
 
-	 	ItemStack identificator = new ItemStack(Material.STONE_BUTTON);
-	 	identificator = setData(identificator, type, "yea");
  		if(beacon instanceof ArmorStand) {
  			ArmorStand stand = (ArmorStand)beacon;
  			stand.setVisible(false);
  			stand.setSmall(true);
- 	 		beacon.getEquipment().setChestplate(identificator);
- 		} else {
- 	 		beacon.getEquipment().setHelmet(identificator);
  		}
+ 		setBeaconData(beacon, beacon_id);
+	 	
  		return beacon;
+	}
+	public static void setBeaconData(LivingEntity beacon, String beacon_id)
+	{
+		ItemStack identificator = new ItemStack(Material.BARRIER); //to identify issues
+	 	identificator = setData(identificator, beacon_id, "+");
+ 		//if(beacon instanceof ArmorStand)
+ 		beacon.getEquipment().setChestplate(identificator);
+ 		//else
+ 	 	//	beacon.getEquipment().setHelmet(identificator);
+	}
+	public static boolean hasBeaconData(LivingEntity beacon, String beacon_id)
+	{
+		ItemStack identificator = beacon.getEquipment().getChestplate();
+	 	return hasDataField(identificator, beacon_id);
 	}
 	
 	public static boolean contains_all_of(String str, String... args) {
@@ -421,12 +467,10 @@ public class Utils {
 		return false;
 	}
 	public static boolean isButton(Material m) {
-		if(isWoodenDoor(m) || m == Material.STONE_BUTTON)
-			return true;
-		return false;
+		 return isWoodenButton(m) || m == Material.STONE_BUTTON;
 	}
 	
-	public static boolean isFence(Material m) {
+	public static boolean isWoodenFence(Material m) {
 		switch(m) {
 		case ACACIA_FENCE: return true;
 		case BIRCH_FENCE: return true;
@@ -436,6 +480,9 @@ public class Utils {
 		case SPRUCE_FENCE: return true;
 		}
 		return false;
+	}
+	public static boolean isFence(Material m) {
+		return isWoodenFence(m) || m == Material.NETHER_BRICK_FENCE;
 	}
 	public static boolean isGate(Material m) {
 		switch(m) {
