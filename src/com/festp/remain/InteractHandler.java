@@ -34,6 +34,7 @@ import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dye;
@@ -48,7 +49,7 @@ import com.festp.mainListener;
 
 public class InteractHandler implements Listener {
 
-	public static final String beacon_id = "saddlemob";
+	public static final String beacon_id_saddle = "saddlemob";
 	
 	//cauldrons to wash items
 	List<BlockState> cauls = new ArrayList<>();
@@ -67,7 +68,7 @@ public class InteractHandler implements Listener {
 	}
 	
 	private LivingEntity spawnSaddleBeacon(Location l) {
-		return Utils.spawnBeacon(l, beacon_id, Turtle.class);
+		return Utils.spawnBeacon(l, Turtle.class, beacon_id_saddle, false);
 	}
 	
 	public void onTick() {
@@ -137,7 +138,7 @@ public class InteractHandler implements Listener {
 				
 				if(e.getCustomName()!= null) {
 					//saddled entities
-					if(Utils.hasDataField(helmet, beacon_id)) {
+					if(Utils.hasDataField(helmet, beacon_id_saddle)) {
 						if(e.getPassengers().size() == 0 || e.getVehicle() == null )
 							e.remove();
 						else {
@@ -146,7 +147,7 @@ public class InteractHandler implements Listener {
 						}
 					}
 					//leashed players
-					else if(Utils.hasDataField(helmet, LeashedPlayer.beacon_id)) {
+					else if(Utils.hasDataField(helmet, LeashedPlayer.BEACON_ID)) {
 						
 						if(!leash_manager.isWorkaroundActive(e) || !e.isLeashed()) {
 							e.getWorld().dropItem(e.getLocation(), new ItemStack(Material.LEAD, 1));
@@ -379,7 +380,7 @@ public class InteractHandler implements Listener {
 	}
 
 	@EventHandler
-	public void onEntityUnleash(EntityUnleashEvent event) {
+	public void onEntityUnleash(PlayerUnleashEntityEvent event) {
 		leash_manager.onUnleash(event);
 	}
 	
