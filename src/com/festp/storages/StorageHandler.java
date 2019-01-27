@@ -154,7 +154,7 @@ public class StorageHandler implements Listener {
 	}
 	
 	public boolean grabbing_inv(Inventory inv) {
-		return !(inv.getType() == InventoryType.ANVIL || inv.getType() == InventoryType.BEACON || inv.getType() == InventoryType.BREWING
+		return inv != null && !(inv.getType() == InventoryType.ANVIL || inv.getType() == InventoryType.BEACON || inv.getType() == InventoryType.BREWING
 				 || inv.getType() == InventoryType.CRAFTING || inv.getType() == InventoryType.WORKBENCH
 				 || inv.getType() == InventoryType.ENCHANTING || inv.getType() == InventoryType.FURNACE || inv.getType() == InventoryType.MERCHANT);
 	}
