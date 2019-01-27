@@ -8,6 +8,7 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -15,25 +16,48 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
+import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import com.festp.Utils;
 
 public class LeashManager {
-	public static final double R = 8, R_SQUARE = R*R,
-			R_BREAK_SQUARE = 140,
+	JavaPlugin plugin;
+	
+	public static final double MAX_R = 8, MAX_R_SQUARE = MAX_R*MAX_R,
+			R_BREAK_SQUARE = 12 * 12,
 			LASSO_BREAK_SQUARE = 20 * 20,
-			PULL_MARGIN = 0, PULL_R2 = (R-PULL_MARGIN)*(R-PULL_MARGIN);
+			PULL_MARGIN = 0;
 	private static final double THROW_POWER = 6.5;
 	private List<LeashedPlayer> leashed_players = new ArrayList<>();
 	private List<LeashLasso> thrown_lasso = new ArrayList<>();
 	private static final Predicate<Entity> entity_filter = (e) -> canLeashEntity(e);
 	
-	public LeashManager()
+	public LeashManager(JavaPlugin plugin)
 	{
+		this.plugin = plugin;
 		LeashLasso.setLeashManager(this);
+		onEnable();
+	}
+	
+	public void onEnable() { }
+	
+	public void onDisable()
+	{
+		for(int i = 0; i < leashed_players.size(); i++) {
+			LeashedPlayer lp = leashed_players.get(i);
+			lp.removeWorkaround();
+		}
+		for(int i = 0; i < thrown_lasso.size(); i++) {
+			LeashLasso lasso = thrown_lasso.get(i);
+			lasso.dropLead();
+			lasso.despawnLasso();
+		}
 	}
 	
 	public void tick()
@@ -168,20 +192,22 @@ public class LeashManager {
 		}
 	}
 	
-	public void onUnleash(EntityUnleashEvent event)
+	public void onUnleash(PlayerUnleashEntityEvent event)
 	{
 		LivingEntity entity = (LivingEntity)event.getEntity();
-		if( entity.isLeashed() &&
-				entity.getLeashHolder() instanceof CraftLeash/*LeashHitch*/ && event.getReason() == UnleashReason.PLAYER_UNLEASH) {
+		//unleash without lead drop
+		if( entity.isLeashed() && entity.getLeashHolder() instanceof CraftLeash/*LeashHitch*/) {
 			for(int i = leashed_players.size()-1; i >= 0; i--) {
 				LeashedPlayer lp = leashed_players.get(i);
 				if(lp.workaround == entity) {
-					lp.workaround.remove();
-					//lp.workaround.getLeashHolder().getWorld().dropItem(lp.workaround.getLeashHolder().getLocation(), new ItemStack(Material.LEAD, 1));
+					lp.removeWorkaround();
 					leashed_players.remove(i);
 				}
 			}
 		}
+		//cancel lasso unleash
+		if (Utils.hasBeaconData(entity, LeashLasso.BEACON_ID))
+			event.setCancelled(true);
 	}
 	
 }
