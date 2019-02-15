@@ -8,7 +8,7 @@ website: https://github.com/festino/hodgepodge
 main: com.festp.mainListener
 
 commands:
-         fest:
+         hodge:
            description: Allows to reload config, get plugin info.
          enderchest:
            description: All interactions with shared enderchests. (may be need some permisions)
