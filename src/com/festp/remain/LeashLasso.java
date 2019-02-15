@@ -59,7 +59,7 @@ public class LeashLasso {
 		projectile = Utils.spawnBeacon(spawn_loc, projectile_class, BEACON_ID, true);
 		projectile.setGravity(true);
 		projectile.setVelocity(velocity);
-		Utils.getNoCollideTeam().addEntry(projectile.getUniqueId().toString());
+		Utils.setNoCollide(projectile, true);
 		
 		//because beacon is armorstand that can't draw leash
 		workaround = Utils.spawnBeacon(spawn_loc, beacon_class, BEACON_ID, false);
