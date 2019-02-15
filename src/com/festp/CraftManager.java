@@ -36,6 +36,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.festp.remain.SoulStone;
 import com.festp.remain.SummonerTome;
 import com.festp.storages.Storage;
+import com.festp.storages.Storage.StorageType;
+import com.festp.storages.StorageBottomless;
+import com.festp.storages.StorageMultitype;
 import com.festp.storages.StoragesFileManager;
 
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
@@ -45,10 +48,8 @@ public class CraftManager implements Listener {
 	Server server;
 	mainListener plugin;
 
-	ItemStack zero_storage_bottomless, zero_storage_multitype; //references, instances
+	ItemStack zero_storage_bottomless, zero_storage_multitype1, zero_storage_multitype2, zero_storage_multitype3; //references, instances
 	ItemMeta storage_meta_bottomless, storage_meta_multitype;
-	int items_limit = 64*54;
-	int items_stacks_limit = 54;
 	
 	List<Recipe> temp_recipes = new ArrayList<>();
 	List<NamespacedKey> recipe_names = new ArrayList<>();
@@ -65,16 +66,29 @@ public class CraftManager implements Listener {
 			storage_meta_bottomless.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 		zero_storage_bottomless.setItemMeta(storage_meta_bottomless);
 		zero_storage_bottomless.addUnsafeEnchantment(Enchantment.ARROW_INFINITE, 1);
-		zero_storage_bottomless = setStorageID(zero_storage_bottomless, 0);
+		zero_storage_bottomless = Storage.setID(zero_storage_bottomless, 0);
 		
-		zero_storage_multitype = new ItemStack(Material.FIREWORK_STAR, 1);
-			storage_meta_multitype = zero_storage_multitype.getItemMeta();
+		zero_storage_multitype1 = new ItemStack(Material.FIREWORK_STAR, 1);
+			storage_meta_multitype = zero_storage_multitype1.getItemMeta();
 			storage_meta_multitype.setDisplayName("Storage");
-			storage_meta_multitype.setLore(Arrays.asList("Smart storage. Maybe smarter than you.")); //Storage's stupidon't!
+			storage_meta_multitype.setLore(Arrays.asList("Smart storage. Maybe smarter than you... Never mind!"));
 			storage_meta_multitype.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-		zero_storage_multitype.setItemMeta(storage_meta_multitype);
-		zero_storage_multitype.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
-		zero_storage_multitype = setStorageID(zero_storage_multitype, 0);
+		zero_storage_multitype1.setItemMeta(storage_meta_multitype);
+		zero_storage_multitype1.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
+		zero_storage_multitype1 = Storage.setID(zero_storage_multitype1, 0);
+		
+		zero_storage_multitype2 = zero_storage_multitype1.clone();
+		storage_meta_multitype = zero_storage_multitype2.getItemMeta();
+			storage_meta_multitype.setLore(Arrays.asList("Smarter storage. Who knows what's on its mind?"));
+		zero_storage_multitype2.setItemMeta(storage_meta_multitype);
+		zero_storage_multitype2.addUnsafeEnchantment(Enchantment.DIG_SPEED, 2);
+		
+		zero_storage_multitype3 = zero_storage_multitype1.clone();
+		storage_meta_multitype = zero_storage_multitype3.getItemMeta();
+			storage_meta_multitype.setLore(Arrays.asList("Just a storage."));
+		zero_storage_multitype3.setItemMeta(storage_meta_multitype);
+		zero_storage_multitype3.addUnsafeEnchantment(Enchantment.DIG_SPEED, 3);
+		
 	}
 	
 	public void addCrafts() {
@@ -132,7 +146,12 @@ public class CraftManager implements Listener {
 		String name___smooth_sandstone_1 = "smooth_ss_from_ss";
 		String name___smooth_redsandstone_1 = "smooth_redss_from_redss";
 		String name___storage_bottomless = "storage_bottomless";
-		String name___storage_multitype = "storage_multitype";
+		String name___storage_multitype1 = "storage_multitype1";
+		String name___storage_multitype2 = "storage_multitype2";
+		String name___storage_multitype3 = "storage_multitype3";
+		//String name___storage_multitype1to3 = "storage_multitype1to3";
+		//String name___storage_multitype2to3 = "storage_multitype2to3";
+		String name___storage_multitype_back = "storage_multitype_back";
 
 		NamespacedKey key___torch = new NamespacedKey(plugin, name___torch_1);
     	NamespacedKey key___redsand = new NamespacedKey(plugin, name___redsand);
@@ -153,7 +172,12 @@ public class CraftManager implements Listener {
     	NamespacedKey key___smooth_sandstone = new NamespacedKey(plugin, name___smooth_sandstone_1);
     	NamespacedKey key___smooth_redsandstone = new NamespacedKey(plugin, name___smooth_redsandstone_1);
     	NamespacedKey key___storage_bottomless = new NamespacedKey(plugin, name___storage_bottomless);
-    	NamespacedKey key___storage_multitype = new NamespacedKey(plugin, name___storage_multitype);
+    	NamespacedKey key___storage_multitype1 = new NamespacedKey(plugin, name___storage_multitype1);
+    	NamespacedKey key___storage_multitype2 = new NamespacedKey(plugin, name___storage_multitype2);
+    	NamespacedKey key___storage_multitype3 = new NamespacedKey(plugin, name___storage_multitype3);
+    	//NamespacedKey key___storage_multitype1to3 = new NamespacedKey(plugin, name___storage_multitype1to3);
+    	//NamespacedKey key___storage_multitype2to3 = new NamespacedKey(plugin, name___storage_multitype2to3);
+    	NamespacedKey key___storage_multitype_back = new NamespacedKey(plugin, name___storage_multitype_back);
 		recipe_names.add(key___torch);
 		recipe_names.add(key___redsand);
 		recipe_names.add(key___clay_1);
@@ -173,7 +197,12 @@ public class CraftManager implements Listener {
 		recipe_names.add(key___smooth_sandstone);
 		recipe_names.add(key___smooth_redsandstone);
 		recipe_names.add(key___storage_bottomless);
-		recipe_names.add(key___storage_multitype);
+		recipe_names.add(key___storage_multitype1);
+		recipe_names.add(key___storage_multitype2);
+		recipe_names.add(key___storage_multitype3);
+		//recipe_names.add(key___storage_multitype1to3);
+		//recipe_names.add(key___storage_multitype2to3);
+		recipe_names.add(key___storage_multitype_back);
 		
     	ShapelessRecipe torch_from_fireball = new ShapelessRecipe(key___torch, new ItemStack(Material.TORCH,16) );
     	torch_from_fireball.addIngredient(1, Material.FIRE_CHARGE);
@@ -190,7 +219,6 @@ public class CraftManager implements Listener {
     	clay1.addIngredient(1, Material.IRON_NUGGET);
     	clay1.addIngredient(4, Material.SAND);
     	clay1.addIngredient(4, Material.FLINT);
-    	//clay.addIngredient(1, Material.WATER_BUCKET.getNewData((byte) 0));
 		server.addRecipe(clay1);
     	
     	ShapelessRecipe clay2 = new ShapelessRecipe(key___clay_2, new ItemStack(Material.CLAY_BALL,8) );
@@ -299,14 +327,30 @@ public class CraftManager implements Listener {
     	storage_bottomless.setIngredient('E', Material.ENDER_CHEST);
     	server.addRecipe(storage_bottomless);
 
-    	ShapedRecipe storage_multitype = new ShapedRecipe(key___storage_multitype, zero_storage_multitype);
-    	storage_multitype.shape(new String[]{"OSO", "SES", "OSO"});
-    	storage_multitype.setIngredient('O', Material.OBSIDIAN);
-    	storage_multitype.setIngredient('S', shulker_list);
-    	storage_multitype.setIngredient('E', Material.ENDER_EYE);
-    	//need upgrades
-    	//server.addRecipe(storage_multitype);
-    	
+    	ShapelessRecipe storage_multitype1 = new ShapelessRecipe(key___storage_multitype1, zero_storage_multitype1);
+    	storage_multitype1.addIngredient(shulker_list);
+    	storage_multitype1.addIngredient(5, Material.NAME_TAG);
+    	storage_multitype1.addIngredient(1, Material.ENDER_EYE);
+    	server.addRecipe(storage_multitype1);
+
+    	ShapelessRecipe storage_multitype2 = new ShapelessRecipe(key___storage_multitype2, zero_storage_multitype2);
+    	storage_multitype2.addIngredient(shulker_list);
+    	storage_multitype2.addIngredient(shulker_list);
+    	storage_multitype2.addIngredient(5, Material.NAME_TAG);
+    	storage_multitype2.addIngredient(1, Material.ENDER_EYE);
+    	server.addRecipe(storage_multitype2);
+
+    	ShapelessRecipe storage_multitype3 = new ShapelessRecipe(key___storage_multitype3, zero_storage_multitype3);
+    	storage_multitype3.addIngredient(shulker_list);
+    	storage_multitype3.addIngredient(shulker_list);
+    	storage_multitype3.addIngredient(shulker_list);
+    	storage_multitype3.addIngredient(5, Material.NAME_TAG);
+    	storage_multitype3.addIngredient(1, Material.ENDER_EYE);
+    	server.addRecipe(storage_multitype3);
+
+    	ShapelessRecipe storage_multitype_back = new ShapelessRecipe(key___storage_multitype_back, new ItemStack(Material.SHULKER_BOX));
+    	storage_multitype_back.addIngredient(1, Material.FIREWORK_STAR);
+    	server.addRecipe(storage_multitype_back);
 	}
 	
 	@EventHandler
@@ -338,12 +382,26 @@ public class CraftManager implements Listener {
 				}
 			}
 		}
+		//Uncraft storage
+		if (ci.getResult() != null && ci.getResult().getType() == Material.SHULKER_BOX)
+		{
+			int items = 0;
+			boolean have_multitype = false;
+			for (int i = 0; i < matrix.length; i++)
+				if (matrix[i] != null) {
+					items++;
+					if (Storage.getType(matrix[i]) == StorageType.MULTITYPE)
+						have_multitype = true;
+				}
+			if (items != 1 || !have_multitype)
+				ci.setResult(null);
+		}
 		//Storages
 		if (Storage.isStorage(ci.getResult()))
 		{
 			int empty_boxes = 0, boxes = 0;
 			for (int i = 0; i < matrix.length; i++)
-				if (Utils.is_shulker_box(matrix[i].getType()))
+				if (matrix[i] != null && Utils.is_shulker_box(matrix[i].getType()))
 				{
 					boxes++;
 					if (isShulkerBoxEmpty(matrix[i]))
@@ -392,13 +450,14 @@ public class CraftManager implements Listener {
 		ItemStack craft_result = event.getCurrentItem();
 		if( Storage.isStorage(craft_result) ) {
 			int id = StoragesFileManager.nextID++;
-			craft_result = setStorageID(craft_result, id);
+			craft_result = Storage.setID(craft_result, id);
 			Storage st;
 			if(craft_result.getEnchantmentLevel(Enchantment.ARROW_INFINITE) > 0)
-				st = new Storage(id, plugin.mainworld.getFullTime(), Storage.UNDEFINED_MATERIAL);
-			else if(craft_result.getEnchantmentLevel(Enchantment.DIG_SPEED) > 0)
-				st = new Storage(id, plugin.mainworld.getFullTime());
-			else {
+				st = new StorageBottomless(id, plugin.mainworld.getFullTime(), StorageBottomless.UNDEFINED_MATERIAL);
+			else if(craft_result.getEnchantmentLevel(Enchantment.DIG_SPEED) > 0) {
+				int lvl = craft_result.getEnchantmentLevel(Enchantment.DIG_SPEED);
+				st = new StorageMultitype(id, plugin.mainworld.getFullTime(), lvl);
+			} else {
 				event.setCancelled(true);
 				return;
 			}
@@ -630,20 +689,4 @@ public class CraftManager implements Listener {
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
     }*/
-	
-	//may be this must be in Storage class with isStorage() and getID()?
-	public static ItemStack setStorageID(ItemStack i, int ID) {
-		net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
-        if (compound == null) {
-           compound = new NBTTagCompound();
-            nmsStack.setTag(compound);
-            compound = nmsStack.getTag();
-        }
-        //it guarantee not to stack
-        compound.setInt("StorageID", ID);
-        nmsStack.setTag(compound);
-        i = CraftItemStack.asBukkitCopy(nmsStack);
-        return i;
-	}
 }
