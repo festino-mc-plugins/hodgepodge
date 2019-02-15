@@ -216,17 +216,15 @@ public class mainListener extends JavaPlugin implements Listener
 					maxID = Integer.parseInt(s);
 				}
 			} catch (Exception ex) {
-				System.out.println("["+pluginname+"] Storages: Wrong file in directory: " + s);
+				getLogger().severe("["+pluginname+"] Storages: Wrong file in directory: " + s);
 			}
 		}
 		ststorage.nextID = maxID+1;
-		for(int i=0; i<54; i++) {
-			Storage.empty_inventory[i] = null;
-		}
+		getLogger().info("New storages will start from ID " + ststorage.nextID + ".");
     	
     	CommandWorker command_worker = new CommandWorker(this);
-    	getCommand("fest").setExecutor(command_worker);
-    	getCommand("item").setExecutor(command_worker);
+    	getCommand(command_worker.main_command).setExecutor(command_worker);
+    	getCommand(command_worker.item_command).setExecutor(command_worker);
     	
     	StorageHandler handler_storage = new StorageHandler(this);
     	pm.registerEvents(handler_storage, this);
@@ -275,6 +273,8 @@ public class mainListener extends JavaPlugin implements Listener
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
+					TaskList.tick();
+					
 					for(World w : getServer().getWorlds())
 			    	{
 			    		for(Entity e : w.getEntities())
