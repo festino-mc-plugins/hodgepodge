@@ -3,6 +3,7 @@ package com.festp;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.Random;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -15,16 +16,11 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Snowball;
-import org.bukkit.entity.SplashPotion;
 import org.bukkit.entity.Turtle;
 import org.bukkit.entity.Vex;
 import org.bukkit.inventory.Inventory;
@@ -32,7 +28,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Cauldron;
 import org.bukkit.material.MaterialData;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
@@ -44,10 +39,9 @@ import com.festp.storages.Storage;
 import net.minecraft.server.v1_13_R2.EntityAgeable;
 import net.minecraft.server.v1_13_R2.EntityAnimal;
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
-import net.minecraft.server.v1_13_R2.Particles;//.EnumParticle;
 
 public class Utils {
-	private static JavaPlugin plugin;
+	private static mainListener plugin;
 	private static UnsafeValues legacy;
 	public static final double EPSILON = 0.0001;
 	//we have some Minecraft magic constants
@@ -55,14 +49,13 @@ public class Utils {
 		DECELERATION_H = 0.91, DECELERATION_V = 0.98, ACCELERATION_V = -0.08;
 	private static Team team_no_collide;
 	
-	public static void setPlugin(JavaPlugin pl) {
+	public static void setPlugin(mainListener pl) {
 		plugin = pl;
 		legacy = pl.getServer().getUnsafe();
 	}
-	
-	public static Team getNoCollideTeam()
-	{
-		return team_no_collide;
+
+	public static mainListener getPlugin() {
+		return plugin;
 	}
 
 	public static void onEnable()
@@ -79,6 +72,16 @@ public class Utils {
 	public static void onDisable()
 	{
 		team_no_collide.unregister(); //if plugin will be removed anywhen
+	}
+	
+	public static void setNoCollide(Entity e, boolean val)
+	{
+		String entry = e.getUniqueId().toString();
+		if (val) {
+			if (!team_no_collide.hasEntry(entry))
+				team_no_collide.addEntry(entry);
+		} else
+			team_no_collide.removeEntry(entry);
 	}
 
 	public static Material from_legacy(MaterialData md) {
@@ -232,6 +235,20 @@ public class Utils {
 		return null;
 	}
 	
+	public static String toString(Vector v) {
+		if (v == null)
+			return "(null)";
+		DecimalFormat dec = new DecimalFormat("#0.00");
+		return ("("+dec.format(v.getX())+"; "
+				  +dec.format(v.getY())+"; "
+				  +dec.format(v.getZ())+")")
+				.replace(',', '.');
+	}
+	public static String toString(Location l) {
+		if (l == null) return toString((Vector)null);
+		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
+	}
+	
 	public static ItemStack setData(ItemStack i, String field, String data) {
         if (data == null || field == null || i == null)
             return i;
@@ -247,20 +264,6 @@ public class Utils {
         nmsStack.setTag(compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
-	}
-	
-	public static String toString(Vector v) {
-		if (v == null)
-			return "(null)";
-		DecimalFormat dec = new DecimalFormat("#0.00");
-		return ("("+dec.format(v.getX())+"; "
-				  +dec.format(v.getY())+"; "
-				  +dec.format(v.getZ())+")")
-				.replace(',', '.');
-	}
-	public static String toString(Location l) {
-		if (l == null) return toString((Vector)null);
-		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
 	
 	public static boolean hasDataField(ItemStack i, String field) {
@@ -281,6 +284,17 @@ public class Utils {
         if(compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
         	return true;
         return false;
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static ItemStack getHead(String headName, String texture_url) {
+		ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+		stack = Bukkit.getUnsafe().modifyItemStack(stack,
+				"{SkullOwner:{Id:" + UUID.randomUUID().toString() + ",Properties:{textures:[{Value:\"" + texture_url + "\"}]}}}");
+		ItemMeta meta = stack.getItemMeta();
+		meta.setDisplayName(headName);
+		stack.setItemMeta(meta);
+		return stack;
 	}
 	
 	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity, String beacon_id, boolean gravity) {
