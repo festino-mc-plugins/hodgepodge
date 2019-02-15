@@ -111,4 +111,8 @@ public class InventoryMenu implements Listener {
 			listeners.clear();
 		}
 	}
+
+	public void changeSlot(int slot, ItemStack button) {
+		gui.setItem(slot, button);
+	}
 }
