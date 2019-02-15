@@ -26,6 +26,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 	private mainListener plugin;
 	
+	String main_command = "hodge";
+	
 	String item_command = "item";
 	String item_command_usage = ChatColor.GRAY+"Usage: /item "+ChatColor.GRAY+"type "+ChatColor.DARK_GRAY+"damage "+ChatColor.DARK_GRAY+"enchantments, name, ...";
 	String item_command_examples = ChatColor.GRAY + "Примеры:\n"
@@ -101,8 +103,12 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 	@EventHandler
 	public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args)
 	{
-		if (cmd.getName().equalsIgnoreCase("fest"))
+		if (cmd.getName().equalsIgnoreCase(main_command))
 		{
+			if (args.length == 0)
+			{
+				
+			}
 			if (args.length == 1)
 			{
 				if (args[0].equalsIgnoreCase("reload"))
@@ -117,14 +123,26 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 				}
 				return true;
 			}
-			else if (args.length == 2 )
+			else if (args[0].equalsIgnoreCase("config"))
 			{
-				if (args[0].equalsIgnoreCase("config") && args[1].equalsIgnoreCase("reload"))
+				if (args.length == 2 && args[1].equalsIgnoreCase("reload"))
 				{
 					reloadConfig();
 					Config.loadConfig();
 					sender.sendMessage(ChatColor.GREEN + "Конфиги обновлены.");
 					System.out.println("[FestPlugin] Config reloaded.");
+				}
+				return true;
+			}
+			else if (args[0].equalsIgnoreCase("storages"))
+			{
+				if (args.length == 2 && args[1].equalsIgnoreCase("save"))
+				{
+					plugin.stlist.saveStorages();
+				}
+				if (args.length == 3 && args[1].equalsIgnoreCase("give"))
+				{
+					// gives with ID or error
 				}
 				return true;
 			}
