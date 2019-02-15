@@ -1,20 +1,16 @@
 package com.festp.storages;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map.Entry;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.mainListener;
-import com.festp.storages.BottomlessInventory.Grab;
-import com.festp.storages.Storage.StorageType;
+import com.festp.storages.Storage.Grab;
 
 public class StoragesFileManager {
 	private mainListener pl;
@@ -66,7 +62,6 @@ public class StoragesFileManager {
 	}
 	
 	public Storage loadStorage(int ID){
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//type
@@ -77,17 +72,19 @@ public class StoragesFileManager {
 				if(Material.valueOf(smat) == null)
 					return null;
 				
-				Storage st = new Storage(ID, pl.mainworld.getFullTime(), Material.valueOf(smat));
+				StorageBottomless st = new StorageBottomless(ID, pl.mainworld.getFullTime(), Material.valueOf(smat));
 				int amount = ymlFormat.getInt("amount");
-				st.unlim_inv.setAmount(amount);
+				st.setAmount(amount);
 				String grab = ymlFormat.getString("grab");
-				st.unlim_inv.setGrab(Grab.valueOf(grab));
+				st.setGrab(Storage.Grab.valueOf(grab));
 				return st;
 			}
 			else if(stype.contains("multitype")) {
-				Storage st = new Storage(ID, pl.mainworld.getFullTime());
+				int lvl = ymlFormat.getInt("level");
+				StorageMultitype st = new StorageMultitype(ID, pl.mainworld.getFullTime(), lvl);
 				
 				int slots = ymlFormat.getInt("slots");
+				ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 				for (int i = 0; i < slots; i++) {
 					ItemStack item = ymlFormat.getItemStack("s." + i);
 					items.add(item);
@@ -95,6 +92,27 @@ public class StoragesFileManager {
 				ItemStack[] itemsList = (ItemStack[])items.toArray(new ItemStack[items.size()]);
 				st.getInventory().setContents(itemsList);
 				items.clear();
+
+				String grab = ymlFormat.getString("grab_mode"); // TO DO: pick out strings, create function
+				if (grab == null)
+					grab = Storage.DEFAULT_GRAB_MODE.toString();
+				st.setGrab(Storage.Grab.valueOf(grab));
+				String dir = ymlFormat.getString("grab_dir");
+				if (dir == null)
+					dir = StorageMultitype.DEFAULT_DIR.toString();
+				st.setGrabDirection(StorageMultitype.GrabDirection.valueOf(dir));
+				String sort_mode = ymlFormat.getString("sort_mode");
+				if (sort_mode == null)
+					sort_mode = StorageMultitype.DEFAULT_MODE.toString();
+				st.setSortMode(StorageMultitype.SortMode.valueOf(sort_mode));
+				String sort_time = ymlFormat.getString("sort_time");
+				if (sort_time == null)
+					sort_time = StorageMultitype.DEFAULT_TIME.toString();
+				st.setSortTime(StorageMultitype.HandleTime.valueOf(sort_time));
+				String stack_time = ymlFormat.getString("stack_time");
+				if (stack_time == null)
+					stack_time = StorageMultitype.DEFAULT_TIME.toString();
+				st.setStackTime(StorageMultitype.HandleTime.valueOf(stack_time));
 				return st;
 			}
 			else return null;
@@ -106,93 +124,54 @@ public class StoragesFileManager {
 	}
 
 	public boolean saveStorage(Storage st) {
-		if(st.getType() == StorageType.BOTTOMLESS) {
-			saveInventory_Bottomless(st.ID, st.unlim_inv);
+		try
+		{
+			if(st instanceof StorageBottomless)
+				saveInventory_Bottomless((StorageBottomless)st);
+			else if(st instanceof StorageMultitype)
+				saveInventory_Multitype((StorageMultitype)st);
+			
+			return true;
+		} catch (Exception e) {
+			pl.getLogger().severe("Could not save inventory of ID "+st.ID+"!");
+			e.printStackTrace();
 		}
-		else if(st.getType() == StorageType.MULTITYPE) {
-			try {
-				File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, st.ID + ".yml");
-				FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
-				
-				Inventory inv = st.getInventory();
-				for (int i = 0; i < inv.getContents().length; i++) {
-					ItemStack item = inv.getContents()[i];
+		return false;
+	}
 
-					ymlFormat.set("s." + i, item);
-					//saveItemStack_Multi(st.ID, i, item);
-				}
-				ymlFormat.set("type", "multitype");
-				
-				ymlFormat.set("slots", inv.getContents().length);
-				ymlFormat.save(dataFile);
-			} catch (IOException e) {
-				pl.getLogger().severe("Could not save inventory of ID "+st.ID+"!");
-				e.printStackTrace();
-			}
-			//////
-			//saveItemStack_LastMulti(st.ID, inv.getSize()-1, inv.getContents().length, inv.getContents()[inv.getSize()-1]);
-		}
+	private void saveInventory_Bottomless(StorageBottomless storage) throws Exception {
+		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir,
+				storage.ID + ".yml");
+		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
+
+		ymlFormat.set("type", "bottomless");
+		ymlFormat.set("material", storage.getMaterial().toString());
+		ymlFormat.set("amount", storage.getAmount());
+		ymlFormat.set("grab", storage.canGrab().toString());
+
+		ymlFormat.save(dataFile);
+	}
+
+	private void saveInventory_Multitype(StorageMultitype storage) throws Exception {
+
+		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir,
+				storage.getID() + ".yml");
+		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		
-		return true;
-	}
+		Inventory inv = storage.getInventory();
+		for (int i = 0; i < inv.getContents().length; i++) {
+			ItemStack item = inv.getContents()[i];
 
-	private boolean saveInventory_Bottomless(int ID, BottomlessInventory inventory) {
-	
-		try {
-			File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
-			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
-
-			ymlFormat.set("type", "bottomless");
-			ymlFormat.set("material", inventory.getMaterial().toString());
-			ymlFormat.set("amount", inventory.getAmount());
-			ymlFormat.set("grab", inventory.canGrab().toString());
-
-			ymlFormat.save(dataFile);
-			return true;
-			
-		} catch (Exception e) {
-			pl.getLogger().severe("Could not save inventory of ID "+ID+"!");
-			e.printStackTrace();
+			ymlFormat.set("s." + i, item);
 		}
-		return false;
-	}
-
-	private boolean saveItemStack_Multi(int ID, Integer size, ItemStack inventory) {
-	
-		try {
-			File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
-			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
-			
-			ymlFormat.set("s." + size, inventory);
-			
-			ymlFormat.save(dataFile);
-			return true;
-			
-		} catch (Exception e) {
-			pl.getLogger().severe("Could not save inventory of ID "+ID+"!");
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	private boolean saveItemStack_LastMulti(int ID, Integer size, Integer maxSize, ItemStack inventory) {
-		try {
-			File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
-			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
-
-			ymlFormat.set("type", "multitype");
-			
-			ymlFormat.set("slots", maxSize);
-			
-			ymlFormat.set("s." + size, inventory);
-			
-			ymlFormat.save(dataFile);
-			return true;
-			
-		} catch (Exception e) {
-			pl.getLogger().severe("Could not save inventory of "+ID+"!");
-			e.printStackTrace();
-		}
-		return false;
+		ymlFormat.set("type", "multitype");
+		ymlFormat.set("slots", inv.getContents().length);
+		ymlFormat.set("level", storage.getLvl());
+		ymlFormat.set("grab_mode", storage.canGrab().toString());
+		ymlFormat.set("grab_dir", storage.getGrabDirection().toString());
+		ymlFormat.set("sort_mode", storage.getSortMode().toString());
+		ymlFormat.set("sort_time", storage.getSortTime().toString());
+		ymlFormat.set("stack_time", storage.getStackTime().toString());
+		ymlFormat.save(dataFile);
 	}
 }

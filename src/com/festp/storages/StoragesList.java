@@ -36,7 +36,7 @@ public class StoragesList {
 	public Storage get(int id) {
 		if(id < 0) return null;
 		for(Storage st : storages) {
-			if( st.ID == id ) {
+			if( st.getID() == id ) {
 				return st;
 			}
 		}
@@ -50,11 +50,8 @@ public class StoragesList {
 	
 	public Storage findByInventory(Inventory inv) {
 		for(Storage st : storages) {
-			if(st.getType() == StorageType.MULTITYPE) {
+			if(st instanceof StorageMultitype) {
 				if( Utils.equal_invs(st.getInventory(), inv))
-					return st;
-			} else if(st.getType() == StorageType.BOTTOMLESS) {
-				if( st.unlim_inv.containsPage(inv))
 					return st;
 			}
 		}

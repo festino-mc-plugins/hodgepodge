@@ -1,94 +1,116 @@
 package com.festp.storages;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-
-import com.festp.Utils;
+import org.bukkit.inventory.PlayerInventory;
 import com.festp.mainListener;
-import com.festp.storages.Storage.StorageType;
 
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
-import net.minecraft.server.v1_13_R2.NBTTagInt;
-import net.minecraft.server.v1_13_R2.NBTTagList;
-import net.minecraft.server.v1_13_R2.NBTTagString;
 
-public class Storage {
+public abstract class Storage
+{
 	public enum StorageType {BOTTOMLESS, MULTITYPE};
-	public static final Material UNDEFINED_MATERIAL = Material.AIR;
-	public static final Material GRAB_NOTHING_MATERIAL = Material.BARRIER;
-	public static final Material GRAB_PLAYERNT_MATERIAL = Material.HOPPER;
-	public static final Material GRAB_ALL_MATERIAL = Material.PLAYER_HEAD;
+	public enum Grab {NOTHING, NO_PLAYER, ALL}
+	public static Grab DEFAULT_GRAB_MODE = Grab.NOTHING;
+	protected Grab grab_mode = DEFAULT_GRAB_MODE;
 	
 	public static mainListener pl;
 	
-	int ID;
-	private StorageType type;
-	private Inventory inventory;
-	public Inventory grabbing_inventory = null;
-	public BottomlessInventory unlim_inv;
+	protected int ID;
+	protected StorageType type;
 	long start_session, last_load;
-	private boolean edited = false;
+	protected boolean edited = false;
+	public static final String NBT_KEY = "StorageID";
 	
-	public static ItemStack[] empty_inventory = new ItemStack[54];
-	
-	public Storage(int ID, long full_time) {
+	public Storage(int ID, long full_time)
+	{
 		this.ID = ID;
 		start_session = full_time;
 		last_load = full_time;
-		
-		this.type = StorageType.MULTITYPE;
-		inventory = pl.getServer().createInventory(null, 27, "Storage");
 	}
-	
-	public Storage(int ID, long full_time, Material material) {
-		this.ID = ID;
-		this.type = StorageType.BOTTOMLESS;
-		start_session = full_time;
-		last_load = full_time;
-		
-		unlim_inv = new BottomlessInventory(this);
-		unlim_inv.setMaterial(material);
+
+	public int getID() {
+		return ID;
 	}
-	
+
+	@Deprecated // if I am going to remove StorageType
 	public StorageType getType() {
 		return type;
 	}
 	
-	public Inventory getInventory() {
-		if(type == StorageType.BOTTOMLESS)
-			return unlim_inv.getPage();
-		else
-			return inventory;
+	@Deprecated // if I am going to remove StorageType
+	public static StorageType getType(ItemStack item) {
+		if (!isStorage(item))
+			return null;
+		if (item.getEnchantmentLevel(Enchantment.ARROW_INFINITE) > 0)
+			return StorageType.BOTTOMLESS;
+		if (item.getEnchantmentLevel(Enchantment.DIG_SPEED) > 0)
+			return StorageType.MULTITYPE;
+		return null;
 	}
-	
-	public void setInventory(Inventory inv) {
-		inventory = inv;
-	}
-	
+
+	/** Any edit of Storage means only that it needs to be saved. */
 	public boolean wasEdited() {
 		return edited;
 	}
 
+	/** Any edit of Storage means only that it needs to be saved. */
 	public void setEdited(boolean new_val) {
 		edited = new_val;
+	}
+	
+	public void setGrab(Grab grab_mode) {
+		this.grab_mode = grab_mode;
+	}
+	
+	public Grab canGrab() {
+		return grab_mode;
+	}
+	
+	public boolean canGrab(Inventory inv) {
+		if (!isGrabbableInventory(inv))
+			return false;
+		
+		Grab min_grab = Grab.NO_PLAYER;
+		if(inv instanceof PlayerInventory)
+			min_grab = Grab.ALL;
+		return canGrab() == min_grab || min_grab == Grab.NO_PLAYER && canGrab() == Grab.ALL;
+	}
+	
+	public static boolean isGrabbableInventory(Inventory inv) {
+		return inv != null && !(inv.getType() == InventoryType.ANVIL || inv.getType() == InventoryType.BEACON || inv.getType() == InventoryType.BREWING
+				 || inv.getType() == InventoryType.CRAFTING || inv.getType() == InventoryType.WORKBENCH
+				 || inv.getType() == InventoryType.ENCHANTING || inv.getType() == InventoryType.FURNACE || inv.getType() == InventoryType.MERCHANT);
+	}
+	
+	public abstract Inventory getInventory();
+	
+	public abstract boolean isEmpty();
+
+	public abstract boolean isAllowed(ItemStack item);
+
+	public abstract void drop(Location from);
+	
+	public void saveToFile() {
+		pl.ststorage.saveStorage(this);
 	}
 	
 	public static Storage loadFromFile(int ID) {
 		return pl.ststorage.loadStorage(ID);
 	}
 	
-	public void saveToFile() {
-		pl.ststorage.saveStorage(this);
-	}
-	
 	public static Storage getByItemStack(ItemStack storage) {
 		int id = getID(storage);
 		if(id < 0) return null;
 		return pl.stlist.get(id);
+	}
+	
+	public static boolean isStorage(ItemStack item) {
+		return getID(item) >= 0;
 	}
 	
 	public static int getID(ItemStack storage) {
@@ -98,53 +120,23 @@ public class Storage {
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return -1;
-        if( compound.hasKey("StorageID") )
-        	return compound.getInt("StorageID");
-        //nmsStack.setTag(compound);
+        if( compound.hasKey(NBT_KEY) )
+        	return compound.getInt(NBT_KEY);
 		return -1;
 	}
 	
-	public static boolean isStorage(ItemStack item) {
-		return getID(item) >= 0;
-	}
-	
-	public void drop(Location loc) {
-		setEdited(true);
-		if(type == StorageType.BOTTOMLESS)
-			unlim_inv.drop(loc);
-		else {
-			int i = 0;
-			for(ItemStack stack : inventory.getContents()) {
-				Utils.drop(loc, stack, 1);
-				inventory.setItem(i, null);
-				i++;
-			}
-		}
-	}
-
-	public boolean isAllowed(ItemStack item) {
-		if(type == StorageType.BOTTOMLESS) {
-			if(item != null && Storage.getID(item) < 0 && (item.getType() == unlim_inv.getMaterial() || item.getType() == Material.AIR))
-				if(!Utils.isRenamed(item))
-					return true;
-			return false;
-		}
-		return Storage.getID(item) < 0;
-	}
-
-	public boolean isEmpty() {
-		if(type == StorageType.BOTTOMLESS)
-			return unlim_inv.getAmount() == 0;
-		else {
-			int i = 0;
-			for(ItemStack stack : inventory.getContents())
-				if(stack != null)
-					return false;
-			return true;
-		}
-	}
-
-	public int getID() {
-		return ID;
+	public static ItemStack setID(ItemStack i, int ID) {
+		net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+        NBTTagCompound compound = nmsStack.getTag();
+        if (compound == null) {
+           compound = new NBTTagCompound();
+            nmsStack.setTag(compound);
+            compound = nmsStack.getTag();
+        }
+        //it guarantee not to stack
+        compound.setInt(NBT_KEY, ID);
+        nmsStack.setTag(compound);
+        i = CraftItemStack.asBukkitCopy(nmsStack);
+        return i;
 	}
 }

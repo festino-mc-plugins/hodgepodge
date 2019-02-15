@@ -18,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
+import com.festp.Utils;
 import com.festp.mainListener;
 
 public class BeamedPair implements Listener {	
@@ -39,7 +40,7 @@ public class BeamedPair implements Listener {
 		this.beamer = beamer;
 		this.beamed = beamed;
 		workaround = beamer.getWorld().spawn(beamer.getLocation(), Guardian.class);
-		workaround.setCollidable(false);
+		Utils.setNoCollide(workaround, true);
 		workaround.setInvulnerable(true);
 		//workaround.setAI(false);
 		//workaround.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, really_huge_duration, 128, false, false));
