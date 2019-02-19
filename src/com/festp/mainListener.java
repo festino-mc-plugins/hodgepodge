@@ -150,6 +150,10 @@ import java.util.UUID;
 
 public class mainListener extends JavaPlugin implements Listener
 {
+	public static String pluginname;
+	public static final String enderdir = "EnderChestGroups";
+	public static final String storagesdir = "Storages";
+	
 	Config conf;
 	ActiveAmSpawnBlocking spawnblock;
 	private CraftManager craft_manager;
@@ -162,10 +166,7 @@ public class mainListener extends JavaPlugin implements Listener
 
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
-	
-	public static String pluginname;
-	public static final String enderdir = "EnderChestGroups";
-	public static final String storagesdir = "Storages";
+	public StorageHandler sthandler = new StorageHandler(this);
 	
 	public World mainworld = null;
 	
@@ -181,7 +182,6 @@ public class mainListener extends JavaPlugin implements Listener
 		BeamedPair.setPlugin(this);
 		Utils.setPlugin(this);
 		Utils.onEnable();
-		Storage.pl = this;
 		getServer().getPluginManager().registerEvents(this, this);
 		
 		//would better getting main world from server config
@@ -226,8 +226,7 @@ public class mainListener extends JavaPlugin implements Listener
     	getCommand(command_worker.main_command).setExecutor(command_worker);
     	getCommand(command_worker.item_command).setExecutor(command_worker);
     	
-    	StorageHandler handler_storage = new StorageHandler(this);
-    	pm.registerEvents(handler_storage, this);
+    	pm.registerEvents(sthandler, this);
     	
     	EnderChestHandler ecH = new EnderChestHandler(this);
     	//pm.registerEvents(new EnderChestHandler(this), this);
@@ -314,7 +313,7 @@ public class mainListener extends JavaPlugin implements Listener
 					st.onTick();
 					
 					//beam, unload, save, process
-					handler_storage.onTick();
+					sthandler.onTick();
 					
 					//drag xp
 					eh.onTick();
