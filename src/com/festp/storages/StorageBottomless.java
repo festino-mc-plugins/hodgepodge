@@ -22,7 +22,7 @@ public class StorageBottomless extends Storage
 	public static final Material UNDEFINED_MATERIAL = Material.AIR;
 	private Material allowed_type;
 	private Integer amount = 0;
-	public BottomlessMenu menu;
+	public MenuBottomless menu;
 	
 	public StorageBottomless(int ID, long full_time, Material material)
 	{
@@ -30,7 +30,20 @@ public class StorageBottomless extends Storage
 		this.type = StorageType.BOTTOMLESS;
 		setMaterial(material);
 		
-		menu = new BottomlessMenu(this);
+		menu = new MenuBottomless(this);
+	}
+	
+	@Override
+	public void grab()
+	{
+		if (external_inv == null || !canGrab(external_inv))
+			return;
+		
+		Pair<Boolean, ItemStack[]> result = grabInventory(external_inv.getContents());
+		if (result.first) {
+			external_inv.setContents(result.second);
+			Utils.getPlugin().sthandler.delayedUpdate(external_inv);
+		}
 	}
 	
 	public Inventory getInventory()
@@ -66,6 +79,7 @@ public class StorageBottomless extends Storage
 	
 	public void setMaterial(Material m) {
 		allowed_type = m;
+		grab();
 	}
 	
 	public boolean isDefined() {
@@ -154,9 +168,6 @@ public class StorageBottomless extends Storage
 				StorageBottomless st = (StorageBottomless)storage;
 				inv.setItem(j, st.getLored(stacks[j]));
 			}
-		}
-		for(HumanEntity human : inv.getViewers()) {
-			((Player)human).updateInventory();
 		}
 	}
 	
