@@ -23,7 +23,7 @@ import com.festp.menu.MenuAction;
 import com.festp.menu.MenuListener;
 import com.festp.storages.Storage.Grab;
 
-public class BottomlessMenu implements MenuListener {
+public class MenuBottomless implements MenuListener {
 	public static final Material GRAB_NOTHING_MATERIAL = Material.BARRIER;
 	public static final Material GRAB_PLAYERNT_MATERIAL = Material.HOPPER;
 	public static final Material GRAB_ALL_MATERIAL = Material.PLAYER_HEAD;
@@ -32,7 +32,7 @@ public class BottomlessMenu implements MenuListener {
 	private StorageBottomless storage;
 	private InventoryMenu menu = null;
 	
-	public BottomlessMenu(StorageBottomless st) {
+	public MenuBottomless(StorageBottomless st) {
 		storage = st;
 	}
 	
