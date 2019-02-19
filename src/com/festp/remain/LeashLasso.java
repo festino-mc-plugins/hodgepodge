@@ -15,6 +15,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Parrot;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Turtle;
 import org.bukkit.entity.Vex;
 import org.bukkit.inventory.ItemStack;
@@ -31,7 +32,7 @@ public class LeashLasso {
 	public static final String BEACON_ID = "beacon_lasso";
 	private static LeashManager manager = null;
 	public static final Class<? extends LivingEntity> projectile_class = Turtle.class;
-	private static final Class<? extends LivingEntity> beacon_class = Bat.class;
+	private static final Class<? extends LivingEntity> beacon_class = Bat.class; // because Turtle has vanilla leash mechanics
 	private static final double LEAD_LOWERING = -0.8, FENCE_HALF_WIDTH = (4 / 16) / 2, MOB_LEASH_R = 0.1, EPSILON = 0.001;
 	private static final int STICKY_DESPAWN_DELAY = 20, REMOVE_COOLDOWN = 60;
 	private static final Material[] STICKY_BLOCKS = { Material.CACTUS, Material.SLIME_BLOCK };
@@ -98,7 +99,8 @@ public class LeashLasso {
 			despawnLasso();
 			return false;
 		}
-		if(projectile.getLocation().distanceSquared(holder.getLocation()) > LeashManager.LASSO_BREAK_SQUARE) {
+		if(holder instanceof Player && !((Player)holder).isOnline()
+				|| projectile.getLocation().distanceSquared(holder.getLocation()) > LeashManager.LASSO_BREAK_SQUARE) {
 			dropLead();
 			despawnLasso();
 			return false;
@@ -124,7 +126,6 @@ public class LeashLasso {
 				return false;
 			}
 		}
-		
 		
 		//collide with fence -> hitch
 		if (Utils.isFence(current.getType())) {
