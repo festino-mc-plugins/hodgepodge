@@ -14,6 +14,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -113,16 +114,17 @@ public class InventoryHandler implements Listener {
 	}
 	
 	//armor equip
-	@EventHandler
+	@EventHandler(priority=EventPriority.LOWEST)
 	public void onPlayerPickupItem(EntityPickupItemEvent event)
 	{
-		if(event.getEntityType() != EntityType.PLAYER) return;
+		if (event.isCancelled()) return;
+		if (event.getEntityType() != EntityType.PLAYER) return;
 		
 		Player player = (Player)event.getEntity();
 		
-		for(int i=dropped_items.size()-1; i>=0; i--)
+		for (int i=dropped_items.size()-1; i>=0; i--)
 		{
-			if(dropped_items.get(i).it == event.getItem() && dropped_items.get(i).p == player)
+			if (dropped_items.get(i).it == event.getItem() && dropped_items.get(i).p == player)
 			{
 				event.setCancelled(true);
 				return;
@@ -134,25 +136,25 @@ public class InventoryHandler implements Listener {
 		String string_id = armor_material.toString();
 		//кожанка-золото-кольчуга-железо-алмазы
 		boolean isEquiped = false, deleteItem = false;
-		if(string_id.contains("HELMET"))
+		if (string_id.contains("HELMET"))
 		{
-			if( player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType().equals(Material.AIR) ) {
+			if ( player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType().equals(Material.AIR) ) {
 				isEquiped = true;
 				deleteItem = true;
 				player.getInventory().setHelmet(pickedup);
-			} else if(  armorMaterial(armor_material) < itemMaterial(player.getInventory().getHelmet().getType()) ) {
+			} else if (  armorMaterial(armor_material) < itemMaterial(player.getInventory().getHelmet().getType()) ) {
 				isEquiped = true;
 				event.getItem().setItemStack(player.getInventory().getHelmet());
 				player.getInventory().setHelmet(pickedup);
 			}
 		}
-		else if(string_id.contains("CHESTPLATE"))
+		else if (string_id.contains("CHESTPLATE"))
 		{
-			if( player.getInventory().getChestplate() == null || player.getInventory().getChestplate().getType().equals(Material.AIR) ) {
+			if ( player.getInventory().getChestplate() == null || player.getInventory().getChestplate().getType().equals(Material.AIR) ) {
 				isEquiped = true;
 				deleteItem = true;
 				player.getInventory().setChestplate(pickedup);
-			} else if( armorMaterial(armor_material) < itemMaterial(player.getInventory().getChestplate().getType()) ) {
+			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getChestplate().getType()) ) {
 				isEquiped = true;
 				event.getItem().setItemStack(player.getInventory().getChestplate());
 				player.getInventory().setChestplate(pickedup);
@@ -164,31 +166,31 @@ public class InventoryHandler implements Listener {
 			deleteItem = true;
 			player.getInventory().setChestplate(pickedup);
 		}*/
-		else if( string_id.contains("LEGGINGS"))
+		else if (string_id.contains("LEGGINGS"))
 		{
-			if( player.getInventory().getLeggings() == null || player.getInventory().getLeggings().getType().equals(Material.AIR) ) {
+			if ( player.getInventory().getLeggings() == null || player.getInventory().getLeggings().getType().equals(Material.AIR) ) {
 				isEquiped = true;
 				deleteItem = true;
 				player.getInventory().setLeggings(pickedup);
-			} else if( armorMaterial(armor_material) < itemMaterial(player.getInventory().getLeggings().getType()) ) {
+			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getLeggings().getType()) ) {
 				isEquiped = true;
 				event.getItem().setItemStack(player.getInventory().getLeggings());
 				player.getInventory().setLeggings(pickedup);
 			}
 		}
-		else if(string_id.contains("BOOTS"))
+		else if (string_id.contains("BOOTS"))
 		{
-			if( player.getInventory().getBoots() == null || player.getInventory().getBoots().getType().equals(Material.AIR) ) {
+			if ( player.getInventory().getBoots() == null || player.getInventory().getBoots().getType().equals(Material.AIR) ) {
 				isEquiped = true;
 				deleteItem = true;
 				player.getInventory().setBoots(pickedup);
-			} else if( armorMaterial(armor_material) < itemMaterial(player.getInventory().getBoots().getType()) ) {
+			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getBoots().getType()) ) {
 				isEquiped = true;
 				event.getItem().setItemStack(player.getInventory().getBoots());
 				player.getInventory().setBoots(pickedup);
 			}
 		}
-		if(isEquiped) {
+		if (isEquiped) {
 			/*ItemStack item = pickedup;
 			ItemMeta im = item.getItemMeta();
 			im.setLore(Arrays.asList("todelete"));
