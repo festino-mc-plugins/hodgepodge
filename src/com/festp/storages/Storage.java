@@ -3,10 +3,17 @@ package com.festp.storages;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+
+import com.festp.DelayedTask;
+import com.festp.Pair;
+import com.festp.TaskList;
+import com.festp.Utils;
 import com.festp.mainListener;
 
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
@@ -14,17 +21,16 @@ import net.minecraft.server.v1_13_R2.NBTTagCompound;
 public abstract class Storage
 {
 	public enum StorageType {BOTTOMLESS, MULTITYPE};
-	public enum Grab {NOTHING, NO_PLAYER, ALL}
+	public enum Grab {NOTHING, NEW, NO_PLAYER, ALL}
 	public static Grab DEFAULT_GRAB_MODE = Grab.NOTHING;
 	protected Grab grab_mode = DEFAULT_GRAB_MODE;
-	
-	public static mainListener pl;
 	
 	protected int ID;
 	protected StorageType type;
 	long start_session, last_load;
 	protected boolean edited = false;
 	public static final String NBT_KEY = "StorageID";
+	protected Inventory external_inv = null; //also null if the Storage is dropped into the world
 	
 	public Storage(int ID, long full_time)
 	{
@@ -64,7 +70,9 @@ public abstract class Storage
 	}
 	
 	public void setGrab(Grab grab_mode) {
+		setEdited(true);
 		this.grab_mode = grab_mode;
+		grab();
 	}
 	
 	public Grab canGrab() {
@@ -76,7 +84,7 @@ public abstract class Storage
 			return false;
 		
 		Grab min_grab = Grab.NO_PLAYER;
-		if(inv instanceof PlayerInventory)
+		if(inv.getType() == InventoryType.PLAYER)
 			min_grab = Grab.ALL;
 		return canGrab() == min_grab || min_grab == Grab.NO_PLAYER && canGrab() == Grab.ALL;
 	}
@@ -87,6 +95,31 @@ public abstract class Storage
 				 || inv.getType() == InventoryType.ENCHANTING || inv.getType() == InventoryType.FURNACE || inv.getType() == InventoryType.MERCHANT);
 	}
 	
+	public Inventory getExternalInventory() {
+		return external_inv;
+	}
+	
+	public void setExternalInventory(Inventory inv) {
+		external_inv = inv;
+		TaskList.add(grab_task);
+	}
+	
+	DelayedTask grab_task = new DelayedTask(1, new Runnable() { @Override
+		public void run() { grab(); }
+	});
+
+	public void grab()
+	{
+		if (external_inv == null || !canGrab(external_inv))
+			return;
+		
+		Pair<Boolean, ItemStack[]> result = grabInventory(external_inv.getContents());
+		if (result.first) {
+			external_inv.setContents(result.second);
+			Utils.getPlugin().sthandler.delayedUpdate(external_inv);
+		}
+	}
+	
 	public abstract Inventory getInventory();
 	
 	public abstract boolean isEmpty();
@@ -95,18 +128,21 @@ public abstract class Storage
 
 	public abstract void drop(Location from);
 	
+	/** @return <b>true</b> if <b>inv</b> has been updated, and new inventory contents*/
+	public abstract Pair<Boolean, ItemStack[]> grabInventory(ItemStack[] inv);
+	
 	public void saveToFile() {
-		pl.ststorage.saveStorage(this);
+		Utils.getPlugin().ststorage.saveStorage(this);
 	}
 	
 	public static Storage loadFromFile(int ID) {
-		return pl.ststorage.loadStorage(ID);
+		return Utils.getPlugin().ststorage.loadStorage(ID);
 	}
 	
 	public static Storage getByItemStack(ItemStack storage) {
 		int id = getID(storage);
 		if(id < 0) return null;
-		return pl.stlist.get(id);
+		return Utils.getPlugin().stlist.get(id);
 	}
 	
 	public static boolean isStorage(ItemStack item) {
