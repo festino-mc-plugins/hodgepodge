@@ -13,8 +13,8 @@ import org.bukkit.inventory.PlayerInventory;
 import com.festp.DelayedTask;
 import com.festp.Pair;
 import com.festp.TaskList;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
 
@@ -22,7 +22,7 @@ public abstract class Storage
 {
 	public enum StorageType {BOTTOMLESS, MULTITYPE};
 	public enum Grab {NOTHING, NEW, NO_PLAYER, ALL}
-	public static Grab DEFAULT_GRAB_MODE = Grab.NOTHING;
+	public static final Grab DEFAULT_GRAB_MODE = Grab.NOTHING;
 	protected Grab grab_mode = DEFAULT_GRAB_MODE;
 	
 	protected int ID;
@@ -110,14 +110,7 @@ public abstract class Storage
 
 	public void grab()
 	{
-		if (external_inv == null || !canGrab(external_inv))
-			return;
-		
-		Pair<Boolean, ItemStack[]> result = grabInventory(external_inv.getContents());
-		if (result.first) {
-			external_inv.setContents(result.second);
-			Utils.getPlugin().sthandler.delayedUpdate(external_inv);
-		}
+		grabInventory(external_inv);
 	}
 	
 	public abstract Inventory getInventory();
@@ -127,9 +120,37 @@ public abstract class Storage
 	public abstract boolean isAllowed(ItemStack item);
 
 	public abstract void drop(Location from);
+
+	/** on Item pickup - do not change <b>stack</b>
+	  * @return grabbed amount*/
+	public abstract int grabItemStack(ItemStack stack);
 	
 	/** @return <b>true</b> if <b>inv</b> has been updated, and new inventory contents*/
 	public abstract Pair<Boolean, ItemStack[]> grabInventory(ItemStack[] inv);
+
+	/** uses grabInventory(ItemStack[] inv) if canGrab(Inventory) this*/
+	public void grabInventory(Inventory inv) {
+		if (!canGrab(inv))
+			return;
+		
+		Pair<Boolean, ItemStack[]> result = grabInventory(inv.getStorageContents());
+		if (result.first) {
+			inv.setStorageContents(result.second);
+			Utils.getPlugin().sthandler.delayedUpdate(inv);
+		}
+	}
+
+	/** uses grabInventory(ItemStack[] inv), ignoring canGrab(Inventory)*/
+	public void grabAnyInventory(Inventory inv) {
+		if (inv == null)
+			return;
+		
+		Pair<Boolean, ItemStack[]> result = grabInventory(inv.getStorageContents());
+		if (result.first) {
+			inv.setStorageContents(result.second);
+			Utils.getPlugin().sthandler.delayedUpdate(inv);
+		}
+	}
 	
 	public void saveToFile() {
 		Utils.getPlugin().ststorage.saveStorage(this);
@@ -174,5 +195,9 @@ public abstract class Storage
         nmsStack.setTag(compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
+	}
+	
+	public String toString() {
+		return "Storage(ID="+ID+")";
 	}
 }
