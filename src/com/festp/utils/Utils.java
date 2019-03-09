@@ -1,4 +1,4 @@
-package com.festp;
+package com.festp.utils;
 
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
@@ -15,6 +15,7 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Turtle;
 import org.bukkit.entity.Vex;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Cauldron;
 import org.bukkit.material.MaterialData;
@@ -34,7 +36,9 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
+import com.festp.mainListener;
 import com.festp.storages.Storage;
+import com.festp.storages.StorageMultitype;
 
 import net.minecraft.server.v1_13_R2.EntityAgeable;
 import net.minecraft.server.v1_13_R2.EntityAnimal;
@@ -56,6 +60,10 @@ public class Utils {
 
 	public static mainListener getPlugin() {
 		return plugin;
+	}
+	
+	public static void printError(String msg) {
+		plugin.getLogger().severe(msg);
 	}
 
 	public static void onEnable()
@@ -1853,5 +1861,74 @@ public class Utils {
 	public static boolean isRenamed(ItemStack item) {
 		return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				&& !item.getItemMeta().getDisplayName().equals((new ItemStack(item.getType())).getItemMeta().getDisplayName());
+	}
+	
+	/**@return <b>null</b> if the <b>stack</b> was only given<br>
+	 * <b>Item</b> if at least one item was dropped*/
+	public static Item giveOrDrop(Inventory inv, ItemStack stack)
+	{
+		boolean given = false;
+		ItemStack[] stacks = inv.getStorageContents();
+		int amount = stack.getAmount();
+		amount -= StorageMultitype.grabItemStack_stacking(inv, stack);
+		if (amount == 0)
+			return null;
+		amount -= StorageMultitype.grabItemStack_any(inv, stack, amount);
+		if (amount == 0)
+			return null;
+		stack.setAmount(amount);
+		Item item = inv.getLocation().getWorld().dropItem(inv.getLocation(), stack);
+		item.setVelocity(new Vector());
+		return item;
+	}
+	
+	public static int countEmpty(ItemStack[] inv)
+	{
+		int empty = 0;
+		for (ItemStack is : inv)
+			if (is == null)
+				empty++;
+		return empty;
+	}
+	
+	public static <T> int indexOf(T needle, T[] haystack)
+	{
+	    for (int i=0; i<haystack.length; i++)
+	    {
+	        if (haystack[i] != null && haystack[i].equals(needle)
+	            || needle == null && haystack[i] == null) return i;
+	    }
+
+	    return -1;
+	}
+	public static <T> T next(T needle, T[] haystack)
+	{
+		int index = Utils.indexOf(needle, haystack);
+		if (index < 0)
+			return null;
+		return haystack[(index + 1) % haystack.length];
+	}
+	public static <T> T prev(T needle, T[] haystack)
+	{
+		int index = Utils.indexOf(needle, haystack);
+		if (index < 0)
+			return null;
+		return haystack[((index - 1) % haystack.length + haystack.length) % haystack.length];
+	}
+	
+	public static ItemStack setShulkerInventory(ItemStack shulker_box, Inventory inv)
+	{
+    	BlockStateMeta im = (BlockStateMeta)shulker_box.getItemMeta();
+    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+    	shulker.getInventory().setContents(inv.getStorageContents());
+    	im.setBlockState(shulker);
+    	shulker_box.setItemMeta(im);
+    	return shulker_box;
+	}
+	public static Inventory getShulkerInventory(ItemStack shulker_box)
+	{
+    	BlockStateMeta im = (BlockStateMeta)shulker_box.getItemMeta();
+    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+    	return shulker.getInventory();
 	}
 }
