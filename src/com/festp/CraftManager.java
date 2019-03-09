@@ -37,6 +37,7 @@ import com.festp.remain.SoulStone;
 import com.festp.remain.SummonerTome;
 import com.festp.storages.Storage;
 import com.festp.storages.Storage.StorageType;
+import com.festp.utils.Utils;
 import com.festp.storages.StorageBottomless;
 import com.festp.storages.StorageMultitype;
 import com.festp.storages.StoragesFileManager;
@@ -71,7 +72,7 @@ public class CraftManager implements Listener {
 		zero_storage_multitype1 = new ItemStack(Material.FIREWORK_STAR, 1);
 			storage_meta_multitype = zero_storage_multitype1.getItemMeta();
 			storage_meta_multitype.setDisplayName("Storage");
-			storage_meta_multitype.setLore(Arrays.asList("Smart storage. Maybe smarter than you... Never mind!"));
+			storage_meta_multitype.setLore(Arrays.asList("Smart storage.")); //Smart storage. Maybe smarter than you... Never mind!
 			storage_meta_multitype.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 		zero_storage_multitype1.setItemMeta(storage_meta_multitype);
 		zero_storage_multitype1.addUnsafeEnchantment(Enchantment.DIG_SPEED, 1);
@@ -79,7 +80,7 @@ public class CraftManager implements Listener {
 		
 		zero_storage_multitype2 = zero_storage_multitype1.clone();
 		storage_meta_multitype = zero_storage_multitype2.getItemMeta();
-			storage_meta_multitype.setLore(Arrays.asList("Smarter storage. Who knows what's on its mind?"));
+			storage_meta_multitype.setLore(Arrays.asList("Smarter storage.")); //Smarter storage. Who knows what's on its mind?
 		zero_storage_multitype2.setItemMeta(storage_meta_multitype);
 		zero_storage_multitype2.addUnsafeEnchantment(Enchantment.DIG_SPEED, 2);
 		
@@ -347,7 +348,7 @@ public class CraftManager implements Listener {
     	storage_multitype3.addIngredient(5, Material.NAME_TAG);
     	storage_multitype3.addIngredient(1, Material.ENDER_EYE);
     	server.addRecipe(storage_multitype3);
-
+    	
     	ShapelessRecipe storage_multitype_back = new ShapelessRecipe(key___storage_multitype_back, new ItemStack(Material.SHULKER_BOX));
     	storage_multitype_back.addIngredient(1, Material.FIREWORK_STAR);
     	server.addRecipe(storage_multitype_back);
@@ -374,7 +375,7 @@ public class CraftManager implements Listener {
 					&& ( Utils.contains_all_of(matrix[5].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[5].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
 					&& ( Utils.contains_all_of(matrix[7].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[7].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") ))
 				{
-					
+					//nothing to do
 				}
 				else
 				{
