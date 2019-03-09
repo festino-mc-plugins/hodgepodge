@@ -1,6 +1,6 @@
 package com.festp.amethyst;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_13_R2.Entity;
 import net.minecraft.server.v1_13_R2.PathEntity;
