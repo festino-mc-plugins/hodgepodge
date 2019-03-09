@@ -13,8 +13,9 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.ClickResult;
+import com.festp.utils.Utils;
 
 public class InventoryMenu implements Listener {
 	private static mainListener plugin;
@@ -67,11 +68,12 @@ public class InventoryMenu implements Listener {
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
 		//event.getClickedInventory() != gui
-		if(event.getAction() != InventoryAction.COLLECT_TO_CURSOR)
-			if(event.getClickedInventory() == null || !Utils.equal_invs(event.getView().getTopInventory(),gui)
-					|| (!Utils.equal_invs(event.getClickedInventory(),gui) && event.getAction() != InventoryAction.MOVE_TO_OTHER_INVENTORY)
-					|| event.getAction() == InventoryAction.CLONE_STACK || event.getClick() == ClickType.CREATIVE)
+		//System.out.println(event.getView().getTopInventory() + " " + gui);
+		if (event.getClickedInventory() == null || !Utils.equal_invs(event.getView().getTopInventory(), gui))
 				return;
+		ClickResult click_res = ClickResult.getClickResult(event);
+		if (!click_res.fromTop() && !click_res.fillsTop())
+			return;
 		event.setCancelled(true);
 		
 		InventoryAction action = event.getAction();
