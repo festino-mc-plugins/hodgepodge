@@ -19,7 +19,6 @@ public class StoragesFileManager {
 	
 	public StoragesFileManager(mainListener pl) {
 		this.pl = pl;
-		Storage.pl = pl;
 	}
 
 	public boolean hasDataFile(int ID) {
@@ -96,23 +95,32 @@ public class StoragesFileManager {
 				String grab = ymlFormat.getString("grab_mode"); // TO DO: pick out strings, create function
 				if (grab == null)
 					grab = Storage.DEFAULT_GRAB_MODE.toString();
-				st.setGrab(Storage.Grab.valueOf(grab));
-				String dir = ymlFormat.getString("grab_dir");
-				if (dir == null)
-					dir = StorageMultitype.DEFAULT_DIR.toString();
-				st.setGrabDirection(StorageMultitype.GrabDirection.valueOf(dir));
+				try { st.setGrab(Storage.Grab.valueOf(grab)); } catch (IllegalArgumentException e) {}
+
+				String grab_filter = ymlFormat.getString("grab_filter");
+				if (grab_filter == null)
+					grab_filter = StorageMultitype.DEFAULT_FILTER.toString();
+				try { st.setGrabFilter(StorageMultitype.GrabFilter.valueOf(grab_filter)); } catch (IllegalArgumentException e) {}
+				
+				String grab_dir = ymlFormat.getString("grab_dir");
+				if (grab_dir == null)
+					grab_dir = StorageMultitype.DEFAULT_DIR.toString();
+				try { st.setGrabDirection(StorageMultitype.GrabDirection.valueOf(grab_dir)); } catch (IllegalArgumentException e) {}
+				
 				String sort_mode = ymlFormat.getString("sort_mode");
 				if (sort_mode == null)
 					sort_mode = StorageMultitype.DEFAULT_MODE.toString();
-				st.setSortMode(StorageMultitype.SortMode.valueOf(sort_mode));
+				try { st.setSortMode(StorageMultitype.SortMode.valueOf(sort_mode)); } catch (IllegalArgumentException e) {}
+				
 				String sort_time = ymlFormat.getString("sort_time");
 				if (sort_time == null)
 					sort_time = StorageMultitype.DEFAULT_TIME.toString();
-				st.setSortTime(StorageMultitype.HandleTime.valueOf(sort_time));
+				try { st.setSortTime(StorageMultitype.HandleTime.valueOf(sort_time)); } catch (IllegalArgumentException e) {}
+				
 				String stack_time = ymlFormat.getString("stack_time");
 				if (stack_time == null)
 					stack_time = StorageMultitype.DEFAULT_TIME.toString();
-				st.setStackTime(StorageMultitype.HandleTime.valueOf(stack_time));
+				try { st.setStackTime(StorageMultitype.HandleTime.valueOf(stack_time)); } catch (IllegalArgumentException e) {}
 				return st;
 			}
 			else return null;
@@ -168,6 +176,7 @@ public class StoragesFileManager {
 		ymlFormat.set("slots", inv.getContents().length);
 		ymlFormat.set("level", storage.getLvl());
 		ymlFormat.set("grab_mode", storage.canGrab().toString());
+		ymlFormat.set("grab_filter", storage.getGrabFilter().toString());
 		ymlFormat.set("grab_dir", storage.getGrabDirection().toString());
 		ymlFormat.set("sort_mode", storage.getSortMode().toString());
 		ymlFormat.set("sort_time", storage.getSortTime().toString());
