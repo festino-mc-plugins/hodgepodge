@@ -5,28 +5,34 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.festp.Utils;
 import com.festp.menu.InventoryMenu;
 import com.festp.menu.MenuAction;
 import com.festp.menu.MenuListener;
 import com.festp.storages.Storage.Grab;
 import com.festp.storages.StorageMultitype.GrabDirection;
+import com.festp.storages.StorageMultitype.GrabFilter;
 import com.festp.storages.StorageMultitype.HandleTime;
 import com.festp.storages.StorageMultitype.SortMode;
 import com.festp.storages.StorageMultitype.UncraftMode;
+import com.festp.utils.Utils;
 
 public class MenuMultitype implements MenuListener {
 	public static final Material MISSING_MATERIAL = Material.ROTTEN_FLESH;
 
 	public static final Grab[] ORDER_GRAB = { Grab.NOTHING, Grab.NEW, Grab.NO_PLAYER, Grab.ALL };
+	public static final GrabFilter[] ORDER_GRAB_FILTER = { GrabFilter.STACKING, GrabFilter.SIMILAR, GrabFilter.ANY };
 	public static final GrabDirection[] ORDER_GRAB_DIR = { GrabDirection.BACKWARD, GrabDirection.FORWARD };
 	public static final SortMode[] ORDER_SORT_MODE = { SortMode.ALPHABET, SortMode.VANILLA };
 	public static final HandleTime[] ORDER_TIME = { HandleTime.ON_BUTTON, HandleTime.WAIT_N_SECONDS, HandleTime.OPEN_CLOSE, HandleTime.ALWAYS };
 	public static final UncraftMode[] ORDER_UNCRAFT = { UncraftMode.DENY, UncraftMode.DROP };
 	public static final Material
 		GRAB_NOTHING_MATERIAL = Material.BARRIER,
-		GRAB_PLAYERNT_MATERIAL = Material.HOPPER,
+		GRAB_NEW_MATERIAL = Material.IRON_PICKAXE, // also there are option with Material.HOPPER
+		GRAB_PLAYERNT_MATERIAL = Material.HOPPER,  //                        and Material.HOPPER_MINECART
 		GRAB_ALL_MATERIAL = Material.PLAYER_HEAD,
+		GRAB_F_STACKING_MATERIAL = Material.NAME_TAG,
+		GRAB_F_SIMILAR_MATERIAL = Material.BOOKSHELF,
+		GRAB_F_ANY_MATERIAL = Material.CHEST,
 		SORT_BUTTON = Material.HOPPER,
 		SORT_VANILLA = Material.GRASS_BLOCK,
 		SORT_ALPHABET = Material.NAME_TAG,
@@ -34,7 +40,7 @@ public class MenuMultitype implements MenuListener {
 		TIME__WAIT_N_SECONDS = Material.CLOCK,
 		TIME__OPEN_CLOSE = Material.ENDER_EYE,
 		TIME__ALWAYS = Material.REDSTONE_BLOCK,
-		STACK_BUTTON = Material.SLIME_BALL, // book, bookshelf, chest, slime
+		STACK_BUTTON = Material.SLIME_BALL,
 		UNCRAFT_DENY = Material.BARRIER,
 		UNCRAFT_DROP = Material.GLASS_PANE;
 	public static final String ARROW_LEFT = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWYxMzNlOTE5MTlkYjBhY2VmZGMyNzJkNjdmZDg3YjRiZTg4ZGM0NGE5NTg5NTg4MjQ0NzRlMjFlMDZkNTNlNiJ9fX0=",
@@ -43,26 +49,28 @@ public class MenuMultitype implements MenuListener {
 	// Util Map<String,String> with english and other lang strings
 	
 	
-	private static final int grab_mode_index = 0, grab_dir_index = 1,
-			sort_mode_index = 2, sort_time_index = 3, sort_index = sort_mode_index + 9,
-			stack_time_index = 4, stack_index = stack_time_index + 9,
+	private static final int grab_mode_index = 0, grab_filter_index = 1, grab_dir_index = 2,
+			sort_mode_index = 3, sort_time_index = 4, sort_index = sort_time_index + 9,
+			stack_time_index = 5, stack_index = stack_time_index + 9,
 			uncraft_index = 8;
 	
 	private StorageMultitype storage;
 	private InventoryMenu menu = null;
 	
 	public MenuMultitype(StorageMultitype st) {
+		
 		storage = st;
 	}
 	
 	public Inventory getMenu() {
 		if(menu == null) {
-			int max_slot = max_slot(grab_mode_index, grab_dir_index, sort_mode_index, sort_time_index, sort_index, stack_time_index, stack_index, uncraft_index);
+			int max_slot = max_slot(grab_mode_index, grab_filter_index, grab_dir_index, sort_mode_index, sort_time_index, sort_index, stack_time_index, stack_index, uncraft_index);
 			ItemStack[] buttons = new ItemStack[max_slot + 1];
 			for (int i = 0; i <= max_slot; i++)
 				buttons[i] = null;
 			
 			buttons[grab_mode_index] = genGrabModeButton();
+			buttons[grab_filter_index] = genGrabFilterButton();
 			buttons[grab_dir_index] = genGrabDirButton();
 			buttons[sort_mode_index] = genSortModeButton();
 			buttons[sort_time_index] = genSortTimeButton();
@@ -87,7 +95,6 @@ public class MenuMultitype implements MenuListener {
 	
 	@Override
 	public ItemStack onClick(int slot, ItemStack cursor_item, ItemStack slot_item, MenuAction action) {
-		// grab mode
 		if(slot == grab_mode_index) {
 			Grab new_grab = storage.canGrab();
 			if(action == MenuAction.LEFT_CLICK)
@@ -95,8 +102,16 @@ public class MenuMultitype implements MenuListener {
 			else if(action == MenuAction.RIGHT_CLICK)
 				new_grab = prev(new_grab);
 			storage.setGrab(new_grab);
-			storage.setEdited(true);
 			return genGrabModeButton();
+		}
+		if(slot == grab_filter_index) {
+			GrabFilter grab_filter = storage.getGrabFilter();
+			if(action == MenuAction.LEFT_CLICK)
+				grab_filter = next(grab_filter);
+			else if(action == MenuAction.RIGHT_CLICK)
+				grab_filter = prev(grab_filter);
+			storage.setGrabFilter(grab_filter);
+			return genGrabFilterButton();
 		}
 		// grab direction (from begin/from end)
 		else if(slot == grab_dir_index) {
@@ -106,7 +121,6 @@ public class MenuMultitype implements MenuListener {
 			else if(action == MenuAction.RIGHT_CLICK)
 				dir = prev(dir);
 			storage.setGrabDirection(dir);
-			storage.setEdited(true);
 			
 			return genGrabDirButton();
 		}
@@ -176,15 +190,42 @@ public class MenuMultitype implements MenuListener {
 	private ItemStack genGrabModeButton() {
 		String grab_name = "ERROR_GRAB_MODE_NAME";
 		Material grab_material = MISSING_MATERIAL;
-		if(storage.canGrab() == Grab.ALL) {
+		Grab grab_mode = storage.canGrab();
+		if(grab_mode == Grab.ALL) {
 			grab_material = GRAB_ALL_MATERIAL;
 			grab_name = "Ññàñûâàíèå: ÂÑ¨";
-		} else if(storage.canGrab() == Grab.NO_PLAYER) {
+		} else if(grab_mode == Grab.NO_PLAYER) {
 			grab_material = GRAB_PLAYERNT_MATERIAL;
 			grab_name = "Ññàñûâàíèå: ÊÐÎÌÅ ÈÃÐÎÊÀ";
-		} else {
+		} else if(grab_mode == Grab.NEW) {
+			grab_material = GRAB_NEW_MATERIAL;
+			grab_name = "Ññàñûâàíèå: ÒÎËÜÊÎ ÍÎÂÎÅ";
+		} else if(grab_mode == Grab.NOTHING) {
 			grab_material = GRAB_NOTHING_MATERIAL;
 			grab_name = "Ññàñûâàíèå: ÂÛÊË";
+		}
+		ItemStack grab_button = new ItemStack(grab_material);
+
+		ItemMeta grab_meta = grab_button.getItemMeta();
+		grab_meta.setDisplayName(grab_name);
+		grab_button.setItemMeta(grab_meta);
+		
+		return grab_button;
+	}
+
+	private ItemStack genGrabFilterButton() {
+		String grab_name = "ERROR_GRAB_FILTER_NAME";
+		Material grab_material = MISSING_MATERIAL;
+		GrabFilter grab_filter = storage.getGrabFilter();
+		if(grab_filter == GrabFilter.STACKING) {
+			grab_material = GRAB_F_STACKING_MATERIAL;
+			grab_name = "Ññàñûâàòü ÄÎÏÎËÍßß ñòàêè";
+		} else if(grab_filter == GrabFilter.SIMILAR) {
+			grab_material = GRAB_F_SIMILAR_MATERIAL;
+			grab_name = "Ññàñûâàòü ÒÀÊÈÅ ÆÅ âåùè";
+		} else if(grab_filter == GrabFilter.ANY) {
+			grab_material = GRAB_F_ANY_MATERIAL;
+			grab_name = "Ññàñûâàòü ËÞÁÛÅ âåùè";
 		}
 		ItemStack grab_button = new ItemStack(grab_material);
 
@@ -347,18 +388,25 @@ public class MenuMultitype implements MenuListener {
 		return Utils.prev(grab, ORDER_GRAB);
 	}
 	
-	private static SortMode next(SortMode grab) {
-		return Utils.next(grab, ORDER_SORT_MODE);
-	}
-	private static SortMode prev(SortMode grab) {
-		return Utils.prev(grab, ORDER_SORT_MODE);
-	}
-	
 	private static GrabDirection next(GrabDirection dir) {
 		return Utils.next(dir, ORDER_GRAB_DIR);
 	}
 	private static GrabDirection prev(GrabDirection dir) {
 		return Utils.prev(dir, ORDER_GRAB_DIR);
+	}
+	
+	private static GrabFilter next(GrabFilter dir) {
+		return Utils.next(dir, ORDER_GRAB_FILTER);
+	}
+	private static GrabFilter prev(GrabFilter dir) {
+		return Utils.prev(dir, ORDER_GRAB_FILTER);
+	}
+	
+	private static SortMode next(SortMode grab) {
+		return Utils.next(grab, ORDER_SORT_MODE);
+	}
+	private static SortMode prev(SortMode grab) {
+		return Utils.prev(grab, ORDER_SORT_MODE);
 	}
 	
 	private static HandleTime next(HandleTime time) {
