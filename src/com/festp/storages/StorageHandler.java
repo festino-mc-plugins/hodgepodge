@@ -3,8 +3,10 @@ package com.festp.storages;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.ShulkerBox;
 import org.bukkit.craftbukkit.v1_13_R2.entity.CraftItem;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -13,11 +15,13 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -29,12 +33,17 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.Config;
 import com.festp.Pair;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.storages.Storage.Grab;
 import com.festp.storages.StorageMultitype.HandleTime;
+import com.festp.storages.StorageMultitype.UncraftMode;
+import com.festp.utils.ClickResult;
+import com.festp.utils.Utils;
 
 public class StorageHandler implements Listener {
 	//Перенос пусть будет на ЛКМ и перенос + на ЛКМ+Shift. Дроп хранилища и так на Q, дроп его содержимого на Ctrl+Q...
@@ -47,6 +56,7 @@ public class StorageHandler implements Listener {
 	private int storage_unloadcheck_maxticks = 60*20;
 	private List<Inventory> updating_invs = new ArrayList<>();
 	private List<Inventory> grabbing_invs = new ArrayList<>();
+	public static final String LABEL_YOUR_ITEMS = "YOUR ITEMS";
 	
 	public StorageHandler(mainListener plugin)
 	{
@@ -156,12 +166,124 @@ public class StorageHandler implements Listener {
 	@EventHandler
 	public void onPrepareItemCraft(PrepareItemCraftEvent event)
 	{
-		if (event.getInventory().getResult() != null && !Utils.is_shulker_box(event.getInventory().getResult().getType()))
-		for(ItemStack is : event.getInventory().getMatrix()) {
+		ItemStack result = event.getInventory().getResult();
+		if (result != null)
+		{
+			StorageMultitype storage = null;
+			
+			for(ItemStack is : event.getInventory().getMatrix())
+				if(Storage.isStorage(is)) {
+					storage = (StorageMultitype)Storage.getByItemStack(is);
+					break;
+				}
+			
+			if (storage != null)
+				if (Utils.is_shulker_box(result.getType())) {
+					int lvl = storage.getLvl();
+					if (storage.getUncraftMode() == UncraftMode.DENY && lvl - 1 > Utils.countEmpty(event.getViewers().get(0).getInventory().getStorageContents())) {
+						event.getInventory().setResult(null);
+						return;
+					}
+			    	ItemStack item = new ItemStack(Material.SHULKER_BOX);
+			    	BlockStateMeta im = (BlockStateMeta)item.getItemMeta();
+			    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+			    	ItemStack renamed = new ItemStack(Material.SHULKER_BOX);
+			    	ItemMeta meta = renamed.getItemMeta();
+			    	meta.setDisplayName(ChatColor.BOLD + LABEL_YOUR_ITEMS + ChatColor.RESET);
+			    	renamed.setItemMeta(meta);
+			    	ItemStack[] contents = new ItemStack[27];
+			    	contents[0] = renamed;
+			    	shulker.getInventory().setContents(contents);
+			    	im.setBlockState(shulker);
+			    	item.setItemMeta(im);
+					event.getInventory().setResult(item);
+				}
+				else {
+					event.getInventory().setResult(null);
+				}
+		}
+	}
+	//return shulker boxes
+	@EventHandler
+	public void onCraftItem(CraftItemEvent event)
+	{
+		ItemStack result = event.getInventory().getResult();
+		if (result == null) return;
+		StorageMultitype storage = null;
+		
+		for(ItemStack is : event.getInventory().getMatrix())
 			if(Storage.isStorage(is)) {
-				event.getInventory().setResult(null);
+				storage = (StorageMultitype)Storage.getByItemStack(is);
+				break;
+			}
+		
+		if (storage != null)
+		{
+			Inventory st_inv = storage.getInventory();
+			Inventory player_inv = event.getWhoClicked().getInventory();
+			
+			//stop unreal crafts (something moved to cursor(swap))
+			ClickResult click_result = ClickResult.getClickResult(event);
+			if (click_result.items_2_to_1 > 0 || click_result.items_1_to_2 <= 0)
+				return;
+			
+			if (Utils.is_shulker_box(result.getType())) {
+				int lvl = storage.getLvl();
+				int extra_slots = click_result.fillsBottom() ? 1 : 0;
+				if (storage.getUncraftMode() == UncraftMode.DENY) {
+					int empties = Utils.countEmpty(event.getViewers().get(0).getInventory().getStorageContents());
+					if (lvl - 1 + extra_slots > empties)
+					{
+						if (lvl - 1 > empties)
+							event.getInventory().setResult(null);
+						event.setCancelled(true);
+						return;
+					}
+				}
+				//change cursor
+				event.getInventory().setResult(genShulker(st_inv, 0));
+				//give extra shulkers
+				for (int i = 1; i < lvl; i++)
+					Utils.giveOrDrop(player_inv, genShulker(st_inv, 27 * i));
+				
+				//free space if needed(fixed slot -> hotbar button)
+				switch (event.getAction())
+				{
+				case HOTBAR_MOVE_AND_READD:
+				case HOTBAR_SWAP:
+					ItemStack hotbar_slot = player_inv.getItem(event.getHotbarButton());
+					if (hotbar_slot != null) {
+						Utils.giveOrDrop(player_inv, hotbar_slot);
+						player_inv.setItem(event.getHotbarButton(), null);
+					}
+					break;
+				default:
+					break;
+				}
+				
+				//delete storage
+				plugin.ststorage.deleteDataFile(storage.ID);
 			}
 		}
+	}
+	private static ItemStack genShulker(Inventory from, int offset)
+	{
+    	ItemStack item = new ItemStack(Material.SHULKER_BOX);
+    	BlockStateMeta im = (BlockStateMeta)item.getItemMeta();
+    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+    	ItemStack[] contents = new ItemStack[27];
+    	ItemStack[] stacks = from.getStorageContents();
+    	for (int i = 0; i < 27; i++, offset++) {
+    		if (offset >= stacks.length)
+    			break;
+    		contents[i] = stacks[offset];
+    		stacks[offset] = null;
+    	}
+    	from.setStorageContents(stacks);
+    	shulker.getInventory().setContents(contents);
+    	im.setBlockState(shulker);
+    	item.setItemMeta(im);
+    	return item;
 	}
 
 	//immortality of storage
@@ -203,6 +325,7 @@ public class StorageHandler implements Listener {
 	}
 
 	// Storage logic
+	@SuppressWarnings("deprecation")
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (event.isCancelled()) return;
@@ -282,20 +405,96 @@ public class StorageHandler implements Listener {
 
 		st = Storage.getByItemStack(current_item);
 		// click on Storage
-		if(st == null && Storage.getID(current_item) >= 0) {
-			plugin.getLogger().severe("Storage(ID="+Storage.getID(current_item)+") could not load (on inv click: "+event.getClick()+")");
+		if (st == null && Storage.getID(current_item) >= 0) {
+			Utils.printError("Storage(ID="+Storage.getID(current_item)+") could not load (on inv click: "+event.getClick()+")");
 			// delete storage tag from itemstack?
 			return;
 		}
-		if(st != null) {
+		if (st != null) {
 			// click with non-empty cursor
 			// CHANGE STORAGE TYPE / ADD ITEMS - only Bottomless
-			if(cursor != null && cursor.getType() != Material.AIR)
+			if (cursor != null && cursor.getType() != Material.AIR)
 			{
-				if(st instanceof StorageBottomless) {
+				if (Utils.is_shulker_box(cursor.getType())) {
+					event.setCancelled(true);
+					Inventory box_inv = Utils.getShulkerInventory(cursor);
+					if (st instanceof StorageBottomless) {
+						StorageBottomless stb = (StorageBottomless)st;
+						if (event.getClick() == ClickType.LEFT) // put items to storage
+						{
+							stb.grabAnyInventory(box_inv);
+							event.setCursor(Utils.setShulkerInventory(cursor, box_inv));
+						}
+						else if (event.getClick() == ClickType.RIGHT) // drag items from storage
+						{
+							// TO DO: StorageBottomless grab functions, grab-Utils, ignore GrabFilter on SHIFT clicks
+							Material pattern_material = stb.getMaterial();
+							ItemStack pattern = new ItemStack(pattern_material);
+							ItemStack[] stacks = box_inv.getContents();
+							int storage_amount = stb.getAmount(), grabbed, stack_size = pattern.getMaxStackSize(), stack_amount;
+							//stacking
+							for (int i = 0; i < stacks.length; i++)
+							{
+								if (pattern.isSimilar(stacks[i]))
+								{
+									stack_amount = stacks[i].getAmount();
+									grabbed = Math.min(stack_size - stack_amount, storage_amount);
+									stacks[i].setAmount(stack_amount + grabbed);
+									storage_amount -= grabbed;
+									if (storage_amount == 0)
+										break;
+								}
+							}
+							if (storage_amount > 0) {
+								//grabbing
+								for (int i = 0; i < stacks.length; i++)
+								{
+									if (stacks[i] == null)
+									{
+										grabbed = Math.min(stack_size, storage_amount);
+										stacks[i] = new ItemStack(pattern_material, grabbed);
+										storage_amount -= grabbed;
+										if (storage_amount == 0)
+											break;
+									}
+								}
+							}
+							if (stb.getAmount() != storage_amount) {
+								stb.setAmount(storage_amount);
+								box_inv.setContents(stacks);
+								event.setCursor(Utils.setShulkerInventory(cursor, box_inv));
+							}
+						}
+						event.setCurrentItem(stb.getLored(current_item));
+					}
+					else if (st instanceof StorageMultitype) {
+						StorageMultitype stm = (StorageMultitype)st;
+						Inventory st_inv = stm.getInventory();
+						ItemStack[] stacks = st_inv.getStorageContents();
+						if (event.getClick() == ClickType.LEFT) // put items to storage
+						{
+							box_inv = Utils.getShulkerInventory(cursor);
+							stm.grabAnyInventory(box_inv);
+							event.setCursor(Utils.setShulkerInventory(cursor, box_inv));
+						}
+						else if (event.getClick() == ClickType.RIGHT) // drag items from storage
+						{
+							Pair<Boolean, ItemStack[]> res = StorageMultitype.grabInventory_stacking(box_inv, stacks, stm.getGrabDirection());
+							res = StorageMultitype.grabInventory_any(box_inv, res.second, stm.getGrabDirection(), res.first);
+							if (res.first) {
+								res = StorageMultitype.grabInventory_stacking(box_inv, stacks, stm.getGrabDirection());
+								stm.onAction(com.festp.storages.StorageMultitype.InventoryAction.LOSE);
+								st_inv.setContents(res.second);
+								event.setCursor(Utils.setShulkerInventory(cursor, box_inv));
+							}
+						}
+					}
+				}
+				// drag cursor or set storage material
+				else if (st instanceof StorageBottomless) {
 					StorageBottomless stb = (StorageBottomless)st;
-					if(stb.getMaterial() != cursor.getType()) {
-						if(stb.isEmpty() && StorageBottomless.isAllowedMaterial(cursor.getType())) {
+					if (stb.getMaterial() != cursor.getType()) {
+						if (stb.isEmpty() && StorageBottomless.isAllowedMaterial(cursor.getType())) {
 							stb.setMaterial(cursor.getType());
 							event.setCancelled(true);
 						}
@@ -316,16 +515,16 @@ public class StorageHandler implements Listener {
 				switch(event.getClick())
 				{
 				case RIGHT:
-					if(st instanceof StorageMultitype) {
+					if (st instanceof StorageMultitype) {
 						event.getWhoClicked().openInventory(st.getInventory());
 					}
-					else if(st instanceof StorageBottomless) {
+					else if (st instanceof StorageBottomless) {
 						event.getWhoClicked().openInventory(((StorageBottomless) st).getMenu());
 					}
 					event.setCancelled(true);
 					break;
 				case SHIFT_RIGHT:
-					if(st instanceof StorageMultitype) {
+					if (st instanceof StorageMultitype) {
 						event.getWhoClicked().openInventory(((StorageMultitype)st).getMenu());
 					}
 					break;
@@ -450,30 +649,43 @@ public class StorageHandler implements Listener {
 		delayedGrab(event.getView().getTopInventory());
 		delayedGrab(event.getView().getBottomInventory());
 	}
-
+	
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onEntityPickupItemEvent(EntityPickupItemEvent event) {
 		if(event.isCancelled()) return;
 		if (event.getEntityType() != EntityType.PLAYER) return;
 
-		work_pickup_event(((Player)event.getEntity()).getInventory(), event.getItem());
+		work_pickup_event(((Player)event.getEntity()).getInventory(), event.getItem(), event);
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onInventoryPickupItem(InventoryPickupItemEvent event) {
 		if(event.isCancelled()) return;
 		
-		work_pickup_event(event.getInventory(), event.getItem());
+		work_pickup_event(event.getInventory(), event.getItem(), event);
 	}
 	
-	private void work_pickup_event(Inventory inv, Item eitem) {
+	private void work_pickup_event(Inventory inv, Item eitem, Cancellable event) {
 		ItemStack item = eitem.getItemStack();
 		Storage st = Storage.getByItemStack(item);
 		if(st != null) // Storage had been picked up
-		{
 			st.setExternalInventory(inv);
+		else
+		{
+			int amount = grab(inv, item);
+			if (item.getAmount() - amount != 0) {
+				event.setCancelled(true);
+				if (amount == 0) {
+					eitem.remove();
+				}
+				else {
+					ItemStack edited = eitem.getItemStack();
+					edited.setAmount(amount);
+					eitem.setItemStack(edited);
+				}
+				StorageBottomless.update_item_counts(inv);
+			}
 		}
-		grabbing_invs.add(inv);
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
@@ -485,10 +697,7 @@ public class StorageHandler implements Listener {
 
 		Storage st = Storage.getByItemStack(item);
 		if(st != null) // Storage had been moved
-		{
 			st.setExternalInventory(inv);
-			grabbing_invs.add(inv); //can be instant
-		}
 		else
 		{
 			int amount = grab(inv, item);
@@ -499,7 +708,8 @@ public class StorageHandler implements Listener {
 			StorageBottomless.update_item_counts(inv);
 		}
 	}
-	
+
+	/** @return remaining amount */
 	public int grab(Inventory inv, ItemStack item) {
 		int amount = item.getAmount();
 		List<Storage> storages = findGrabbingStorages(inv, item);
@@ -568,21 +778,38 @@ public class StorageHandler implements Listener {
 		List<Storage> list = new ArrayList<>();
 		if (!Storage.isGrabbableInventory(inv))
 			return list;
-		
-		StorageBottomless suit = null;
-		for(ItemStack is : inv.getContents()) {
+
+		List<Storage> list_new = new ArrayList<>();
+		StorageBottomless suit = null, suit_new = null;
+		for(ItemStack is : inv.getContents())
+		{
 			int id = Storage.getID(is);
 			Storage st = plugin.stlist.get(id);
-			if(st != null && st.canGrab(inv))
-				if (st instanceof StorageBottomless && suit == null && ((StorageBottomless) st).canGrab(stack.getType()))
-					suit = (StorageBottomless) st;
-				else if (st instanceof StorageMultitype && ((StorageMultitype) st).canGrab(stack))
-					list.add(st);
+			if(st != null)
+			{
+				if (st.canGrab() == Grab.NEW)
+				{
+					if (st instanceof StorageBottomless && suit_new == null && ((StorageBottomless) st).canGrab(stack.getType()))
+						suit_new = (StorageBottomless) st;
+					else if (st instanceof StorageMultitype && ((StorageMultitype) st).canGrab(stack))
+						list_new.add(st);
+				}
+				else if (st.canGrab(inv))
+				{
+					if (st instanceof StorageBottomless && suit == null && ((StorageBottomless) st).canGrab(stack.getType()))
+						suit = (StorageBottomless) st;
+					else if (st instanceof StorageMultitype && ((StorageMultitype) st).canGrab(stack))
+						list.add(st);
+				}
+			}
 		}
 		
 		if (suit != null)
 			list.add(suit);
+		if (suit_new != null)
+			list_new.add(suit_new);
 		
-		return list;
+		list_new.addAll(list);
+		return list_new;
 	}
 }
