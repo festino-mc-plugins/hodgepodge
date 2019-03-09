@@ -34,7 +34,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 public class InventoryHandler implements Listener {
 

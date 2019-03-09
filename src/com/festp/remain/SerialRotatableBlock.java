@@ -7,7 +7,7 @@ import org.bukkit.block.data.Bisected.Half;
 import org.bukkit.block.data.type.Slab;
 import org.bukkit.block.data.type.Slab.Type;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 import org.bukkit.block.data.type.Stairs;
 

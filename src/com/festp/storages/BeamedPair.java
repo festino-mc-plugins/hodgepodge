@@ -18,8 +18,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 public class BeamedPair implements Listener {	
 	private static List<BeamedPair> beamed_entities = new ArrayList<>();

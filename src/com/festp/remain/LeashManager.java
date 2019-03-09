@@ -24,7 +24,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 public class LeashManager {
 	JavaPlugin plugin;

@@ -13,7 +13,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 public class SortHoppers implements Listener {
 	final String standart_hopper_name = "Item Hopper";

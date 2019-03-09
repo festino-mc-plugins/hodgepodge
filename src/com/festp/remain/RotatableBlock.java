@@ -24,7 +24,7 @@ import org.bukkit.block.data.type.Stairs;
 import org.bukkit.block.data.type.TrapDoor;
 import org.bukkit.material.Pumpkin;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 import org.bukkit.block.data.type.Slab.Type;
 import org.bukkit.inventory.DoubleChestInventory;

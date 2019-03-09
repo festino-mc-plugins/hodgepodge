@@ -44,8 +44,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
 import com.festp.CooldownPlayer;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 public class InteractHandler implements Listener {
 

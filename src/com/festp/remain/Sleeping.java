@@ -9,8 +9,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import com.festp.Config;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 public class Sleeping {
 	int ticks = 20;

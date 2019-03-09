@@ -10,7 +10,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 public class ClosedInventory {
 	private UUID closed_inv_player;

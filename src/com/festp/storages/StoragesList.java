@@ -6,8 +6,8 @@ import java.util.List;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.Utils;
 import com.festp.storages.Storage.StorageType;
+import com.festp.utils.Utils;
 
 public class StoragesList {
 	public List<Storage> storages = new ArrayList<>();
@@ -40,12 +40,8 @@ public class StoragesList {
 				return st;
 			}
 		}
-		Storage st = load(id); 
+		Storage st = load(id);
 		return st;
-	}
-	
-	public void tryLoad(int id) {
-		get(id);
 	}
 	
 	public Storage findByInventory(Inventory inv) {
@@ -58,7 +54,8 @@ public class StoragesList {
 		return null;
 	}
 	
-	public Storage load(int ID) {
+	/**Always adds new list element*/
+	private Storage load(int ID) {
 		Storage loaded = Storage.loadFromFile(ID);
 		if(loaded == null)
 			return null;

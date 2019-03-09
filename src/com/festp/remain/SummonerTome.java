@@ -65,8 +65,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.CraftManager;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
 
@@ -945,7 +945,9 @@ public class SummonerTome implements Listener {
 					}
 				}
 		}
-		event.setCancelled(illegal);
+		
+		if (illegal)
+			event.setCancelled(true);
 	}
 	
 	private static int find_tome_slot(ItemStack[] inv, Entity entity) {

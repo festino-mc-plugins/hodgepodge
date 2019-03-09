@@ -22,7 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 import com.mysql.jdbc.V1toV2StatementInterceptorAdapter;
 
 //spawn thrown beacon, which will die on collide(top or bottom)

@@ -33,8 +33,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.festp.Config;
-import com.festp.Utils;
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 public class Others implements Listener {
 	mainListener plugin;

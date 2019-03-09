@@ -19,7 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import com.festp.Utils;
+import com.festp.utils.Utils;
 
 public class LeashedPlayer {
 	public static final Class<? extends LivingEntity> BEACON_CLASS = Vex.class;
