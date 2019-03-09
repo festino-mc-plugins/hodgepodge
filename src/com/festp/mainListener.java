@@ -115,6 +115,7 @@ import com.festp.storages.Storage;
 import com.festp.storages.StorageHandler;
 import com.festp.storages.StoragesFileManager;
 import com.festp.storages.StoragesList;
+import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_13_R2.EntityAgeable;
 import net.minecraft.server.v1_13_R2.EntityAnimal;
@@ -317,6 +318,9 @@ public class mainListener extends JavaPlugin implements Listener
 					
 					//drag xp
 					eh.onTick();
+					
+					//move and remove
+					BeamedPair.tickAll();
 				}
 			},0L,1L);
 		
