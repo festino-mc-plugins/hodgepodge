@@ -17,16 +17,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.Pair;
-import com.festp.Utils;
 import com.festp.menu.InventoryMenu;
 import com.festp.menu.MenuAction;
 import com.festp.menu.MenuListener;
 import com.festp.storages.Storage.Grab;
+import com.festp.utils.Utils;
 
 public class MenuBottomless implements MenuListener {
-	public static final Material GRAB_NOTHING_MATERIAL = Material.BARRIER;
-	public static final Material GRAB_PLAYERNT_MATERIAL = Material.HOPPER;
-	public static final Material GRAB_ALL_MATERIAL = Material.PLAYER_HEAD;
+	public static final Material MISSING_MATERIAL = Material.ROTTEN_FLESH;
+	
+	public static final Material
+		GRAB_NOTHING_MATERIAL = Material.BARRIER,
+		GRAB_NEW_MATERIAL = Material.IRON_PICKAXE,
+		GRAB_PLAYERNT_MATERIAL = Material.HOPPER,
+		GRAB_ALL_MATERIAL = Material.PLAYER_HEAD;
 	
 	//HashMap<Material, Integer> map = new HashMap<>();
 	private StorageBottomless storage;
@@ -65,14 +69,17 @@ public class MenuBottomless implements MenuListener {
 			if(action == MenuAction.LEFT_CLICK) {
 				Grab new_grab = Grab.NOTHING;
 				switch (storage.canGrab()) {
-				case ALL:
-					new_grab = Grab.NOTHING;
+				case NOTHING:
+					new_grab = Grab.NEW;
+					break;
+				case NEW:
+					new_grab = Grab.NO_PLAYER;
 					break;
 				case NO_PLAYER:
 					new_grab = Grab.ALL;
 					break;
-				case NOTHING:
-					new_grab = Grab.NO_PLAYER;
+				case ALL:
+					new_grab = Grab.NOTHING;
 					break;
 				}
 				storage.setGrab(new_grab);
@@ -85,6 +92,9 @@ public class MenuBottomless implements MenuListener {
 					new_grab = Grab.NO_PLAYER;
 					break;
 				case NO_PLAYER:
+					new_grab = Grab.NEW;
+					break;
+				case NEW:
 					new_grab = Grab.NOTHING;
 					break;
 				case NOTHING:
@@ -131,15 +141,18 @@ public class MenuBottomless implements MenuListener {
 	}
 	
 	public ItemStack genGrabButton() {
-		String grab_name;
-		Material grab_material;
+		String grab_name = "ERROR_GRAB_MODE_NAME";
+		Material grab_material = MISSING_MATERIAL;
 		if(storage.canGrab() == Grab.ALL) {
 			grab_material = GRAB_ALL_MATERIAL;
 			grab_name = "Ссасывание: ВСЁ";
 		} else if(storage.canGrab() == Grab.NO_PLAYER) {
 			grab_material = GRAB_PLAYERNT_MATERIAL;
 			grab_name = "Ссасывание: КРОМЕ ИГРОКА";
-		} else {
+		} else if(storage.canGrab() == Grab.NEW) {
+			grab_material = GRAB_NEW_MATERIAL;
+			grab_name = "Ссасывание: ТОЛЬКО НОВОЕ";
+		} else if(storage.canGrab() == Grab.NOTHING) {
 			grab_material = GRAB_NOTHING_MATERIAL;
 			grab_name = "Ссасывание: ВЫКЛ";
 		}
