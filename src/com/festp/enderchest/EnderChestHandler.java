@@ -9,12 +9,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -26,6 +28,7 @@ import org.bukkit.util.Vector;
 import org.fusesource.jansi.Ansi.Color;
 
 import com.festp.mainListener;
+import com.festp.utils.Utils;
 
 import somebodyelse.code.OfflinePlayerLoader;
 
@@ -189,21 +192,18 @@ public class EnderChestHandler implements CommandExecutor, Listener {
 	}
 
 	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent e) {
-		if (e.getClickedBlock() != null) {
-			if (e.getClickedBlock().getType() == Material.ENDER_CHEST) {
-				if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
-					Player p = e.getPlayer();
-					if (p.isSneaking() == false || (hasItemInHand(p.getInventory().getItemInMainHand()) == false && hasItemInHand(p.getInventory().getItemInOffHand()) == false)) {
-						EnderChest ec = pl.ecgroup.getAdminByPlayer(e.getPlayer());
-						if(ec == null) ec = pl.ecgroup.getByNick(e.getPlayer().getName());
-						if(ec != null) {
-							e.setCancelled(true);
-							e.getPlayer().openInventory(ec.getInventory());
-							sendEnderchestOpenSound(e.getPlayer());
-						}
-					}
-				}
+	public void onInventoryOpen(InventoryOpenEvent event)
+	{
+		if (event.getInventory().getType() == InventoryType.ENDER_CHEST && pl.ecgroup.getByInventory(event.getInventory()) == null)
+		{
+			Player p = (Player)event.getPlayer();
+			EnderChest ec = pl.ecgroup.getAdminByPlayer(p);
+			if (ec == null) ec = pl.ecgroup.getByNick(p.getName());
+			if (ec != null)
+			{
+				event.setCancelled(true);
+				event.getPlayer().openInventory(ec.getInventory());
+				sendEnderchestOpenSound(p);
 			}
 		}
 	}
@@ -212,7 +212,6 @@ public class EnderChestHandler implements CommandExecutor, Listener {
 	public void onInventoryClose(InventoryCloseEvent e) {
 		Player p = (Player) e.getPlayer();
 		if (p != null) {
-			//System.out.println(e.getView().getType());
 				if (e.getView().getType().equals(InventoryType.ENDER_CHEST) && pl.ecgroup.getByNick(p.getName()) != null) {
 					sendEnderchestCloseSound(p);
 				}
@@ -329,7 +328,8 @@ public class EnderChestHandler implements CommandExecutor, Listener {
 				ec.group.add(invited);
 				//p.getEnderChest().setContents(ec.getInventory().getContents());
 				for(ItemStack it : p.getEnderChest().getContents())
-					if(it != null && it.getType() != Material.AIR) p.getWorld().dropItem(p.getLocation(), it).setVelocity(new Vector(0.0,0.0,0.0));
+					if(it != null && it.getType() != Material.AIR)
+						Utils.giveOrDrop(p, it);
 				p.getEnderChest().setContents(new ItemStack[27]);
 				sendGroupjoinSound(pl.getServer().getPlayer(invited));
 				return (ChatColor.GREEN+"Successfully joined ecgroup \""+ec.getGroupName()+"\".");
