@@ -4,42 +4,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.block.Container;
+import org.bukkit.block.Hopper;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 public class SortHoppers implements Listener {
-	final String standart_hopper_name = "Item Hopper";
-	final String standart_hopperminecart_name = "Minecart with Hopper";
+	final static String standart_hopper_name = "Item Hopper";
+	final static String standart_hopperminecart_name = "Minecart with Hopper";
 	
 	@EventHandler
 	public void onHopperPickupItem(InventoryPickupItemEvent event) {
-		if(event.getInventory().getType() != InventoryType.HOPPER) return;
-		Inventory hop = event.getInventory();
-		if(hop.getName() == null || hop.getName().equals(standart_hopper_name) || hop.getName().equals(standart_hopperminecart_name)) return;
-		
-		if(!canMoveIntoHopper(hop.getName(), event.getItem().getItemStack()))
-				event.setCancelled(true);
+		if (event.getInventory().getType() != InventoryType.HOPPER) return;
+		if (!canMoveIntoHopper(event.getInventory(), event.getItem().getItemStack()))
+			event.setCancelled(true);
 	}
 	
 	@EventHandler
 	public void onHopperMoveItem(InventoryMoveItemEvent event) {
 		if(event.getDestination().getType() != InventoryType.HOPPER || event.getDestination() != event.getInitiator()) return;
-		Inventory hop = event.getDestination();
-		if(hop.getName() == null || hop.getName().equals(standart_hopper_name) || hop.getName().equals(standart_hopperminecart_name)) return;
-		
-		if(!canMoveIntoHopper(hop.getName(), event.getItem()))
+		if (!canMoveIntoHopper(event.getDestination(), event.getItem()))
 				event.setCancelled(true);
 	}
+	public static boolean canMoveIntoHopper(Inventory inv, ItemStack item) {
+		InventoryHolder holder = inv.getHolder();
+		String name = "";
+		if (holder instanceof Container)
+		{
+			Container hopper = (Container)holder;
+			name = hopper.getCustomName();
+			if (name == null
+				|| name.equals(standart_hopper_name))
+				return true;
+		}
+		else if (holder instanceof Entity)
+		{
+			Entity hopper_minecart = (Entity)holder;
+			name = hopper_minecart.getCustomName();
+			if (name == null
+				|| name.equals(standart_hopperminecart_name))
+				return true;
+		}
+		return canMoveIntoInventory(name, item);
+	}
 	
-	public static boolean canMoveIntoHopper(String filter, ItemStack is) {
+	public static boolean canMoveIntoInventory(String filter, ItemStack is) {
 		//separate filter by "||" and "or", "minecraft:log", "armor"
 		filter = remove_spaces(filter);
 		int start_index = 0;
@@ -111,15 +131,15 @@ public class SortHoppers implements Listener {
 			return true;
 		}
 		else if(word.contains("armor")) {
-			if(Utils.isArmor(m))
+			if(UtilsType.isArmor(m))
 				return true;
 		}
 		else if(word.contains("tool")) {
-			if(Utils.isTool(m))
+			if(UtilsType.isTool(m))
 				return true;
 		}
 		else if(word.contains("weapon")) {
-			if(Utils.isWeapon(m))
+			if(UtilsType.isWeapon(m))
 				return true;
 		}
 		
