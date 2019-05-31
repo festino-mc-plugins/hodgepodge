@@ -5,16 +5,12 @@ import java.util.List;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
 import org.bukkit.entity.Bat;
-import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Vex;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
@@ -22,14 +18,18 @@ import org.bukkit.util.Vector;
 import com.festp.utils.Utils;
 
 public class LeashedPlayer {
-	public static final Class<? extends LivingEntity> BEACON_CLASS = Vex.class;
+	public static final Class<? extends LivingEntity> BEACON_CLASS = Bat.class; //because Vex, for example, have vanilla lead break mechanics
 	public static final String BEACON_ID = "leashed_entity";
-	private static final double DIST_CLIMBING = 0.3, player_pull_v = 0.3;
-	private static final float from_top = 5, from_bottom = 5;
+	private static final double DIST_CLIMBING = 0.3, player_pull_v = 0.3; // TO DO: DIST_CLIMBING -> around fence
+	private static final float ANGLE_TOP = 5f, ANGLE_BOTTOM = 5f;
 	private static final float kxz = 0.05f, ky = 0.05f;
+	private static final double EDGE_FORCE = 0.4d;
+
+	private ItemStack lead_drops;
 	LivingEntity workaround;
 	Entity leashed;
-	private double cur_R = LeashManager.MAX_R, pull_R, pull_R_square;
+	private double max_R, cur_R, break_R_squared,
+			pull_R, pull_R_square;
 	private int cooldown_new = 0;
 	private static final int ticks_new = 60;
 	private int cooldown_break = 0;
@@ -40,14 +40,22 @@ public class LeashedPlayer {
 	private Vector old_vel = new Vector();
 	private Location old_loc;
 	
-	public LeashedPlayer(Entity holder, Entity leashed)
+	public LeashedPlayer(Entity holder, Entity leashed, ItemStack drops)
 	{
-		recalc_pull();
 		cooldown_break = ticks_break;
 		workaround = (LivingEntity) Utils.spawnBeacon(leashed.getLocation(), BEACON_CLASS, BEACON_ID, false);
 		this.leashed = leashed;
 		workaround.setLeashHolder(holder);
 		old_loc = leashed.getLocation();
+		lead_drops = drops;
+		max_R = LeashManager.getLeadLength(lead_drops);
+		cur_R = max_R;
+		recalc_pull();
+		//double break_R = max_R + Math.sqrt(2 * max_R); // 8 -> 12, 30 -> ~38, 100 -> ~114
+		double break_R = max_R + 1;
+		if (max_R >= 1)
+			break_R += Math.log(max_R)/Math.log(2); // 8 -> 12, 30 -> ~36, 100 -> ~107,6
+		break_R_squared = break_R * break_R;
 	}
 	
 	public boolean tick()
@@ -58,13 +66,15 @@ public class LeashedPlayer {
 		else if(cooldown_break > 0) {
 			cooldown_break--;
 		}
-		else if(workaround.isLeashed() && !workaround.isDead() && !leashed.isDead()  && workaround.getWorld() == leashed.getWorld() && workaround.getLeashHolder().getWorld() == leashed.getWorld()
-				&& !(leashed instanceof Player && !((Player)leashed).isOnline() ) ) {
+		else if( !workaround.isDead() && workaround.isLeashed() && !leashed.isDead() 
+				&& workaround.getWorld() == leashed.getWorld() && workaround.getLeashHolder().getWorld() == leashed.getWorld()
+				&& !(leashed instanceof Player && !((Player)leashed).isOnline() ) )
+		{
 			double dist2 = leashed.getLocation().distanceSquared(workaround.getLeashHolder().getLocation());
 				
-			if(dist2 > LeashManager.R_BREAK_SQUARE && cooldown_remove <= 0)
+			if(dist2 > break_R_squared && cooldown_remove <= 0)
 			{
-				leashed.getWorld().dropItem(leashed.getLocation(), new ItemStack(Material.LEAD, 1));
+				Utils.giveOrDrop(leashed, lead_drops);
 				removeWorkaround();
 				return false;
 			}
@@ -97,11 +107,11 @@ public class LeashedPlayer {
 						setGravity(true);
 			}
 			
-			workaround.teleport(leashed);
 			if(leashed instanceof Player) {
 				Player p = (Player)leashed;
 				if(p.isSneaking()) {
 					cooldown_new = ticks_new;
+					Utils.giveOrDrop(leashed, lead_drops); //because of cooldown
 					removeWorkaround();
 				}
 			}
@@ -119,12 +129,15 @@ public class LeashedPlayer {
 				}
 			}
 		}
-		else {
-			workaround.getWorld().dropItem(workaround.getLocation(), new ItemStack(Material.LEAD, 1));
+		else
+		{
+			if (!workaround.isDead() && workaround.isLeashed())
+				Utils.giveOrDrop(leashed, lead_drops);
 			removeWorkaround();
 			return false;
 		}
-		
+
+		workaround.teleport(leashed);
 		old_loc = leashed.getLocation();
 		old_vel = leashed.getVelocity();
 		workaround.setVelocity(old_vel); //more actual leash render
@@ -138,9 +151,18 @@ public class LeashedPlayer {
 	
 	private Vector calc_velocity_to_LeashHolder() {
 		Location loc_holder = workaround.getLeashHolder().getLocation(), loc_leashed = leashed.getLocation();
-		Vector velocity = new Vector( (loc_holder.getX()-loc_leashed.getX())*kxz,
-									  (loc_holder.getY()-loc_leashed.getY())*ky,
-									  (loc_holder.getZ()-loc_leashed.getZ())*kxz );
+		double dx = loc_holder.getX() - loc_leashed.getX(),
+			   dy = loc_holder.getY()-loc_leashed.getY(),
+			   dz = loc_holder.getZ()-loc_leashed.getZ();
+		Vector velocity_edge = new Vector( dx, dy, dz );
+		double dlen = velocity_edge.length() - cur_R;
+		velocity_edge.multiply(new Vector(kxz, ky, kxz));
+		velocity_edge.normalize();
+		Vector velocity = velocity_edge.clone();
+		velocity_edge.multiply(EDGE_FORCE);
+		velocity.multiply(dlen);
+		velocity.multiply(new Vector(kxz, ky, kxz));
+		velocity.add(velocity_edge);
 
 		RayTraceResult ray_res = leashed.getWorld().rayTraceBlocks(loc_leashed, velocity,
 				leashed.getWidth()/2 + Utils.EPSILON, FluidCollisionMode.NEVER);
@@ -160,9 +182,9 @@ public class LeashedPlayer {
 			Location cam = leashed.getLocation();
 			float pitch = cam.getPitch();
 			double length_change;
-			if (pitch >= 90 - from_bottom)
+			if (pitch >= 90 - ANGLE_BOTTOM)
 			{
-				length_change = Math.max(0, LeashManager.MAX_R - cur_R);
+				length_change = Math.max(0, max_R - cur_R);
 				length_change = Math.min(player_pull_v, length_change);
 				cur_R += length_change;
 				recalc_pull();
@@ -171,7 +193,7 @@ public class LeashedPlayer {
 				v.setY(total_down);
 				controlled = true;
 			}
-			else if (pitch <= -90 + from_top)
+			else if (pitch <= -90 + ANGLE_TOP)
 			{
 				if (isUnderHolder())
 				{
