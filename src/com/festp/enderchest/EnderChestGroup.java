@@ -73,34 +73,40 @@ public class EnderChestGroup {
 	}
 
 	public EnderChest getByAdminGroupname(String groupname) {
-		for(int i=0; i<admingroups.size(); i++)
-			if(admingroups.get(i).getGroupName().equalsIgnoreCase(groupname))
+		for (int i = 0; i < admingroups.size(); i++)
+			if (admingroups.get(i).getGroupName().equalsIgnoreCase(groupname))
 				return admingroups.get(i);
 		return null;
 	}
 
+	public EnderChest getByInventory(Inventory inv) {
+		for (int i = 0; i < groups.size(); i++)
+		{
+			EnderChest ec = groups.get(i);
+			if (ec.getInventory() == inv)
+				return ec;
+		}
+		for (int i = 0; i < admingroups.size(); i++)
+		{
+			EnderChest ec = admingroups.get(i);
+			if (ec.getInventory() == inv)
+				return ec;
+		}
+		return null;
+	}
+
 	public void remove(String groupname) {
-		for(int i=0; i<groups.size(); i++)
-			if(groups.get(i).getGroupName().equalsIgnoreCase(groupname))
+		for (int i = 0; i < groups.size(); i++)
+			if (groups.get(i).getGroupName().equalsIgnoreCase(groupname))
 				groups.remove(i);
-	}
-	
-	public static void saveEnderChest(String name)
-	{
-		
-	}
-	
-	public static void loadEnderChest(String name)
-	{
-		
 	}
 
 	public boolean isNameUsed(String groupname) {
-		for(int i=0; i<admingroups.size(); i++)
-			if(admingroups.get(i).getGroupName().equalsIgnoreCase(groupname))
+		for (int i = 0; i < admingroups.size(); i++)
+			if (admingroups.get(i).getGroupName().equalsIgnoreCase(groupname))
 				return true;
-		for(int i=0; i<groups.size(); i++)
-			if(groups.get(i).getGroupName().equalsIgnoreCase(groupname))
+		for (int i = 0; i < groups.size(); i++)
+			if (groups.get(i).getGroupName().equalsIgnoreCase(groupname))
 				return true;
 		return false;
 	}
