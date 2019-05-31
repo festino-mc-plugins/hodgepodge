@@ -63,7 +63,7 @@ public class MenuBottomless implements MenuListener {
 	}
 	
 	@Override
-	public ItemStack onClick(int slot, ItemStack cursor_item, ItemStack slot_item, MenuAction action) {
+	public ItemStack onClick(int slot, ItemStack cursor_item, ItemStack slot_item, MenuAction action, Player clicked) {
 		//grab
 		if(slot == 0) {
 			if(action == MenuAction.LEFT_CLICK) {
