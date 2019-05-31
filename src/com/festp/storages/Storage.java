@@ -1,7 +1,7 @@
 package com.festp.storages;
 
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -16,7 +16,7 @@ import com.festp.TaskList;
 import com.festp.mainListener;
 import com.festp.utils.Utils;
 
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
+import net.minecraft.server.v1_14_R1.NBTTagCompound;
 
 public abstract class Storage
 {
@@ -114,6 +114,7 @@ public abstract class Storage
 	}
 	
 	public abstract Inventory getInventory();
+	public abstract Inventory getMenu();
 	
 	public abstract boolean isEmpty();
 
@@ -173,7 +174,7 @@ public abstract class Storage
 	public static int getID(ItemStack storage) {
 		if(storage == null)
 			return -1;
-		net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(storage);
+		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(storage);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return -1;
@@ -183,7 +184,7 @@ public abstract class Storage
 	}
 	
 	public static ItemStack setID(ItemStack i, int ID) {
-		net.minecraft.server.v1_13_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -199,5 +200,13 @@ public abstract class Storage
 	
 	public String toString() {
 		return "Storage(ID="+ID+")";
+	}
+
+	public ItemStack getItemStack() {
+		if (this instanceof StorageBottomless)
+			return Utils.getPlugin().stcraft.getBottomless(ID);
+		if (this instanceof StorageMultitype)
+			return Utils.getPlugin().stcraft.getMultitype(ID, ((StorageMultitype)this).getLvl());
+		return null;
 	}
 }
