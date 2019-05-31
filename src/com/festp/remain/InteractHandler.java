@@ -16,7 +16,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Bed.Part;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
@@ -46,6 +46,8 @@ import com.festp.Config;
 import com.festp.CooldownPlayer;
 import com.festp.mainListener;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsColor;
+import com.festp.utils.UtilsType;
 
 public class InteractHandler implements Listener {
 
@@ -72,11 +74,14 @@ public class InteractHandler implements Listener {
 	}
 	
 	public void onTick() {
-		for(int i = 0; i<caulticks.size(); i++)
+		long t1, t2, t3, t4;
+		t1 = System.nanoTime();
+		
+		for(int i = 0; i< caulticks.size(); i++)
 			caulticks.set(i, caulticks.get(i) + 1);
 		for(World w : server.getWorlds())
 		{
-			for(Entity e : w.getEntitiesByClass(Item.class))
+			for(Item e : w.getEntitiesByClass(Item.class))
 			{
 				Block b = w.getBlockAt(e.getLocation());
 				if(b.getType() == Material.CAULDRON) {
@@ -90,20 +95,20 @@ public class InteractHandler implements Listener {
 							}
 							continue;
 						}
-						Material m = ((Item)e).getItemStack().getType();
+						Material m = e.getItemStack().getType();
 						ItemStack drop = null;
-						if(Utils.is_concrete_powder(m))
-							drop = new ItemStack(Utils.fromColor_concrete(Utils.colorFromMaterial(m)));
-						else if(Utils.is_colored_terracotta(m))
+						if(UtilsType.is_concrete_powder(m))
+							drop = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(m)));
+						else if(UtilsType.is_colored_terracotta(m))
 							drop = new ItemStack(Material.TERRACOTTA);
-						else if(Utils.colorFromMaterial(m) != DyeColor.WHITE) {
-							 if(Utils.is_glazed_terracotta(m)) 
+						else if(UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
+							 if(UtilsType.is_glazed_terracotta(m)) 
 								 drop = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-							 else if(Utils.is_concrete(m)) 
+							 else if(UtilsType.is_concrete(m)) 
 								 drop = new ItemStack(Material.WHITE_CONCRETE, 1);
-							 else if(Utils.is_wool(m)) 
+							 else if(UtilsType.is_wool(m)) 
 								 drop = new ItemStack(Material.WHITE_WOOL, 1);
-							 else if(Utils.is_carpet(m)) 
+							 else if(UtilsType.is_carpet(m)) 
 								 drop = new ItemStack(Material.WHITE_CARPET, 1);
 						}
 						else if(m.equals(Material.RED_SAND))
@@ -111,7 +116,7 @@ public class InteractHandler implements Listener {
 						else if(m.equals(Material.RED_SANDSTONE))
 							drop = new ItemStack(Material.SANDSTONE,1);
 						if(drop != null) {
-							((Item)e).getItemStack().setAmount(((Item)e).getItemStack().getAmount()-1);
+							e.getItemStack().setAmount(e.getItemStack().getAmount()-1);
 							w.dropItem(e.getLocation(),new ItemStack(drop));
 							Utils.lower_cauldron_water(b.getState());
 			                cauls.add(cauldron);
@@ -120,44 +125,51 @@ public class InteractHandler implements Listener {
 					}
 				}
 			}
-			
-			
+		}
+		
+		t2 = System.nanoTime();
 
-			for(int i = left_rotate_cooldown.size()-1; i >=0; i--) {
-				CooldownPlayer cp = left_rotate_cooldown.get(i);
-				if(!cp.tick()) {
-					left_rotate_cooldown.remove(i);
-				}
+		for(int i = left_rotate_cooldown.size()-1; i >=0; i--) {
+			CooldownPlayer cp = left_rotate_cooldown.get(i);
+			if(!cp.tick()) {
+				left_rotate_cooldown.remove(i);
 			}
-			
-			ItemStack helmet;
+		}
+
+		t3 = System.nanoTime();
+		
+		ItemStack chestplate;
+		for(World w : server.getWorlds())
+		{
 			for(Turtle e : w.getEntitiesByClass(Turtle.class))
 			{
-				helmet = e.getEquipment().getHelmet();
-				if(helmet == null || Utils.isAir(helmet.getType())) continue;
-				
-				if(e.getCustomName()!= null) {
-					//saddled entities
-					if(Utils.hasDataField(helmet, beacon_id_saddle)) {
-						if(e.getPassengers().size() == 0 || e.getVehicle() == null )
-							e.remove();
-						else {
-							e.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( ((LivingEntity)e.getVehicle()).getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
-							e.setHealth( ((LivingEntity)e.getVehicle()).getHealth() );
-						}
+				chestplate = e.getEquipment().getChestplate();
+				if(chestplate == null || UtilsType.isAir(chestplate.getType())) continue;
+
+				//saddled entities
+				if(Utils.hasDataField(chestplate, beacon_id_saddle)) {
+					if(e.getPassengers().size() == 0 || e.getVehicle() == null )
+						e.remove();
+					else {
+						e.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( ((LivingEntity)e.getVehicle()).getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
+						e.setHealth( ((LivingEntity)e.getVehicle()).getHealth() );
 					}
-					//leashed players
-					else if(Utils.hasDataField(helmet, LeashedPlayer.BEACON_ID)) {
-						
-						if(!leash_manager.isWorkaroundActive(e) || !e.isLeashed()) {
-							e.getWorld().dropItem(e.getLocation(), new ItemStack(Material.LEAD, 1));
-							e.remove();
-						}
+				}
+				//leashed players
+				else if(Utils.hasDataField(chestplate, LeashedPlayer.BEACON_ID)) {
+					
+					if(!leash_manager.isWorkaroundActive(e) || !e.isLeashed()) {
+						e.getWorld().dropItem(e.getLocation(), new ItemStack(Material.LEAD, 1));
+						e.remove();
 					}
 				}
 			}
 			
 		}
+		
+		t4 = System.nanoTime();
+
+		//System.out.println( (t2 - t1)/(1000000000.0 / 20) + "(Item), " + (t3 - t2)/(1000000000.0 / 20) + "(cooldown), "+(t4 - t3)/(1000000000.0 / 20)+"(Turtle)." );
 	}
 	
 	@EventHandler
@@ -201,30 +213,30 @@ public class InteractHandler implements Listener {
 		if(event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
 		if(event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
 			return;
-		if(event.hasBlock() && event.getItem() != null) {
-			if(!event.getPlayer().isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
+		if (event.hasBlock() && event.getItem() != null) {
+			if (!event.getPlayer().isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
 			{
 	                BlockState d = event.getClickedBlock().getState();
-					if(d.getData().getData() == 0)
+					if (d.getData().getData() == 0)
 						return;
 					MaterialData hand_data = event.getItem().getData();
 					Material hand = Utils.from_legacy(hand_data);
 					ItemStack washed;
-					if(Utils.is_colored_terracotta(hand)) {
+					if (UtilsType.is_colored_terracotta(hand)) {
 						washed = new ItemStack(Material.TERRACOTTA, 1);
-					} else if(Utils.is_wool(hand)) {
+					} else if (UtilsType.is_wool(hand)) {
 						washed = new ItemStack(Material.WHITE_WOOL, 1);
-					} else if(Utils.is_concrete(hand)) {
+					} else if (UtilsType.is_concrete(hand)) {
 						washed = new ItemStack(Material.WHITE_CONCRETE, 1);
-					} else if(Utils.is_carpet(hand)) {
+					} else if (UtilsType.is_carpet(hand)) {
 						washed = new ItemStack(Material.WHITE_CARPET, 1);
-					} else if(Utils.is_glazed_terracotta(hand)) {
+					} else if (UtilsType.is_glazed_terracotta(hand)) {
 						washed = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-					} else if(Utils.is_concrete_powder(hand)) {
-						washed = new ItemStack(Utils.fromColor_concrete(Utils.colorFromMaterial(hand)), 1);
-					} else if(hand.equals(Material.RED_SAND)) {
+					} else if (UtilsType.is_concrete_powder(hand)) {
+						washed = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(hand)), 1);
+					} else if (hand.equals(Material.RED_SAND)) {
 						washed = new ItemStack(Material.SAND, 1);
-					} else if(hand.equals(Material.RED_SANDSTONE)) {
+					} else if (hand.equals(Material.RED_SANDSTONE)) {
 						washed = new ItemStack(Material.SANDSTONE, 1);
 					} else return;
 					event.setCancelled(true);
@@ -237,11 +249,11 @@ public class InteractHandler implements Listener {
 	                //d.getData().setData((byte) (d.getData().getData()-1));
 	                //d.update();
 			}
-			if(Utils.is_dye(event.getItem().getType()) ) 
+			if (UtilsType.is_dye(event.getItem().getType()) ) 
 			{
-				if( Utils.is_banner(event.getClickedBlock().getType()) || Utils.is_wall_banner(event.getClickedBlock().getType()) && event.getItem().getAmount()>5 )
+				if ( UtilsType.is_banner(event.getClickedBlock().getType()) || UtilsType.is_wall_banner(event.getClickedBlock().getType()) && event.getItem().getAmount()>5 )
 				{
-					if( ((Banner)event.getClickedBlock().getState()).getBaseColor() != ((Dye)event.getItem().getData()).getColor() ) {
+					if ( ((Banner)event.getClickedBlock().getState()).getBaseColor() != ((Dye)event.getItem().getData()).getColor() ) {
 						Block banner = event.getClickedBlock();
 						Banner b = (Banner)banner.getState();
 						b.setBaseColor( ((Dye)event.getItem().getData()).getColor() );
@@ -254,43 +266,43 @@ public class InteractHandler implements Listener {
 				
 				//grass from dirt
 				Material currentblock = event.getClickedBlock().getType();
-				if(currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
+				if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
 					event.getClickedBlock().setType(Material.GRASS_BLOCK);
-					event.getItem().setAmount(event.getItem().getAmount()-1);
+					event.getItem().setAmount(event.getItem().getAmount() - 1);
 					event.setCancelled(true);
 					return;
 				} 
 				
-				DyeColor clicked_block_color = Utils.colorFromMaterial(event.getClickedBlock().getType());
-				DyeColor clicking_dye_color = Utils.colorFromMaterial(event.getItem().getType());
-				if(clicked_block_color == clicking_dye_color)
+				DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+				DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
+				if (clicked_block_color == clicking_dye_color)
 					return;
-				if(Utils.is_terracotta(currentblock)) event.getClickedBlock().setType(Utils.fromColor_terracotta(clicking_dye_color));
-				else if(Utils.is_wool(currentblock)) event.getClickedBlock().setType(Utils.fromColor_wool(clicking_dye_color));
-				else if(Utils.is_concrete_powder(currentblock)) event.getClickedBlock().setType(Utils.fromColor_concrete_powder(clicking_dye_color));
-				else if(Utils.is_concrete(currentblock)) event.getClickedBlock().setType(Utils.fromColor_concrete(clicking_dye_color));
-				else if(Utils.is_carpet(currentblock)) event.getClickedBlock().setType(Utils.fromColor_carpet(clicking_dye_color));
+				if (UtilsType.is_terracotta(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
+				else if (UtilsType.is_wool(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_wool(clicking_dye_color));
+				else if (UtilsType.is_concrete_powder(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete_powder(clicking_dye_color));
+				else if (UtilsType.is_concrete(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete(clicking_dye_color));
+				else if (UtilsType.is_carpet(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_carpet(clicking_dye_color));
 				else return;
 				event.getItem().setAmount(event.getItem().getAmount()-1);
 				return;
 			}
 			
 			Material handMaterial = event.getItem().getType();
-			if(handMaterial.equals(Material.WOODEN_HOE) ||
+			if (handMaterial.equals(Material.WOODEN_HOE) ||
 				handMaterial.equals(Material.STONE_HOE) ||
 				handMaterial.equals(Material.IRON_HOE) ||
 				handMaterial.equals(Material.GOLDEN_HOE) ||
 				handMaterial.equals(Material.DIAMOND_HOE) )
 			{
 				//ROTATE BLOCKS
-				if(event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())
+				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())
 						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())) {
-					if(event.getAction() == Action.LEFT_CLICK_BLOCK)
+					if (event.getAction() == Action.LEFT_CLICK_BLOCK)
 						left_rotate_cooldown.add(new CooldownPlayer(event.getPlayer(), Config.LEFT_ROTATE_COOLDOWN));
 					byte dur = (byte) ((Math.random()*(event.getItem().getEnchantmentLevel(Enchantment.DURABILITY)+1)) > 1 ? 0 : 1);
 					event.getItem().setDurability((short) (event.getItem().getDurability()+dur));
-					if(event.getItem().getDurability() > event.getItem().getType().getMaxDurability())
-						if(event.getHand() == EquipmentSlot.HAND)
+					if (event.getItem().getDurability() > event.getItem().getType().getMaxDurability())
+						if (event.getHand() == EquipmentSlot.HAND)
 							event.getPlayer().getInventory().setItemInMainHand(null);
 						else
 							event.getPlayer().getInventory().setItemInOffHand(null);
@@ -299,9 +311,9 @@ public class InteractHandler implements Listener {
 			
 			//change bed linen
 			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && !event.getPlayer().isSneaking() && 
-					Utils.is_carpet(handMaterial) && Utils.is_bed(event.getClickedBlock().getType())) {
-				DyeColor c_carpet = Utils.colorFromMaterial(handMaterial);
-				DyeColor c_bed = Utils.colorFromMaterial(event.getClickedBlock().getType());
+					UtilsType.is_carpet(handMaterial) && UtilsType.is_bed(event.getClickedBlock().getType())) {
+				DyeColor c_carpet = UtilsColor.colorFromMaterial(handMaterial);
+				DyeColor c_bed = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
 				if(c_bed != c_carpet) {
 					Block blockfoot = event.getClickedBlock();
 					Bed bedfoot = (Bed)blockfoot.getBlockData();
@@ -318,8 +330,8 @@ public class InteractHandler implements Listener {
 						blockfoot = blockhead.getRelative(face.getOppositeFace());
 						bedfoot = (Bed)blockfoot.getBlockData();
 					}
-					blockhead.setType(Utils.fromColor_bed(c_carpet));
-					blockfoot.setType(Utils.fromColor_bed(c_carpet));
+					blockhead.setType(UtilsColor.fromColor_bed(c_carpet));
+					blockfoot.setType(UtilsColor.fromColor_bed(c_carpet));
 					bedfoot = (Bed)blockfoot.getBlockData();
 					bedfoot.setFacing(face);
 					bedhead = (Bed)blockhead.getBlockData();
@@ -330,10 +342,10 @@ public class InteractHandler implements Listener {
 					
 					
 					if(event.getItem().getAmount() == 1)
-						event.getItem().setType(Utils.fromColor_carpet(c_bed));
+						event.getItem().setType(UtilsColor.fromColor_carpet(c_bed));
 					else {
 						event.getItem().setAmount(event.getItem().getAmount()-1);
-						event.getPlayer().getInventory().addItem(new ItemStack(Utils.fromColor_carpet(c_bed), 1));
+						event.getPlayer().getInventory().addItem(new ItemStack(UtilsColor.fromColor_carpet(c_bed), 1));
 					}
 				}
 			}
@@ -343,9 +355,9 @@ public class InteractHandler implements Listener {
 		if(event.getItem() != null && event.getItem().getType() == Material.LEAD) {
 			ItemStack hand = event.getItem();
 			Player player = event.getPlayer();
-			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && Utils.isFence(event.getClickedBlock().getType())) {
-				
-				if(player.isLeashed()) return;
+			ItemStack lead_drops = hand.clone();
+			lead_drops.setAmount(1);
+			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && UtilsType.isFence(event.getClickedBlock().getType())) {
 				
 				List <Entity> entities = event.getPlayer().getNearbyEntities(15, 15, 15);
 				for(Entity e : entities)
@@ -355,19 +367,19 @@ public class InteractHandler implements Listener {
 				event.setCancelled(true);
 				Location hitch_loc = event.getClickedBlock().getLocation();
 				LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
-				leash_manager.addLeashed(hitch, event.getPlayer());
+				leash_manager.addLeashed(hitch, event.getPlayer(), lead_drops);
 		    	if(player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if(event.getAction() == Action.RIGHT_CLICK_AIR
-					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !Utils.isInteractable(event.getClickedBlock().getType())) {
-				leash_manager.throwLasso(event.getPlayer());
+					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !UtilsType.isInteractable(event.getClickedBlock().getType())) {
+				leash_manager.throwLasso(event.getPlayer(), lead_drops);
 		    	if(player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if(event.getAction() == Action.LEFT_CLICK_AIR)
 			{
-				leash_manager.throwTargetLasso(event.getPlayer());
+				leash_manager.throwTargetLasso(event.getPlayer(), lead_drops);
 		    	if(player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
