@@ -7,7 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftItem;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftItem;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -42,8 +42,10 @@ import com.festp.mainListener;
 import com.festp.storages.Storage.Grab;
 import com.festp.storages.StorageMultitype.HandleTime;
 import com.festp.storages.StorageMultitype.UncraftMode;
+import com.festp.utils.BeamedPair;
 import com.festp.utils.ClickResult;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 public class StorageHandler implements Listener {
 	//Перенос пусть будет на ЛКМ и перенос + на ЛКМ+Shift. Дроп хранилища и так на Q, дроп его содержимого на Ctrl+Q...
@@ -154,7 +156,7 @@ public class StorageHandler implements Listener {
         	if (id >= 0) {
         		Storage st = plugin.stlist.get(id);
         		if (st == null)
-					plugin.getLogger().severe("Storage(ID="+id+") could not load (on open "+inv+")");
+					plugin.getLogger().severe("Storage(ID="+id+") could not load (on open "+inv+" / "+Utils.toString(inv.getLocation())+")");
         		else
         			st.setExternalInventory(inv);
         	}
@@ -169,18 +171,19 @@ public class StorageHandler implements Listener {
 		ItemStack result = event.getInventory().getResult();
 		if (result != null)
 		{
-			StorageMultitype storage = null;
+			Storage storage = null;
 			
 			for(ItemStack is : event.getInventory().getMatrix())
 				if(Storage.isStorage(is)) {
-					storage = (StorageMultitype)Storage.getByItemStack(is);
+					storage = Storage.getByItemStack(is);
 					break;
 				}
 			
-			if (storage != null)
-				if (Utils.is_shulker_box(result.getType())) {
-					int lvl = storage.getLvl();
-					if (storage.getUncraftMode() == UncraftMode.DENY && lvl - 1 > Utils.countEmpty(event.getViewers().get(0).getInventory().getStorageContents())) {
+			if (storage instanceof StorageMultitype) {
+				if (UtilsType.is_shulker_box(result.getType())) {
+					StorageMultitype sm = (StorageMultitype)storage;
+					int lvl = sm.getLvl();
+					if (sm.getUncraftMode() == UncraftMode.DENY && lvl - 1 > Utils.countEmpty(event.getViewers().get(0).getInventory().getStorageContents())) {
 						event.getInventory().setResult(null);
 						return;
 					}
@@ -201,6 +204,28 @@ public class StorageHandler implements Listener {
 				else {
 					event.getInventory().setResult(null);
 				}
+			}
+			else if (storage instanceof StorageBottomless) {
+				StorageBottomless sb = (StorageBottomless)storage;
+				if (sb.isEmpty() && UtilsType.is_shulker_box(result.getType())) {
+			    	ItemStack item = new ItemStack(Material.SHULKER_BOX);
+			    	BlockStateMeta im = (BlockStateMeta)item.getItemMeta();
+			    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
+			    	ItemStack renamed = new ItemStack(Material.SHULKER_BOX);
+			    	ItemMeta meta = renamed.getItemMeta();
+			    	meta.setDisplayName(ChatColor.BOLD + LABEL_YOUR_ITEMS + ChatColor.RESET);
+			    	renamed.setItemMeta(meta);
+			    	ItemStack[] contents = new ItemStack[27];
+			    	contents[0] = renamed;
+			    	shulker.getInventory().setContents(contents);
+			    	im.setBlockState(shulker);
+			    	item.setItemMeta(im);
+					event.getInventory().setResult(item);
+				}
+				else {
+					event.getInventory().setResult(null);
+				}
+			}
 		}
 	}
 	//return shulker boxes
@@ -209,16 +234,17 @@ public class StorageHandler implements Listener {
 	{
 		ItemStack result = event.getInventory().getResult();
 		if (result == null) return;
-		StorageMultitype storage = null;
+		Storage st = null;
 		
 		for(ItemStack is : event.getInventory().getMatrix())
 			if(Storage.isStorage(is)) {
-				storage = (StorageMultitype)Storage.getByItemStack(is);
+				st = Storage.getByItemStack(is);
 				break;
 			}
 		
-		if (storage != null)
+		if (st instanceof StorageMultitype)
 		{
+			StorageMultitype storage = (StorageMultitype)st;
 			Inventory st_inv = storage.getInventory();
 			Inventory player_inv = event.getWhoClicked().getInventory();
 			
@@ -227,7 +253,7 @@ public class StorageHandler implements Listener {
 			if (click_result.items_2_to_1 > 0 || click_result.items_1_to_2 <= 0)
 				return;
 			
-			if (Utils.is_shulker_box(result.getType())) {
+			if (UtilsType.is_shulker_box(result.getType())) {
 				int lvl = storage.getLvl();
 				int extra_slots = click_result.fillsBottom() ? 1 : 0;
 				if (storage.getUncraftMode() == UncraftMode.DENY) {
@@ -245,6 +271,42 @@ public class StorageHandler implements Listener {
 				//give extra shulkers
 				for (int i = 1; i < lvl; i++)
 					Utils.giveOrDrop(player_inv, genShulker(st_inv, 27 * i));
+				
+				//free space if needed(fixed slot -> hotbar button)
+				switch (event.getAction())
+				{
+				case HOTBAR_MOVE_AND_READD:
+				case HOTBAR_SWAP:
+					ItemStack hotbar_slot = player_inv.getItem(event.getHotbarButton());
+					if (hotbar_slot != null) {
+						Utils.giveOrDrop(player_inv, hotbar_slot);
+						player_inv.setItem(event.getHotbarButton(), null);
+					}
+					break;
+				default:
+					break;
+				}
+				
+				//delete storage
+				plugin.ststorage.deleteDataFile(storage.ID);
+			}
+		}
+		else if (st instanceof StorageBottomless)
+		{
+			StorageBottomless storage = (StorageBottomless)st;
+			Inventory player_inv = event.getWhoClicked().getInventory();
+			if (UtilsType.is_shulker_box(result.getType())) {
+				//stop unreal crafts (something moved to cursor(swap))
+				ClickResult click_result = ClickResult.getClickResult(event);
+				if (click_result.items_2_to_1 > 0 || click_result.items_1_to_2 <= 0)
+					return;
+				
+				ItemStack empty_shulker = new ItemStack(Material.SHULKER_BOX);
+				//change cursor
+				event.getInventory().setResult(empty_shulker);
+				//give extra shulkers
+				for (int i = 1; i < 4; i++)
+					Utils.giveOrDrop(player_inv, empty_shulker);
 				
 				//free space if needed(fixed slot -> hotbar button)
 				switch (event.getAction())
@@ -301,25 +363,26 @@ public class StorageHandler implements Listener {
 	public void onInteract(PlayerInteractEvent event) {
 		if(event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
 			return;
-		if(!event.hasBlock() || !Utils.isInteractable(event.getClickedBlock().getType())) {
+		if(!event.hasBlock() || !UtilsType.isInteractable(event.getClickedBlock().getType())) {
 			int id = Storage.getID(event.getItem());
 			if(id >= 0) {
 				event.setCancelled(true);
 				Storage st = plugin.stlist.get(id);
 				if(st == null) {
-					plugin.getLogger().severe("Storage(ID="+id+") could not load (on interact)");
+					plugin.getLogger().severe("Storage(ID="+id+") could not load (on interact of "
+							+event.getPlayer().getName()+Utils.toString(event.getPlayer().getLocation())+")");
 					//delete storage tag from itemstack or create new storage - configurable?
 					return;
 				}
 				Player p = event.getPlayer();
 				if(st instanceof StorageMultitype) {
 					if (p.isSneaking())
-						p.openInventory(((StorageMultitype)st).getMenu());
+						p.openInventory(st.getMenu());
 					else
 						p.openInventory(st.getInventory());
 				}
 				else if(st instanceof StorageBottomless)
-					p.openInventory(((StorageBottomless) st).getMenu());
+					p.openInventory(st.getMenu());
 			}
 		}
 	}
@@ -406,7 +469,8 @@ public class StorageHandler implements Listener {
 		st = Storage.getByItemStack(current_item);
 		// click on Storage
 		if (st == null && Storage.getID(current_item) >= 0) {
-			Utils.printError("Storage(ID="+Storage.getID(current_item)+") could not load (on inv click: "+event.getClick()+")");
+			Utils.printError("Storage(ID="+Storage.getID(current_item)+") could not load (on inv click: "+event.getClick()+" in "
+					+Utils.toString(event.getClickedInventory().getLocation())+")");
 			// delete storage tag from itemstack?
 			return;
 		}
@@ -415,7 +479,7 @@ public class StorageHandler implements Listener {
 			// CHANGE STORAGE TYPE / ADD ITEMS - only Bottomless
 			if (cursor != null && cursor.getType() != Material.AIR)
 			{
-				if (Utils.is_shulker_box(cursor.getType())) {
+				if (UtilsType.is_shulker_box(cursor.getType())) {
 					event.setCancelled(true);
 					Inventory box_inv = Utils.getShulkerInventory(cursor);
 					if (st instanceof StorageBottomless) {
