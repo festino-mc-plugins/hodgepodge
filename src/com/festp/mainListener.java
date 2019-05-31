@@ -1,99 +1,16 @@
 package com.festp;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.Effect;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.WorldType;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Banner;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.CreatureSpawner;
-import org.bukkit.block.Dispenser;
-import org.bukkit.block.ShulkerBox;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_13_R2.CraftServer;
-import org.bukkit.craftbukkit.v1_13_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftAnimals;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftItem;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_13_R2.potion.CraftPotionBrewer;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Cow;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.entity.Zombie;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockDispenseEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
-import org.bukkit.event.weather.ThunderChangeEvent;
-import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.FurnaceRecipe;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.SpawnEggMeta;
-import org.bukkit.material.Cauldron;
-import org.bukkit.material.Dye;
-import org.bukkit.material.MaterialData;
-import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.PluginManager;
-//import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.Potion;
-import org.bukkit.potion.PotionBrewer;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
-import com.festp.amethyst.ActiveAmSpawnBlocking;
-import com.festp.amethyst.PathfinderGoalAvoidAmBlocks;
-import com.festp.amethyst.PathfinderGoalAvoidAmEntities;
+import com.festp.commands.CommandWorker;
+import com.festp.commands.StorageCommand;
 import com.festp.dispenser.DropActions;
 import com.festp.enderchest.AdminChannelPlayer;
 import com.festp.enderchest.ECTabCompleter;
@@ -110,44 +27,16 @@ import com.festp.remain.Others;
 import com.festp.remain.Sleeping;
 import com.festp.remain.SoulStone;
 import com.festp.remain.SummonerTome;
-import com.festp.storages.BeamedPair;
-import com.festp.storages.Storage;
+import com.festp.storages.StorageCraftManager;
 import com.festp.storages.StorageHandler;
 import com.festp.storages.StoragesFileManager;
 import com.festp.storages.StoragesList;
+import com.festp.utils.BeamedPair;
 import com.festp.utils.Utils;
 
-import net.minecraft.server.v1_13_R2.EntityAgeable;
-import net.minecraft.server.v1_13_R2.EntityAnimal;
-import net.minecraft.server.v1_13_R2.EntityCow;
-import net.minecraft.server.v1_13_R2.EntityCreature;
-import net.minecraft.server.v1_13_R2.EntityHuman;
-import net.minecraft.server.v1_13_R2.EntityInsentient;
-import net.minecraft.server.v1_13_R2.EntityItem;
-import net.minecraft.server.v1_13_R2.EntityMonster;
-import net.minecraft.server.v1_13_R2.EntityOcelot;
-//import net.minecraft.server.v1_13_R2.EnumParticle;
-import net.minecraft.server.v1_13_R2.Items;
-import net.minecraft.server.v1_13_R2.PathfinderGoalBreed;
-import net.minecraft.server.v1_13_R2.PathfinderGoalHurtByTarget;
-import net.minecraft.server.v1_13_R2.PathfinderGoalMeleeAttack;
-import net.minecraft.server.v1_13_R2.PathfinderGoalMoveTowardsRestriction;
-import net.minecraft.server.v1_13_R2.PathfinderGoalNearestAttackableTarget;
-import net.minecraft.server.v1_13_R2.PathfinderGoalPanic;
-import net.minecraft.server.v1_13_R2.PathfinderGoalTempt;
-
-import ru.tehkode.permissions.bukkit.PermissionsEx;
-import somebodyelse.code.FlatFileStorage;
-
 import java.io.File;
-import java.lang.reflect.Field;
-import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
 public class mainListener extends JavaPlugin implements Listener
 {
@@ -156,7 +45,6 @@ public class mainListener extends JavaPlugin implements Listener
 	public static final String storagesdir = "Storages";
 	
 	Config conf;
-	ActiveAmSpawnBlocking spawnblock;
 	private CraftManager craft_manager;
 
 	public List<AdminChannelPlayer> admin_ecplayers = new ArrayList<>();
@@ -164,16 +52,23 @@ public class mainListener extends JavaPlugin implements Listener
 	public EnderFileStorage ecstorage;
 	private int groupticks = 0;
 	private int maxgroupticks = 3*60*20; //3 minutes
+	
+	//TODO: metrics class, no public
+	public int metrics_ticks = 0;
+	public int max_metrics_ticks = 60*20; //3 minutes
+	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
 	public StorageHandler sthandler = new StorageHandler(this);
+	public StorageCraftManager stcraft = new StorageCraftManager(this, getServer());
 	
 	public World mainworld = null;
 	
-	ExpHoppers eh; 
+	ExpHoppers exp_hop; 
 	LeashManager lm;
 	
+	long t1;
 	public void onEnable()
 	{
 		pluginname = getName();
@@ -194,7 +89,6 @@ public class mainListener extends JavaPlugin implements Listener
 		if(mainworld == null) mainworld = getServer().getWorlds().get(0);
 		
 		conf = new Config(this);
-		spawnblock = new ActiveAmSpawnBlocking();
 		Config.loadConfig();
     	craft_manager = new CraftManager(this, getServer());
 		
@@ -204,28 +98,18 @@ public class mainListener extends JavaPlugin implements Listener
     	}
 		ecstorage = new EnderFileStorage(this);	
 		
-    	File STpluginFolder = new File("plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator") + storagesdir);
-		if (STpluginFolder.exists() == false) {
-    		STpluginFolder.mkdir();
-    	}
 		int maxID = 0;
-		for(String s : STpluginFolder.list()) {
-			if(s.length() < 5) continue;
-			s = s.substring(0, s.length()-4);
-			try {
-				if(Integer.parseInt(s) > maxID) {
-					maxID = Integer.parseInt(s);
-				}
-			} catch (Exception ex) {
-				getLogger().severe("["+pluginname+"] Storages: Wrong file in directory: " + s);
-			}
-		}
-		ststorage.nextID = maxID+1;
-		getLogger().info("New storages will start from ID " + ststorage.nextID + ".");
+		for(Integer ID : StoragesFileManager.getIDList())
+			if(ID > maxID)
+				maxID = ID;
+		StoragesFileManager.nextID = maxID+1;
+		getLogger().info("New storages will start from ID " + StoragesFileManager.nextID + ".");
     	
     	CommandWorker command_worker = new CommandWorker(this);
-    	getCommand(command_worker.main_command).setExecutor(command_worker);
-    	getCommand(command_worker.item_command).setExecutor(command_worker);
+    	getCommand(CommandWorker.MAIN_COMMAND).setExecutor(command_worker);
+    	getCommand(CommandWorker.ITEM_COMMAND).setExecutor(command_worker);
+    	StorageCommand storage_worker = new StorageCommand(stlist, ststorage);
+    	getCommand(StorageCommand.ST_COMMAND).setExecutor(storage_worker);
     	
     	pm.registerEvents(sthandler, this);
     	
@@ -240,17 +124,18 @@ public class mainListener extends JavaPlugin implements Listener
     	getCommand("ec").setTabCompleter(ectc);
     	ecgroup.loadEnderChests(ecstorage, ECpluginFolder.list());
     	
-    	Sleeping sl = new Sleeping(this);
+    	Sleeping sleep = new Sleeping(this);
+    	pm.registerEvents(sleep, this);
 
     	DropActions drop_actions = new DropActions(this);
     	pm.registerEvents(drop_actions, this);
 
-    	InventoryHandler ih = new InventoryHandler();
-    	pm.registerEvents(ih, this);
+    	InventoryHandler invs = new InventoryHandler();
+    	pm.registerEvents(invs, this);
 
     	lm = new LeashManager(this);
-    	InteractHandler ih2 = new InteractHandler(this, lm);
-    	pm.registerEvents(ih2, this);
+    	InteractHandler interacts = new InteractHandler(this, lm);
+    	pm.registerEvents(interacts, this);
 
     	Others features = new Others(this);
     	pm.registerEvents(features, this);
@@ -258,71 +143,120 @@ public class mainListener extends JavaPlugin implements Listener
     	SoulStone ss = new SoulStone();
     	pm.registerEvents(ss, this);
     	
-    	SummonerTome st = new SummonerTome(this);
-    	pm.registerEvents(st, this);
+    	SummonerTome summoner_tomes = new SummonerTome(this);
+    	pm.registerEvents(summoner_tomes, this);
     	
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
 
-    	eh = new ExpHoppers(getServer());
-    	pm.registerEvents(eh, this); //TO DO: try add canceling interact system
+    	exp_hop = new ExpHoppers(getServer());
+    	pm.registerEvents(exp_hop, this);
     	
     	craft_manager.addCrafts();
     	pm.registerEvents(craft_manager, this);
     	
+		t1 = System.nanoTime();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
+					metrics_ticks++;
+					if (metrics_ticks > max_metrics_ticks) {
+						for (int i = 0; i < metrics.length; i++)
+							metrics[i] = 0;
+						metrics_ticks = 0;
+					}
+
+					long t2 = System.nanoTime();
+					metrics[0] += t2 - t1;
+					t1 = t2;
+					
 					TaskList.tick();
+
+					t2 = System.nanoTime();
+					metrics[1] += t2 - t1;
+					t1 = t2;
 					
-					for(World w : getServer().getWorlds())
-			    	{
-			    		for(Entity e : w.getEntities())
-			    		{
-			    			if(e.getMetadata("amfear") == null || e.getMetadata("amfear").isEmpty()) {
-			    				e.setMetadata("amfear", new FixedMetadataValue(conf.plugin(),"1"));
-			    				applyAmethystFear(e);
-			    			}
-			    		}
-			    	}
-					
-					groupticks+=1;
+					groupticks++;
 					if(groupticks >= maxgroupticks) {
 						ecgroup.saveEnderChests(ecstorage);
 						groupticks = 0;
 					}
+
+					t2 = System.nanoTime();
+					metrics[2] += t2 - t1;
+					t1 = t2;
 					
 					//skip night by sleep
-					sl.onTick();
+					sleep.onTick();
+
+					t2 = System.nanoTime();
+					metrics[3] += t2 - t1;
+					t1 = t2;
 					
 					//fill cauldrons, feed animals and pump liquids
 					drop_actions.onTick();
+
+					t2 = System.nanoTime();
+					metrics[4] += t2 - t1;
+					t1 = t2;
 					
-					//items in cauldrons
-					ih2.onTick();
+					//items in cauldrons, saddle hp updating, hoe left click cooldown
+					interacts.onTick();
+
+					t2 = System.nanoTime();
+					metrics[5] += t2 - t1;
+					t1 = t2;
 					
 					//lasso and jumping rope
 					lm.tick();
+
+					t2 = System.nanoTime();
+					metrics[6] += t2 - t1;
+					t1 = t2;
 					
 					//shulker and chest items dropping on 'F' (default)
-					ih.onTick();
+					invs.onTick();
+
+					t2 = System.nanoTime();
+					metrics[7] += t2 - t1;
+					t1 = t2;
 					
 					//login in portal fix, vertical fireworks, silk touch 2 and jump boost damage reduce
 					features.onTick();
+
+					t2 = System.nanoTime();
+					metrics[8] += t2 - t1;
+					t1 = t2;
 					
 					//save horse data to tome
-					st.onTick();
+					summoner_tomes.onTick();
+
+					t2 = System.nanoTime();
+					metrics[9] += t2 - t1;
+					t1 = t2;
 					
 					//beam, unload, save, process
 					sthandler.onTick();
+
+					t2 = System.nanoTime();
+					metrics[10] += t2 - t1;
+					t1 = t2;
 					
 					//drag xp
-					eh.onTick();
+					exp_hop.onTick();
+
+					t2 = System.nanoTime();
+					metrics[11] += t2 - t1;
+					t1 = t2;
 					
 					//move and remove
 					BeamedPair.tickAll();
+
+					t2 = System.nanoTime();
+					metrics[12] += t2 - t1;
+					t1 = t2;
 				}
-			},0L,1L);
+			}, 0L, 1L);
 		
 	}
 	
@@ -336,32 +270,11 @@ public class mainListener extends JavaPlugin implements Listener
 		lm.onDisable();
 		Utils.onDisable();
 		
-		eh.save();
+		exp_hop.save();
 		ecgroup.saveEnderChests(ecstorage);
 		stlist.saveStorages();
 		for(Player p : getServer().getOnlinePlayers()) {
 			p.closeInventory();
-		}
-	}
-	
-	@EventHandler
-	public void onEntitySpawn(EntitySpawnEvent event) {
-		Entity e = event.getEntity();
-		if(!spawnblock.canspawn(e)) {
-			event.setCancelled( true );
-			if(e.getVehicle() != null)
-				e.getVehicle().remove();
-		} else {
-			applyAmethystFear(e);
-			e.setMetadata("amfear", new FixedMetadataValue(conf.plugin(),"1"));
-		}
-	}
-	
-	public void applyAmethystFear(Entity e) { //Avoidance
-		if(e instanceof Skeleton || e instanceof Zombie || e instanceof Creeper) {
-			EntityInsentient ei = (EntityInsentient)((CraftLivingEntity)e).getHandle();
-			//ei.goalSelector.a(0, new PathfinderGoalAvoidAmEntities((EntityCreature)(((CraftLivingEntity)e).getHandle()), 20.0F, 1.2D, 1.5D, 20 ));
-			ei.goalSelector.a(0, new PathfinderGoalAvoidAmBlocks((EntityCreature)(((CraftLivingEntity)e).getHandle()), 1.0D, 1.2D, 15, 4 ));
 		}
 	}
 }
