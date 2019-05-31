@@ -1,6 +1,7 @@
 package com.festp.remain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -12,7 +13,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_14_R1.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Boat;
@@ -35,6 +37,7 @@ import org.bukkit.util.Vector;
 import com.festp.Config;
 import com.festp.mainListener;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 public class Others implements Listener {
 	mainListener plugin;
@@ -54,13 +57,9 @@ public class Others implements Listener {
 				if(e.getVelocity().getY() >= 0d)
 					e.setFallDistance(Math.min(e.getFallDistance(), 10f));
 			}
-			for(Entity e : w.getEntitiesByClass(Firework.class))
-			{
-				e.setVelocity( new Vector(0.0d, e.getVelocity().getY(), 0.0d) ); 
-			}
 			for(Entity e : w.getEntitiesByClass(Boat.class))
 			{
-				if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL)
+				if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL) //Exception: ConcurrentModification
 					tp_entity_from_portal(e);
 			}
 		}
@@ -99,11 +98,44 @@ public class Others implements Listener {
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event)
 	{
-		if(event.isCancelled()) return;
-		if(event.getBlock().getType().equals(Material.SPAWNER) && event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 1) {
-			/*System.out.println(event.getBlock().getState().getData()+" "+event.getBlock().getMetadata("BlockEntityTag"));
-			ItemStack spawner = new ItemStack(Material.MOB_SPAWNER);
-			spawner.setData(event.getBlock().getState().getData());*/
+		if (event.isCancelled()) return;
+		if (event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS) > 1)
+		{
+			if (event.getBlock().getType().equals(Material.BROWN_MUSHROOM_BLOCK) || event.getBlock().getType().equals(Material.RED_MUSHROOM_BLOCK))
+			{
+				event.setCancelled(true);
+				int fortune_lvl = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+				Block block = event.getBlock();
+				double rand_res = random.nextDouble();
+				// 1: (2/3)x1 (1/3)x2 => 2: (2/4)x1 (1/4)x2 (1/4)x3 => 2: (2/5)x1 (1/5)x2 (1/5)x3 (1/5)x4
+				int mul = 1;
+				for (int i = 1; i < fortune_lvl + 1; i++)
+				{
+					if ((fortune_lvl + 1) * rand_res / i < 1.0) {
+						mul = i;
+						break;
+					}
+				}
+				Collection<ItemStack> new_drops = block.getDrops();
+				block.setType(Material.AIR);
+				for (ItemStack new_drop : new_drops)
+				{
+					if (new_drop.getType() == Material.AIR)
+						continue;
+					int amount = new_drop.getAmount() * mul;
+					int max_amount = new_drop.getMaxStackSize();
+					while (amount > 0)
+					{
+						int drop_amount = Math.min(max_amount, amount);
+						amount -= drop_amount;
+						new_drop.setAmount(drop_amount);
+						block.getWorld().dropItemNaturally(block.getLocation(), new_drop);
+					}
+				}
+			}
+		}
+		else if (event.getBlock().getType().equals(Material.SPAWNER) && event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.SILK_TOUCH) > 1)
+		{
 			ItemStack spawner = new ItemStack(Material.SPAWNER);
 			BlockStateMeta bsm = (BlockStateMeta)spawner.getItemMeta();
 			BlockState bs = bsm.getBlockState();
@@ -115,7 +147,7 @@ public class Others implements Listener {
 		}
 	}
 
-	//Запили тогда ещё сокращение урона от падения при джамп бусте.
+	// Jump boost fall damage reduction
 	@EventHandler
 	public void onEntityDamage(EntityDamageEvent event)
 	{
@@ -129,7 +161,6 @@ public class Others implements Listener {
 		}
 	}
 	
-	//EntityPortalEvent extends EntityTeleportEvent
 	private int dir(double x0) {
 		if((int)x0 == (int)(x0+0.75)) //neg x
 			return -1;
@@ -219,6 +250,6 @@ public class Others implements Listener {
 	}
 	
 	private static boolean is_valid_portal_tp(Block b) {
-		return Utils.playerCanStay(b) && b.getType() != Material.NETHER_PORTAL;
+		return UtilsType.playerCanStay(b) && b.getType() != Material.NETHER_PORTAL;
 	}
 }
