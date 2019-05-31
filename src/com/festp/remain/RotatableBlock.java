@@ -18,6 +18,7 @@ import org.bukkit.block.data.type.Comparator;
 import org.bukkit.block.data.type.Door;
 import org.bukkit.block.data.type.Door.Hinge;
 import org.bukkit.block.data.type.Gate;
+import org.bukkit.block.data.type.Piston;
 import org.bukkit.block.data.type.Repeater;
 import org.bukkit.block.data.type.Slab;
 import org.bukkit.block.data.type.Stairs;
@@ -25,6 +26,7 @@ import org.bukkit.block.data.type.TrapDoor;
 import org.bukkit.material.Pumpkin;
 
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 import org.bukkit.block.data.type.Slab.Type;
 import org.bukkit.inventory.DoubleChestInventory;
@@ -49,7 +51,7 @@ public class RotatableBlock {
 		BlockData data = b.getBlockData();
 		
 		//BOTH SNEAKING AND NOT SNEAKING
-		if(Utils.isSlab(block)) {
+		if(UtilsType.isSlab(block)) {
 			rotate_bisected(b);
 			return true;
 		}
@@ -57,15 +59,22 @@ public class RotatableBlock {
 			rotate_orientable(b);
 			return true;
 		}
-		if(Utils.is_glazed_terracotta(block) || block == Material.PUMPKIN || block == Material.CARVED_PUMPKIN || block == Material.JACK_O_LANTERN) { // || data instanceof Pumpkin) {
+		//  || block == Material.CAMPFIRE
+		if(UtilsType.is_glazed_terracotta(block) || block == Material.PUMPKIN || block == Material.CARVED_PUMPKIN || block == Material.JACK_O_LANTERN) { // || data instanceof Pumpkin) {
 			rotate_directional_4(b);
 			return true;
 		}
-		if(block == Material.OBSERVER || block == Material.PISTON || block == Material.STICKY_PISTON) {
+		if(block == Material.OBSERVER) {
 			rotate_directional_6(b);
 			return true;
 		}
-		if(block == Material.SIGN || Utils.is_banner(block) || Utils.isHead(block) && data instanceof Rotatable) {
+		if(block == Material.PISTON || block == Material.STICKY_PISTON) {
+			if (((Piston)b.getBlockData()).isExtended()) //(b.isBlockIndirectlyPowered())
+				return false;
+			rotate_directional_6(b);
+			return true;
+		}
+		if(UtilsType.isSign(block) || UtilsType.is_banner(block) || UtilsType.isHead(block) && data instanceof Rotatable) {
 			rotate_rotatable_16(b);
 			return true;
 		}
@@ -74,11 +83,15 @@ public class RotatableBlock {
 		}
 		//SNEAKING
 		if(sneaking) {
-			if(Utils.isStairs(block)) {
+			if(UtilsType.isStairs(block)) {
 				rotate_bisected(b);
 				return true;
 			}
-			if(Utils.isWoodenTrapdoor(block)) {
+			if(block == Material.LECTERN || block == Material.BELL || block == Material.STONECUTTER || block == Material.GRINDSTONE) {
+				rotate_directional_4(b);
+				return true;
+			}
+			if(UtilsType.isWoodenTrapdoor(block)) {
 				rotate_directional_4(b);
 				if(((Directional)data).getFacing() == BlockFace.SOUTH)
 					rotate_bisected(b);
@@ -90,7 +103,7 @@ public class RotatableBlock {
 					return true;
 				}
 			}
-			if(block == Material.ENDER_CHEST || block == Material.FURNACE
+			if(block == Material.ENDER_CHEST || block == Material.FURNACE || block == Material.SMOKER || block == Material.BLAST_FURNACE
 					|| data instanceof Gate || data instanceof Comparator || data instanceof Repeater
 					|| block == Material.ANVIL || block == Material.CHIPPED_ANVIL || block == Material.DAMAGED_ANVIL) {
 				rotate_directional_4(b);
@@ -111,7 +124,7 @@ public class RotatableBlock {
 		}
 		//NOT SNEAKING
 		else {
-			if(Utils.isStairs(block)) {
+			if(UtilsType.isStairs(block)) {
 				rotate_directional_4(b);
 				return true;
 			}
