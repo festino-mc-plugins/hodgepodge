@@ -1,5 +1,6 @@
 package com.festp.storages;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -18,6 +19,7 @@ import com.festp.Pair;
 import com.festp.TaskList;
 import com.festp.storages.StorageMultitype.HandleTime;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsWorld;
 
 public class StorageMultitype extends Storage
 {
@@ -25,7 +27,7 @@ public class StorageMultitype extends Storage
 	public enum GrabFilter {STACKING, SIMILAR, ANY}
 	public enum SortMode {VANILLA, ALPHABET}
 	public enum HandleTime {ON_BUTTON, WAIT_N_SECONDS, OPEN_CLOSE, ALWAYS}
-	public enum InventoryAction {NOTHING, GAIN, GAIN_MERGING, LOSE} //org.bukkit.event.inventory.InventoryAction
+	public enum InventoryAction {NOTHING, GAIN, GAIN_MERGING, LOSE}
 	public enum UncraftMode {DENY, DROP}
 	public static final GrabDirection DEFAULT_DIR = GrabDirection.BACKWARD;
 	public static final GrabFilter DEFAULT_FILTER = GrabFilter.STACKING;
@@ -33,12 +35,12 @@ public class StorageMultitype extends Storage
 	public static final HandleTime DEFAULT_TIME = HandleTime.ON_BUTTON;
 	public static final UncraftMode DEFAULT_UNCRAFT = UncraftMode.DENY;
 	public static final int DELAY = 5 * 20; // 5s
-	protected static final int FIRST_LEVEL_SIZE = 18, LEVEL_INCREASE = 18,
+	public static final int FIRST_LEVEL_SIZE = 18, LEVEL_INCREASE = 18,
 			MAX_LEVEL = 1 + (54 - FIRST_LEVEL_SIZE) / LEVEL_INCREASE;
 	protected int level = -1;
 	protected Inventory inventory;
 	protected GrabDirection dir = DEFAULT_DIR;
-	protected GrabFilter filter = DEFAULT_FILTER; //GrabFilterGrabFilterGrabFilter
+	protected GrabFilter filter = DEFAULT_FILTER;
 	protected SortMode mode = DEFAULT_MODE;
 	protected HandleTime sort_time = DEFAULT_TIME;
 	protected HandleTime stack_time = DEFAULT_TIME;
@@ -82,7 +84,7 @@ public class StorageMultitype extends Storage
 			else if (stack_time == HandleTime.WAIT_N_SECONDS)
 				delayed = true;
 		}
-		if (action == InventoryAction.GAIN || action == InventoryAction.LOSE)
+		if (action == InventoryAction.GAIN || action == InventoryAction.LOSE || action == InventoryAction.GAIN_MERGING)
 		{
 			sorted = false;
 			if (sort_time == HandleTime.ALWAYS)
@@ -127,7 +129,7 @@ public class StorageMultitype extends Storage
 		setEdited(true);
 		int i = 0;
 		for(ItemStack stack : inventory.getContents()) {
-			Utils.drop(loc, stack, 1);
+			UtilsWorld.drop(loc, stack, 1);
 			inventory.setItem(i, null);
 			i++;
 		}
@@ -607,5 +609,19 @@ public class StorageMultitype extends Storage
 		if (updated)
 			grab_to.setContents(stacks);
 		return new Pair<Boolean, ItemStack[]>(updated, inv);
+	}
+	
+	@Override
+	public String toString()
+	{
+		String location = "(unlocated)";
+		if (getExternalInventory() != null) {
+			Location l = getExternalInventory().getLocation();
+			DecimalFormat f = new DecimalFormat("#0.00");
+			location = "(" + f.format(l.getX()) + ";" + f.format(l.getY()) + ";" + f.format(l.getZ()) + ")";
+		}
+		return "StorageMultitype(ID=" + ID + ", location=" + location + ", level=" + getLvl() + ", "
+				+ "Grab={grab_mode=" + canGrab() + ", grab_dir=" + getGrabDirection() + ", grab_filter=" + getGrabFilter() + "}, "
+				+ "Sort={sort_mode=" + getSortMode() + ", sort_time=" + getSortTime() + "}, stack_time=" + getStackTime() + ", uncraft_mode=" + getUncraftMode() + ")";
 	}
 }
