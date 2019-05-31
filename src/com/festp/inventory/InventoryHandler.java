@@ -8,7 +8,7 @@ import java.util.List;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_13_R2.potion.CraftPotionBrewer;
+import org.bukkit.craftbukkit.v1_14_R1.potion.CraftPotionBrewer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -35,6 +35,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
+import com.festp.utils.UtilsWorld;
 
 public class InventoryHandler implements Listener {
 
@@ -80,7 +82,9 @@ public class InventoryHandler implements Listener {
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent event)
 	{
-		 if(event.getInventory().getType() == InventoryType.SHULKER_BOX || event.getInventory().getType() == InventoryType.CHEST)
+		 if(event.getInventory().getType() == InventoryType.SHULKER_BOX
+				 || event.getInventory().getType() == InventoryType.CHEST
+				 || event.getInventory().getType() == InventoryType.BARREL)
 		 {
 			 if(event.getInventory().getLocation() != null)
 				 closed_invs.add( new ClosedInventory(event.getPlayer().getUniqueId(), Config.max_closed_inv_ticks, event.getInventory().getLocation().getBlock()) );
@@ -107,7 +111,7 @@ public class InventoryHandler implements Listener {
 			event.setCancelled(true);
 			Player p = event.getPlayer();
 			for(ItemStack stack : inv.getContents()) {
-				Utils.drop(p.getEyeLocation(), stack, 1);
+				UtilsWorld.drop(p.getEyeLocation(), stack, 1);
 			}
 			inv.setContents(new ItemStack[inv.getContents().length]);
 		}
@@ -273,19 +277,19 @@ public class InventoryHandler implements Listener {
 	
 	@EventHandler
 	public void onPlayerEntityDamage(EntityDamageByEntityEvent event) {
-		if(event.isCancelled()) return;
-		if(event.getDamager() instanceof Player) {
+		if (event.isCancelled()) return;
+		if (event.getDamager() instanceof Player) {
 			PlayerInventory player_inv = ((Player)event.getDamager()).getInventory();
 			ItemStack hitting_item = player_inv.getItemInMainHand();
 			Material m = hitting_item.getType();
-			if(Utils.isSword(hitting_item.getType()) || hitting_item.getType() == Material.TRIDENT) {
-				if(((Damageable)hitting_item.getItemMeta()).getDamage() + 1 >= m.getMaxDurability()) {
+			if (UtilsType.isSword(hitting_item.getType()) || hitting_item.getType() == Material.TRIDENT) {
+				if (((Damageable)hitting_item.getItemMeta()).getDamage() + 1 >= m.getMaxDurability()) {
 					boolean will_be_replaced = replace_tool(player_inv, player_inv.getHeldItemSlot());
 					event.setCancelled(will_be_replaced);
 				}
 			}
-			else if(Utils.isTool(hitting_item.getType())) {
-				if(((Damageable)hitting_item.getItemMeta()).getDamage() + 2 >= m.getMaxDurability()) {
+			else if (UtilsType.isTool(hitting_item.getType())) {
+				if (((Damageable)hitting_item.getItemMeta()).getDamage() + 2 >= m.getMaxDurability()) {
 					boolean will_be_replaced = replace_tool(player_inv, player_inv.getHeldItemSlot());
 					event.setCancelled(will_be_replaced);
 				}
@@ -353,11 +357,11 @@ public class InventoryHandler implements Listener {
 					player_inv.setItem(slot_new_tool, temp);
 				}
 				else {
-					if(!Utils.isTool(player_inv.getItemInOffHand().getType()))
+					if(!UtilsType.isTool(player_inv.getItemInOffHand().getType()))
 						slot_new_tool = player_inv.getSize()-1;
 					else
 						for(int i=0; i<36; i++)
-							if(!Utils.isTool(player_inv.getItem(i).getType())) {
+							if(!UtilsType.isTool(player_inv.getItem(i).getType())) {
 								slot_new_tool = i;
 								break;
 							}
