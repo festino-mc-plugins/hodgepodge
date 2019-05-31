@@ -3,6 +3,7 @@ package com.festp.menu;
 import java.util.HashSet;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
@@ -76,25 +77,26 @@ public class InventoryMenu implements Listener {
 			return;
 		event.setCancelled(true);
 		
+		Player player = (Player)event.getWhoClicked();
 		InventoryAction action = event.getAction();
 		ClickType click = event.getClick();
 		int slot = event.getSlot();
 		if(action == InventoryAction.PICKUP_ALL && click == ClickType.LEFT) {
 			for(MenuListener listener : listeners) {
 				event.getInventory().setItem(slot,
-						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.LEFT_CLICK));
+						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.LEFT_CLICK, player));
 			}
 		}
 		else if(action == InventoryAction.PICKUP_HALF && click == ClickType.RIGHT) {
 			for(MenuListener listener : listeners) {
 				event.getInventory().setItem(slot,
-						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.RIGHT_CLICK));
+						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.RIGHT_CLICK, player));
 			}
 		}
 		else if(action == InventoryAction.SWAP_WITH_CURSOR && (click == ClickType.LEFT || click == ClickType.RIGHT)) {
 			for(MenuListener listener : listeners) {
 				event.getInventory().setItem(slot,
-						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.SWAP_CLICK));
+						listener.onClick(slot, event.getCursor(), event.getCurrentItem(), MenuAction.SWAP_CLICK, player));
 			}
 		}
 	}
