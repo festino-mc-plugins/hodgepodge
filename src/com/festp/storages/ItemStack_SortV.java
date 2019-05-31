@@ -38,6 +38,7 @@ public class ItemStack_SortV implements Comparable {
 			Enchantment.FIRE_ASPECT, Enchantment.LOOT_BONUS_MOBS, Enchantment.SWEEPING_EDGE, Enchantment.DURABILITY,
 			Enchantment.ARROW_DAMAGE, Enchantment.ARROW_KNOCKBACK, Enchantment.ARROW_FIRE, Enchantment.ARROW_INFINITE,
 			Enchantment.LOYALTY, Enchantment.IMPALING, Enchantment.RIPTIDE, Enchantment.CHANNELING,
+			Enchantment.MULTISHOT, Enchantment.QUICK_CHARGE, Enchantment.PIERCING,
 			Enchantment.MENDING, Enchantment.VANISHING_CURSE});
 	
 	private ItemStack stack;
@@ -189,6 +190,7 @@ public class ItemStack_SortV implements Comparable {
 				|| ench.equals(Enchantment.FIRE_ASPECT) || ench.equals(Enchantment.LOOT_BONUS_MOBS) || ench.equals(Enchantment.SWEEPING_EDGE) || ench.equals(Enchantment.DURABILITY)
 				|| ench.equals(Enchantment.ARROW_DAMAGE) || ench.equals(Enchantment.ARROW_KNOCKBACK) || ench.equals(Enchantment.ARROW_FIRE) || ench.equals(Enchantment.ARROW_INFINITE)
 				|| ench.equals(Enchantment.LOYALTY) || ench.equals(Enchantment.IMPALING) || ench.equals(Enchantment.RIPTIDE) || ench.equals(Enchantment.CHANNELING)
+				|| ench.equals(Enchantment.MULTISHOT) || ench.equals(Enchantment.QUICK_CHARGE) || ench.equals(Enchantment.PIERCING)
 				|| ench.equals(Enchantment.MENDING) || ench.equals(Enchantment.VANISHING_CURSE);
 	}
 	
@@ -309,7 +311,9 @@ public class ItemStack_SortV implements Comparable {
 		case ACACIA_SLAB: 						g++;
 		case DARK_OAK_SLAB: 						g++;
 		case STONE_SLAB: 						g++;
+		case SMOOTH_STONE_SLAB: 						g++;
 		case SANDSTONE_SLAB: 						g++;
+		case CUT_SANDSTONE_SLAB: 						g++;
 		case PETRIFIED_OAK_SLAB: 						g++;
 		case COBBLESTONE_SLAB: 						g++;
 		case BRICK_SLAB: 						g++;
@@ -317,6 +321,7 @@ public class ItemStack_SortV implements Comparable {
 		case NETHER_BRICK_SLAB: 						g++;
 		case QUARTZ_SLAB: 						g++;
 		case RED_SANDSTONE_SLAB: 						g++;
+		case CUT_RED_SANDSTONE_SLAB: 						g++;
 		case PURPUR_SLAB: 						g++;
 		case PRISMARINE_SLAB: 						g++;
 		case PRISMARINE_BRICK_SLAB: 						g++;
@@ -465,6 +470,35 @@ public class ItemStack_SortV implements Comparable {
 		case FIRE_CORAL_BLOCK: 						g++;
 		case HORN_CORAL_BLOCK: 						g++;
 		case BLUE_ICE: 						g++;
+
+		case POLISHED_GRANITE_STAIRS: 						g++;
+		case SMOOTH_RED_SANDSTONE_STAIRS: 						g++;
+		case MOSSY_STONE_BRICK_STAIRS: 						g++;
+		case POLISHED_DIORITE_STAIRS: 						g++;
+		case MOSSY_COBBLESTONE_STAIRS: 						g++;
+		case END_STONE_BRICK_STAIRS: 						g++;
+		case STONE_STAIRS: 						g++;
+		case SMOOTH_SANDSTONE_STAIRS: 						g++;
+		case SMOOTH_QUARTZ_STAIRS: 						g++;
+		case GRANITE_STAIRS: 						g++;
+		case ANDESITE_STAIRS: 						g++;
+		case RED_NETHER_BRICK_STAIRS: 						g++;
+		case POLISHED_ANDESITE_STAIRS: 						g++;
+		case DIORITE_STAIRS: 						g++;
+		case POLISHED_GRANITE_SLAB: 						g++;
+		case SMOOTH_RED_SANDSTONE_SLAB: 						g++;
+		case MOSSY_STONE_BRICK_SLAB: 						g++;
+		case POLISHED_DIORITE_SLAB: 						g++;
+		case MOSSY_COBBLESTONE_SLAB: 						g++;
+		case END_STONE_BRICK_SLAB: 						g++;
+		case SMOOTH_SANDSTONE_SLAB: 						g++;
+		case SMOOTH_QUARTZ_SLAB: 						g++;
+		case GRANITE_SLAB: 						g++;
+		case ANDESITE_SLAB: 						g++;
+		case RED_NETHER_BRICK_SLAB: 						g++;
+		case POLISHED_ANDESITE_SLAB: 						g++;
+		case DIORITE_SLAB: 						g++;
+		
 		case DRIED_KELP_BLOCK: 						g++;
 		// DECORATION BLOCKS
 		case OAK_SAPLING: 						g++;
@@ -495,6 +529,9 @@ public class ItemStack_SortV implements Comparable {
 		case WHITE_TULIP: 						g++;
 		case PINK_TULIP: 						g++;
 		case OXEYE_DAISY: 						g++;
+		case CORNFLOWER: 						g++;
+		case LILY_OF_THE_VALLEY: 						g++;
+		case WITHER_ROSE: 						g++;
 		case BROWN_MUSHROOM: 						g++;
 		case RED_MUSHROOM: 						g++;
 		case TORCH: 						g++;
@@ -534,6 +571,18 @@ public class ItemStack_SortV implements Comparable {
 		case ENDER_CHEST: 						g++;
 		case COBBLESTONE_WALL: 						g++;
 		case MOSSY_COBBLESTONE_WALL: 						g++;
+		case BRICK_WALL: 						g++;
+		case PRISMARINE_WALL: 						g++;
+		case RED_SANDSTONE_WALL: 						g++;
+		case MOSSY_STONE_BRICK_WALL: 						g++;
+		case GRANITE_WALL: 						g++;
+		case STONE_BRICK_WALL: 						g++;
+		case NETHER_BRICK_WALL: 						g++;
+		case ANDESITE_WALL: 						g++;
+		case RED_NETHER_BRICK_WALL: 						g++;
+		case SANDSTONE_WALL: 						g++;
+		case END_STONE_BRICK_WALL: 						g++;
+		case DIORITE_WALL: 						g++;
 		case ANVIL: 						g++;
 		case CHIPPED_ANVIL: 						g++;
 		case DAMAGED_ANVIL: 						g++;
@@ -619,8 +668,14 @@ public class ItemStack_SortV implements Comparable {
 		case BUBBLE_CORAL_FAN: 						g++;
 		case FIRE_CORAL_FAN: 						g++;
 		case HORN_CORAL_FAN: 						g++;
+		case SCAFFOLDING: 						g++;
 		case PAINTING: 						g++;
-		case SIGN: 						g++;
+		case OAK_SIGN: 						g++;
+		case SPRUCE_SIGN: 						g++;
+		case BIRCH_SIGN: 						g++;
+		case JUNGLE_SIGN: 						g++;
+		case ACACIA_SIGN: 						g++;
+		case DARK_OAK_SIGN: 						g++;
 		case WHITE_BED: 						g++;
 		case ORANGE_BED: 						g++;
 		case MAGENTA_BED: 						g++;
@@ -663,6 +718,18 @@ public class ItemStack_SortV implements Comparable {
 		case RED_BANNER: 						g++;
 		case BLACK_BANNER: 						g++;
 		case END_CRYSTAL: 						g++;
+		case LOOM:  						g++;
+		case BARREL:  						g++;
+		case SMOKER:  						g++;
+		case BLAST_FURNACE:  						g++;
+		case CARTOGRAPHY_TABLE:  						g++;
+		case FLETCHING_TABLE:  						g++;
+		case GRINDSTONE:  						g++;
+		case SMITHING_TABLE:  						g++;
+		case STONECUTTER:  						g++;
+		case BELL:  						g++;
+		case LANTERN:  						g++;
+		case CAMPFIRE:  						g++;
 		// REDSTONE
 		case DISPENSER: 						g++;
 		case NOTE_BLOCK: 						g++;
@@ -718,6 +785,7 @@ public class ItemStack_SortV implements Comparable {
 		case REPEATER: 						g++;
 		case COMPARATOR: 						g++;
 		case REDSTONE: 						g++;
+		case LECTERN: 						g++;
 		// TRANSPORTATION
 		case POWERED_RAIL: 						g++;
 		case DETECTOR_RAIL: 						g++;
@@ -741,6 +809,7 @@ public class ItemStack_SortV implements Comparable {
 		case BEACON: 						g++;
 		case TURTLE_EGG: 						g++;
 		case CONDUIT: 						g++;
+		case COMPOSTER	: 						g++;
 		case SCUTE: 						g++;
 		case COAL: 						g++;
 		case CHARCOAL: 						g++;
@@ -769,14 +838,15 @@ public class ItemStack_SortV implements Comparable {
 		case CLAY_BALL: 						g++;
 		case SUGAR_CANE: 						g++;
 		case KELP: 						g++;
+		case BAMBOO: 						g++;
 		case PAPER: 						g++;
 		case BOOK: 						g++;
 		case SLIME_BALL: 						g++;
 		case EGG: 						g++;
 		case GLOWSTONE_DUST: 						g++;
 		case INK_SAC: 						g++;
-		case ROSE_RED: 						g++;
-		case CACTUS_GREEN: 						g++;
+		case RED_DYE: 						g++;
+		case GREEN_DYE: 						g++;
 		case COCOA_BEANS: 						g++;
 		case LAPIS_LAZULI: 						g++;
 		case PURPLE_DYE: 						g++;
@@ -785,11 +855,15 @@ public class ItemStack_SortV implements Comparable {
 		case GRAY_DYE: 						g++;
 		case PINK_DYE: 						g++;
 		case LIME_DYE: 						g++;
-		case DANDELION_YELLOW: 						g++;
+		case YELLOW_DYE: 						g++;
 		case LIGHT_BLUE_DYE: 						g++;
 		case MAGENTA_DYE: 						g++;
 		case ORANGE_DYE: 						g++;
 		case BONE_MEAL: 						g++;
+		case BLUE_DYE: 						g++;
+		case BROWN_DYE: 						g++;
+		case BLACK_DYE: 						g++;
+		case WHITE_DYE: 						g++;
 		case BONE: 						g++;
 		case SUGAR: 						g++;
 		case PUMPKIN_SEEDS: 						g++;
@@ -801,6 +875,7 @@ public class ItemStack_SortV implements Comparable {
 		case ENDER_EYE: 						g++;
 		case BAT_SPAWN_EGG: 						g++;
 		case BLAZE_SPAWN_EGG: 						g++;
+		case CAT_SPAWN_EGG: 						g++;
 		case CAVE_SPIDER_SPAWN_EGG: 						g++;
 		case CHICKEN_SPAWN_EGG: 						g++;
 		case COD_SPAWN_EGG: 						g++;
@@ -813,6 +888,7 @@ public class ItemStack_SortV implements Comparable {
 		case ENDERMAN_SPAWN_EGG: 						g++;
 		case ENDERMITE_SPAWN_EGG: 						g++;
 		case EVOKER_SPAWN_EGG: 						g++;
+		case FOX_SPAWN_EGG: 						g++;
 		case GHAST_SPAWN_EGG: 						g++;
 		case GUARDIAN_SPAWN_EGG: 						g++;
 		case HORSE_SPAWN_EGG: 						g++;
@@ -822,12 +898,15 @@ public class ItemStack_SortV implements Comparable {
 		case MOOSHROOM_SPAWN_EGG: 						g++;
 		case MULE_SPAWN_EGG: 						g++;
 		case OCELOT_SPAWN_EGG: 						g++;
+		case PANDA_SPAWN_EGG: 						g++;
 		case PARROT_SPAWN_EGG: 						g++;
 		case PHANTOM_SPAWN_EGG: 						g++;
 		case PIG_SPAWN_EGG: 						g++;
+		case PILLAGER_SPAWN_EGG: 						g++;
 		case POLAR_BEAR_SPAWN_EGG: 						g++;
 		case PUFFERFISH_SPAWN_EGG: 						g++;
 		case RABBIT_SPAWN_EGG: 						g++;
+		case RAVAGER_SPAWN_EGG: 						g++;
 		case SALMON_SPAWN_EGG: 						g++;
 		case SHEEP_SPAWN_EGG: 						g++;
 		case SHULKER_SPAWN_EGG: 						g++;
@@ -838,11 +917,13 @@ public class ItemStack_SortV implements Comparable {
 		case SPIDER_SPAWN_EGG: 						g++;
 		case SQUID_SPAWN_EGG: 						g++;
 		case STRAY_SPAWN_EGG: 						g++;
+		case TRADER_LLAMA_SPAWN_EGG: 						g++;
 		case TROPICAL_FISH_SPAWN_EGG: 						g++;
 		case TURTLE_SPAWN_EGG: 						g++;
 		case VEX_SPAWN_EGG: 						g++;
 		case VILLAGER_SPAWN_EGG: 						g++;
 		case VINDICATOR_SPAWN_EGG: 						g++;
+		case WANDERING_TRADER_SPAWN_EGG: 						g++;
 		case WITCH_SPAWN_EGG: 						g++;
 		case WITHER_SKELETON_SPAWN_EGG: 						g++;
 		case WOLF_SPAWN_EGG: 						g++;
@@ -866,6 +947,7 @@ public class ItemStack_SortV implements Comparable {
 		case IRON_HORSE_ARMOR: 						g++;
 		case GOLDEN_HORSE_ARMOR: 						g++;
 		case DIAMOND_HORSE_ARMOR: 						g++;
+		case LEATHER_HORSE_ARMOR: 						g++;
 		case CHORUS_FRUIT: 						g++;
 		case POPPED_CHORUS_FRUIT: 						g++;
 		case BEETROOT_SEEDS: 						g++;
@@ -885,6 +967,11 @@ public class ItemStack_SortV implements Comparable {
 		case MUSIC_DISC_WAIT: 						g++;
 		case NAUTILUS_SHELL: 						g++;
 		case HEART_OF_THE_SEA: 						g++;
+		case FLOWER_BANNER_PATTERN: 						g++;
+		case CREEPER_BANNER_PATTERN: 						g++;
+		case SKULL_BANNER_PATTERN: 						g++;
+		case MOJANG_BANNER_PATTERN: 						g++;
+		case GLOBE_BANNER_PATTERN: 						g++;
 		// FOODSTUFFS
 		case APPLE: 						g++;
 		case MUSHROOM_STEW: 						g++;
@@ -921,6 +1008,7 @@ public class ItemStack_SortV implements Comparable {
 		case COOKED_MUTTON: 						g++;
 		case BEETROOT: 						g++;
 		case BEETROOT_SOUP: 						g++;
+		case SWEET_BERRIES: 						g++;
 		// TOOLS
 		case IRON_SHOVEL: 						g++;
 		case IRON_PICKAXE: 						g++;
@@ -985,6 +1073,7 @@ public class ItemStack_SortV implements Comparable {
 		case SHIELD: 						g++;
 		case TOTEM_OF_UNDYING: 						g++;
 		case TRIDENT: 						g++;
+		case CROSSBOW: 						g++;
 		// BREWING
 		case GHAST_TEAR: 						g++;
 		case POTION: 						g++;
@@ -1007,146 +1096,5 @@ public class ItemStack_SortV implements Comparable {
 		}
 		
 		return g;
-	}
-	
-	public static int getSectionNumber_2(Material m) {
-		switch (m)
-		{
-		case STONE: case GRANITE: case POLISHED_GRANITE: case DIORITE: case POLISHED_DIORITE: case ANDESITE: case POLISHED_ANDESITE:
-		case GRASS_BLOCK: case DIRT: case COARSE_DIRT: case PODZOL: case COBBLESTONE:
-		case OAK_PLANKS: case SPRUCE_PLANKS: case BIRCH_PLANKS: case JUNGLE_PLANKS: case ACACIA_PLANKS: case DARK_OAK_PLANKS:
-		case BEDROCK: case SAND: case RED_SAND: case GRAVEL: case GOLD_ORE: case IRON_ORE: case COAL_ORE:
-		case OAK_LOG: case SPRUCE_LOG: case BIRCH_LOG: case JUNGLE_LOG: case ACACIA_LOG: case DARK_OAK_LOG:
-		case STRIPPED_OAK_LOG: case STRIPPED_SPRUCE_LOG: case STRIPPED_BIRCH_LOG: case STRIPPED_JUNGLE_LOG: case STRIPPED_ACACIA_LOG: case STRIPPED_DARK_OAK_LOG:
-		case STRIPPED_OAK_WOOD: case STRIPPED_SPRUCE_WOOD: case STRIPPED_BIRCH_WOOD: case STRIPPED_JUNGLE_WOOD: case STRIPPED_ACACIA_WOOD: case STRIPPED_DARK_OAK_WOOD:
-		case OAK_WOOD: case SPRUCE_WOOD: case BIRCH_WOOD: case JUNGLE_WOOD: case ACACIA_WOOD: case DARK_OAK_WOOD:
-		case SPONGE: case WET_SPONGE: case GLASS: case LAPIS_ORE: case LAPIS_BLOCK:
-		case SANDSTONE: case CHISELED_SANDSTONE: case CUT_SANDSTONE:
-		case WHITE_WOOL: case ORANGE_WOOL: case MAGENTA_WOOL: case LIGHT_BLUE_WOOL: case YELLOW_WOOL: case LIME_WOOL: case PINK_WOOL: case GRAY_WOOL:
-		case LIGHT_GRAY_WOOL: case CYAN_WOOL: case PURPLE_WOOL: case BLUE_WOOL: case BROWN_WOOL: case GREEN_WOOL: case RED_WOOL: case BLACK_WOOL:
-		case GOLD_BLOCK: case IRON_BLOCK:
-		case OAK_SLAB: case SPRUCE_SLAB: case BIRCH_SLAB: case JUNGLE_SLAB: case ACACIA_SLAB: case DARK_OAK_SLAB:
-		case STONE_SLAB: case SANDSTONE_SLAB: case PETRIFIED_OAK_SLAB: case COBBLESTONE_SLAB: case BRICK_SLAB: case STONE_BRICK_SLAB:
-		case NETHER_BRICK_SLAB: case QUARTZ_SLAB: case RED_SANDSTONE_SLAB: case PURPUR_SLAB: case PRISMARINE_SLAB: case PRISMARINE_BRICK_SLAB: case DARK_PRISMARINE_SLAB:
-		case SMOOTH_QUARTZ: case SMOOTH_RED_SANDSTONE: case SMOOTH_SANDSTONE: case SMOOTH_STONE:
-		case BRICKS: case BOOKSHELF: case MOSSY_COBBLESTONE: case OBSIDIAN:
-		case PURPUR_BLOCK: case PURPUR_PILLAR: case PURPUR_STAIRS:
-		case OAK_STAIRS: case DIAMOND_ORE: case DIAMOND_BLOCK: case COBBLESTONE_STAIRS: case REDSTONE_ORE:
-		case ICE: case SNOW_BLOCK: case CLAY: case PUMPKIN: case CARVED_PUMPKIN: case NETHERRACK: case SOUL_SAND: case GLOWSTONE: case JACK_O_LANTERN:
-		case STONE_BRICKS: case MOSSY_STONE_BRICKS: case CRACKED_STONE_BRICKS: case CHISELED_STONE_BRICKS:
-		case MELON: case BRICK_STAIRS: case STONE_BRICK_STAIRS: case MYCELIUM: case NETHER_BRICKS: case NETHER_BRICK_STAIRS:
-		case END_STONE: case END_STONE_BRICKS: case SANDSTONE_STAIRS: case EMERALD_ORE: case EMERALD_BLOCK:
-		case SPRUCE_STAIRS: case BIRCH_STAIRS: case JUNGLE_STAIRS:
-		case NETHER_QUARTZ_ORE: case CHISELED_QUARTZ_BLOCK: case QUARTZ_BLOCK: case QUARTZ_PILLAR: case QUARTZ_STAIRS:
-		case WHITE_TERRACOTTA: case ORANGE_TERRACOTTA: case MAGENTA_TERRACOTTA: case LIGHT_BLUE_TERRACOTTA: case YELLOW_TERRACOTTA: case LIME_TERRACOTTA: case PINK_TERRACOTTA: case GRAY_TERRACOTTA:
-		case LIGHT_GRAY_TERRACOTTA: case CYAN_TERRACOTTA: case PURPLE_TERRACOTTA: case BLUE_TERRACOTTA: case BROWN_TERRACOTTA: case GREEN_TERRACOTTA: case RED_TERRACOTTA: case BLACK_TERRACOTTA:
-		case HAY_BLOCK: case TERRACOTTA: case COAL_BLOCK: case PACKED_ICE: case ACACIA_STAIRS: case DARK_OAK_STAIRS:
-		case WHITE_STAINED_GLASS: case ORANGE_STAINED_GLASS: case MAGENTA_STAINED_GLASS: case LIGHT_BLUE_STAINED_GLASS: case YELLOW_STAINED_GLASS: case LIME_STAINED_GLASS: case PINK_STAINED_GLASS: case GRAY_STAINED_GLASS:
-		case LIGHT_GRAY_STAINED_GLASS: case CYAN_STAINED_GLASS: case PURPLE_STAINED_GLASS: case BLUE_STAINED_GLASS: case BROWN_STAINED_GLASS: case GREEN_STAINED_GLASS: case RED_STAINED_GLASS: case BLACK_STAINED_GLASS:
-		case PRISMARINE: case PRISMARINE_BRICKS: case DARK_PRISMARINE: case PRISMARINE_STAIRS: case PRISMARINE_BRICK_STAIRS: case DARK_PRISMARINE_STAIRS: case SEA_LANTERN:
-		case RED_SANDSTONE: case CHISELED_RED_SANDSTONE: case CUT_RED_SANDSTONE: case RED_SANDSTONE_STAIRS:
-		case MAGMA_BLOCK: case NETHER_WART_BLOCK: case RED_NETHER_BRICKS: case BONE_BLOCK:
-		case WHITE_CONCRETE: case ORANGE_CONCRETE: case MAGENTA_CONCRETE: case LIGHT_BLUE_CONCRETE: case YELLOW_CONCRETE: case LIME_CONCRETE: case PINK_CONCRETE: case GRAY_CONCRETE:
-		case LIGHT_GRAY_CONCRETE: case CYAN_CONCRETE: case PURPLE_CONCRETE: case BLUE_CONCRETE: case BROWN_CONCRETE: case GREEN_CONCRETE: case RED_CONCRETE: case BLACK_CONCRETE:
-		case WHITE_CONCRETE_POWDER: case ORANGE_CONCRETE_POWDER: case MAGENTA_CONCRETE_POWDER: case LIGHT_BLUE_CONCRETE_POWDER: case YELLOW_CONCRETE_POWDER: case LIME_CONCRETE_POWDER: case PINK_CONCRETE_POWDER: case GRAY_CONCRETE_POWDER:
-		case LIGHT_GRAY_CONCRETE_POWDER: case CYAN_CONCRETE_POWDER: case PURPLE_CONCRETE_POWDER: case BLUE_CONCRETE_POWDER: case BROWN_CONCRETE_POWDER: case GREEN_CONCRETE_POWDER: case RED_CONCRETE_POWDER: case BLACK_CONCRETE_POWDER:
-		case DEAD_TUBE_CORAL_BLOCK: case DEAD_BRAIN_CORAL_BLOCK: case DEAD_BUBBLE_CORAL_BLOCK: case DEAD_FIRE_CORAL_BLOCK: case DEAD_HORN_CORAL_BLOCK: 
-		case TUBE_CORAL_BLOCK: case BRAIN_CORAL_BLOCK: case BUBBLE_CORAL_BLOCK: case FIRE_CORAL_BLOCK: case HORN_CORAL_BLOCK: 
-		case BLUE_ICE: case DRIED_KELP_BLOCK:
-			return 1;
-		case OAK_SAPLING: case SPRUCE_SAPLING: case BIRCH_SAPLING: case JUNGLE_SAPLING: case ACACIA_SAPLING: case DARK_OAK_SAPLING:
-		case OAK_LEAVES: case SPRUCE_LEAVES: case BIRCH_LEAVES: case JUNGLE_LEAVES: case ACACIA_LEAVES: case DARK_OAK_LEAVES:
-		case COBWEB: case GRASS: case FERN: case DEAD_BUSH: case SEAGRASS: case SEA_PICKLE:
-		case DANDELION: case POPPY: case BLUE_ORCHID: case ALLIUM: case AZURE_BLUET: case RED_TULIP: case ORANGE_TULIP: case WHITE_TULIP: case PINK_TULIP: case OXEYE_DAISY:
-		case BROWN_MUSHROOM: case RED_MUSHROOM: case TORCH: case END_ROD: case CHORUS_PLANT: case CHORUS_FLOWER: case CHEST: case CRAFTING_TABLE: case FARMLAND: case FURNACE:
-		case LADDER: case SNOW: case CACTUS: case JUKEBOX:
-		case OAK_FENCE: case SPRUCE_FENCE: case BIRCH_FENCE: case JUNGLE_FENCE: case ACACIA_FENCE: case DARK_OAK_FENCE:
-		case INFESTED_STONE: case INFESTED_COBBLESTONE: case INFESTED_STONE_BRICKS: case INFESTED_MOSSY_STONE_BRICKS: case INFESTED_CRACKED_STONE_BRICKS: case INFESTED_CHISELED_STONE_BRICKS:
-		case BROWN_MUSHROOM_BLOCK: case RED_MUSHROOM_BLOCK: case MUSHROOM_STEM: case IRON_BARS: case GLASS_PANE: case VINE: case LILY_PAD: case NETHER_BRICK_FENCE:
-		case ENCHANTING_TABLE: case END_PORTAL_FRAME: case ENDER_CHEST: case COBBLESTONE_WALL: case MOSSY_COBBLESTONE_WALL: case ANVIL: case CHIPPED_ANVIL: case DAMAGED_ANVIL:
-		case WHITE_CARPET: case ORANGE_CARPET: case MAGENTA_CARPET: case LIGHT_BLUE_CARPET: case YELLOW_CARPET: case LIME_CARPET: case PINK_CARPET: case GRAY_CARPET:
-		case LIGHT_GRAY_CARPET: case CYAN_CARPET: case PURPLE_CARPET: case BLUE_CARPET: case BROWN_CARPET: case GREEN_CARPET: case RED_CARPET: case BLACK_CARPET:
-		case SLIME_BLOCK: case GRASS_PATH: case SUNFLOWER: case LILAC: case ROSE_BUSH: case PEONY: case TALL_GRASS: case LARGE_FERN:
-		case WHITE_STAINED_GLASS_PANE: case ORANGE_STAINED_GLASS_PANE: case MAGENTA_STAINED_GLASS_PANE: case LIGHT_BLUE_STAINED_GLASS_PANE: case YELLOW_STAINED_GLASS_PANE: case LIME_STAINED_GLASS_PANE: case PINK_STAINED_GLASS_PANE: case GRAY_STAINED_GLASS_PANE:
-		case LIGHT_GRAY_STAINED_GLASS_PANE: case CYAN_STAINED_GLASS_PANE: case PURPLE_STAINED_GLASS_PANE: case BLUE_STAINED_GLASS_PANE: case BROWN_STAINED_GLASS_PANE: case GREEN_STAINED_GLASS_PANE: case RED_STAINED_GLASS_PANE: case BLACK_STAINED_GLASS_PANE:
-		case WHITE_SHULKER_BOX: case ORANGE_SHULKER_BOX: case MAGENTA_SHULKER_BOX: case LIGHT_BLUE_SHULKER_BOX: case YELLOW_SHULKER_BOX: case LIME_SHULKER_BOX: case PINK_SHULKER_BOX: case GRAY_SHULKER_BOX:
-		case LIGHT_GRAY_SHULKER_BOX: case CYAN_SHULKER_BOX: case PURPLE_SHULKER_BOX: case BLUE_SHULKER_BOX: case BROWN_SHULKER_BOX: case GREEN_SHULKER_BOX: case RED_SHULKER_BOX: case BLACK_SHULKER_BOX:
-		case WHITE_GLAZED_TERRACOTTA: case ORANGE_GLAZED_TERRACOTTA: case MAGENTA_GLAZED_TERRACOTTA: case LIGHT_BLUE_GLAZED_TERRACOTTA: case YELLOW_GLAZED_TERRACOTTA: case LIME_GLAZED_TERRACOTTA: case PINK_GLAZED_TERRACOTTA: case GRAY_GLAZED_TERRACOTTA:
-		case LIGHT_GRAY_GLAZED_TERRACOTTA: case CYAN_GLAZED_TERRACOTTA: case PURPLE_GLAZED_TERRACOTTA: case BLUE_GLAZED_TERRACOTTA: case BROWN_GLAZED_TERRACOTTA: case GREEN_GLAZED_TERRACOTTA: case RED_GLAZED_TERRACOTTA: case BLACK_GLAZED_TERRACOTTA:
-		case TUBE_CORAL: case BRAIN_CORAL: case BUBBLE_CORAL: case FIRE_CORAL: case HORN_CORAL:
-		case TUBE_CORAL_FAN: case BRAIN_CORAL_FAN: case BUBBLE_CORAL_FAN: case FIRE_CORAL_FAN: case HORN_CORAL_FAN:
-		case PAINTING: case SIGN:
-		case WHITE_BED: case ORANGE_BED: case MAGENTA_BED: case LIGHT_BLUE_BED: case YELLOW_BED: case LIME_BED: case PINK_BED: case GRAY_BED:
-		case LIGHT_GRAY_BED: case CYAN_BED: case PURPLE_BED: case BLUE_BED: case BROWN_BED: case GREEN_BED: case RED_BED: case BLACK_BED:
-		case ITEM_FRAME: case FLOWER_POT: case SKELETON_SKULL: case WITHER_SKELETON_SKULL: case PLAYER_HEAD: case ZOMBIE_HEAD: case CREEPER_HEAD: case DRAGON_HEAD: case ARMOR_STAND:
-		case WHITE_BANNER: case ORANGE_BANNER: case MAGENTA_BANNER: case LIGHT_BLUE_BANNER: case YELLOW_BANNER: case LIME_BANNER: case PINK_BANNER: case GRAY_BANNER:
-		case LIGHT_GRAY_BANNER: case CYAN_BANNER: case PURPLE_BANNER: case BLUE_BANNER: case BROWN_BANNER: case GREEN_BANNER: case RED_BANNER: case BLACK_BANNER:
-		case END_CRYSTAL:
-			return 2;
-		case DISPENSER: case NOTE_BLOCK: case STICKY_PISTON: case PISTON: case TNT: case LEVER: case STONE_PRESSURE_PLATE:
-		case OAK_PRESSURE_PLATE: case SPRUCE_PRESSURE_PLATE: case BIRCH_PRESSURE_PLATE: case JUNGLE_PRESSURE_PLATE: case ACACIA_PRESSURE_PLATE: case DARK_OAK_PRESSURE_PLATE:
-		case REDSTONE_TORCH: case STONE_BUTTON:
-		case OAK_TRAPDOOR: case SPRUCE_TRAPDOOR: case BIRCH_TRAPDOOR: case JUNGLE_TRAPDOOR: case ACACIA_TRAPDOOR: case DARK_OAK_TRAPDOOR:
-		case OAK_FENCE_GATE: case SPRUCE_FENCE_GATE: case BIRCH_FENCE_GATE: case JUNGLE_FENCE_GATE: case ACACIA_FENCE_GATE: case DARK_OAK_FENCE_GATE:
-		case REDSTONE_LAMP: case TRIPWIRE:
-		case OAK_BUTTON: case SPRUCE_BUTTON: case BIRCH_BUTTON: case JUNGLE_BUTTON: case ACACIA_BUTTON: case DARK_OAK_BUTTON:
-		case TRAPPED_CHEST: case LIGHT_WEIGHTED_PRESSURE_PLATE: case HEAVY_WEIGHTED_PRESSURE_PLATE: case DAYLIGHT_DETECTOR:
-		case REDSTONE_BLOCK: case HOPPER: case DROPPER: case IRON_TRAPDOOR: case OBSERVER: case IRON_DOOR:
-		case OAK_DOOR: case SPRUCE_DOOR: case BIRCH_DOOR: case JUNGLE_DOOR: case ACACIA_DOOR: case DARK_OAK_DOOR:
-		case REPEATER: case COMPARATOR: case REDSTONE:
-			return 3;
-		case POWERED_RAIL: case DETECTOR_RAIL: case RAIL: case ACTIVATOR_RAIL: case MINECART: case SADDLE: case OAK_BOAT: case CHEST_MINECART: case FURNACE_MINECART:
-		case CARROT_ON_A_STICK: case TNT_MINECART: case HOPPER_MINECART: case ELYTRA: case SPRUCE_BOAT: case BIRCH_BOAT: case JUNGLE_BOAT: case ACACIA_BOAT: case DARK_OAK_BOAT:
-			return 4;
-		case BEACON: case TURTLE_EGG: case CONDUIT: case SCUTE: case COAL: case CHARCOAL: case DIAMOND: case IRON_INGOT: case GOLD_INGOT:
-		case STICK: case BOWL: case STRING: case FEATHER: case GUNPOWDER: case WHEAT_SEEDS: case WHEAT: case FLINT: case BUCKET:
-		case WATER_BUCKET: case LAVA_BUCKET: case SNOWBALL: case LEATHER: case MILK_BUCKET: case PUFFERFISH_BUCKET: case SALMON_BUCKET: case COD_BUCKET: case TROPICAL_FISH_BUCKET:
-		case BRICK: case CLAY_BALL: case SUGAR_CANE: case KELP: case PAPER: case BOOK: case SLIME_BALL: case EGG: case GLOWSTONE_DUST:
-		case INK_SAC: case ROSE_RED: case CACTUS_GREEN: case COCOA_BEANS: case LAPIS_LAZULI: case PURPLE_DYE: case CYAN_DYE: case LIGHT_GRAY_DYE: case GRAY_DYE:
-		case PINK_DYE: case LIME_DYE: case DANDELION_YELLOW: case LIGHT_BLUE_DYE: case MAGENTA_DYE: case ORANGE_DYE: case BONE_MEAL:
-		case BONE: case SUGAR: case PUMPKIN_SEEDS: case MELON_SEEDS: case ENDER_PEARL: case BLAZE_ROD: case GOLD_NUGGET: case NETHER_WART: case ENDER_EYE:
-		case BAT_SPAWN_EGG: case BLAZE_SPAWN_EGG: case CAVE_SPIDER_SPAWN_EGG: case CHICKEN_SPAWN_EGG: case COD_SPAWN_EGG: case COW_SPAWN_EGG: case CREEPER_SPAWN_EGG:
-		case DOLPHIN_SPAWN_EGG: case DONKEY_SPAWN_EGG: case DROWNED_SPAWN_EGG: case ELDER_GUARDIAN_SPAWN_EGG: case ENDERMAN_SPAWN_EGG: case ENDERMITE_SPAWN_EGG:
-		case EVOKER_SPAWN_EGG: case GHAST_SPAWN_EGG: case GUARDIAN_SPAWN_EGG: case HORSE_SPAWN_EGG: case HUSK_SPAWN_EGG: case LLAMA_SPAWN_EGG: case MAGMA_CUBE_SPAWN_EGG:
-		case MOOSHROOM_SPAWN_EGG: case MULE_SPAWN_EGG: case OCELOT_SPAWN_EGG: case PARROT_SPAWN_EGG: case PHANTOM_SPAWN_EGG: case PIG_SPAWN_EGG: case POLAR_BEAR_SPAWN_EGG:
-		case PUFFERFISH_SPAWN_EGG: case RABBIT_SPAWN_EGG: case SALMON_SPAWN_EGG: case SHEEP_SPAWN_EGG: case SHULKER_SPAWN_EGG: case SILVERFISH_SPAWN_EGG: case SKELETON_SPAWN_EGG:
-		case SKELETON_HORSE_SPAWN_EGG: case SLIME_SPAWN_EGG: case SPIDER_SPAWN_EGG: case SQUID_SPAWN_EGG: case STRAY_SPAWN_EGG: case TROPICAL_FISH_SPAWN_EGG: case TURTLE_SPAWN_EGG:
-		case VEX_SPAWN_EGG: case VILLAGER_SPAWN_EGG: case VINDICATOR_SPAWN_EGG: case WITCH_SPAWN_EGG: case WITHER_SKELETON_SPAWN_EGG: case WOLF_SPAWN_EGG: case ZOMBIE_SPAWN_EGG:
-		case ZOMBIE_HORSE_SPAWN_EGG: case ZOMBIE_PIGMAN_SPAWN_EGG: case ZOMBIE_VILLAGER_SPAWN_EGG:
-		case EXPERIENCE_BOTTLE: case FIRE_CHARGE: case WRITABLE_BOOK: case EMERALD: case MAP:
-		case NETHER_STAR: case FIREWORK_ROCKET: case FIREWORK_STAR: case NETHER_BRICK: case QUARTZ: case PRISMARINE_SHARD: case PRISMARINE_CRYSTALS: case RABBIT_HIDE:
-		case IRON_HORSE_ARMOR: case GOLDEN_HORSE_ARMOR: case DIAMOND_HORSE_ARMOR: case CHORUS_FRUIT: case POPPED_CHORUS_FRUIT: case BEETROOT_SEEDS: case SHULKER_SHELL: case IRON_NUGGET:
-		case MUSIC_DISC_13: case MUSIC_DISC_CAT: case MUSIC_DISC_BLOCKS: case MUSIC_DISC_CHIRP: case MUSIC_DISC_FAR: case MUSIC_DISC_MALL: case MUSIC_DISC_MELLOHI:
-		case MUSIC_DISC_STAL: case MUSIC_DISC_STRAD: case MUSIC_DISC_WARD: case MUSIC_DISC_11: case MUSIC_DISC_WAIT: case NAUTILUS_SHELL: case HEART_OF_THE_SEA:
-			return 5;
-		case APPLE: case MUSHROOM_STEW: case BREAD: case PORKCHOP: case COOKED_PORKCHOP: case GOLDEN_APPLE: case ENCHANTED_GOLDEN_APPLE:
-		case COD: case SALMON: case TROPICAL_FISH: case PUFFERFISH: case COOKED_COD: case COOKED_SALMON:
-		case CAKE: case COOKIE: case MELON_SLICE: case DRIED_KELP: case BEEF: case COOKED_BEEF: case CHICKEN: case COOKED_CHICKEN:
-		case ROTTEN_FLESH: case SPIDER_EYE: case CARROT: case POTATO: case BAKED_POTATO: case POISONOUS_POTATO: case PUMPKIN_PIE:
-		case RABBIT: case COOKED_RABBIT: case RABBIT_STEW: case MUTTON: case COOKED_MUTTON: case BEETROOT: case BEETROOT_SOUP:
-			return 6;
-		case IRON_SHOVEL: case IRON_PICKAXE: case IRON_AXE: case FLINT_AND_STEEL:
-		case WOODEN_SHOVEL: case WOODEN_PICKAXE: case WOODEN_AXE:
-		case STONE_SHOVEL: case STONE_PICKAXE: case STONE_AXE:
-		case DIAMOND_SHOVEL: case DIAMOND_PICKAXE: case DIAMOND_AXE:
-		case GOLDEN_SHOVEL: case GOLDEN_PICKAXE: case GOLDEN_AXE:
-		case WOODEN_HOE: case STONE_HOE: case IRON_HOE: case DIAMOND_HOE: case GOLDEN_HOE:
-		case COMPASS: case FISHING_ROD: case CLOCK: case SHEARS: case LEAD: case NAME_TAG:
-			return 7;
-		case TURTLE_HELMET: case BOW: case ARROW: case IRON_SWORD: case WOODEN_SWORD: case STONE_SWORD: case DIAMOND_SWORD: case GOLDEN_SWORD:
-		case LEATHER_HELMET: case LEATHER_CHESTPLATE: case LEATHER_LEGGINGS: case LEATHER_BOOTS:
-		case CHAINMAIL_HELMET: case CHAINMAIL_CHESTPLATE: case CHAINMAIL_LEGGINGS: case CHAINMAIL_BOOTS:
-		case IRON_HELMET: case IRON_CHESTPLATE: case IRON_LEGGINGS: case IRON_BOOTS:
-		case DIAMOND_HELMET: case DIAMOND_CHESTPLATE: case DIAMOND_LEGGINGS: case DIAMOND_BOOTS:
-		case GOLDEN_HELMET: case GOLDEN_CHESTPLATE: case GOLDEN_LEGGINGS: case GOLDEN_BOOTS:
-		case SPECTRAL_ARROW: case TIPPED_ARROW:
-		case SHIELD: case TOTEM_OF_UNDYING: case TRIDENT:
-			return 8;
-		case GHAST_TEAR: case POTION: case GLASS_BOTTLE: case FERMENTED_SPIDER_EYE: case BLAZE_POWDER: case MAGMA_CREAM: case BREWING_STAND: case CAULDRON:
-		case GLISTERING_MELON_SLICE: case GOLDEN_CARROT: case RABBIT_FOOT: case DRAGON_BREATH: case SPLASH_POTION: case LINGERING_POTION: case PHANTOM_MEMBRANE:
-			return 9;
-		default: //out of sections
-			return 0;
-		}
 	}
 }
