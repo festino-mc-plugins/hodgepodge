@@ -1,6 +1,7 @@
 package com.festp.storages;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,17 +43,20 @@ public class MenuMultitype implements MenuListener {
 		TIME__ALWAYS = Material.REDSTONE_BLOCK,
 		STACK_BUTTON = Material.SLIME_BALL,
 		UNCRAFT_DENY = Material.BARRIER,
-		UNCRAFT_DROP = Material.GLASS_PANE;
+		UNCRAFT_DROP = Material.GLASS_PANE,
+		EXTERNAL_INV_MATERIAL = Material.RED_STAINED_GLASS_PANE,
+		RETURN_INV_MATERIAL = Material.RED_STAINED_GLASS_PANE;
 	public static final String ARROW_LEFT = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWYxMzNlOTE5MTlkYjBhY2VmZGMyNzJkNjdmZDg3YjRiZTg4ZGM0NGE5NTg5NTg4MjQ0NzRlMjFlMDZkNTNlNiJ9fX0=",
 		ARROW_RIGHT = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTNmYzUyMjY0ZDhhZDllNjU0ZjQxNWJlZjAxYTIzOTQ3ZWRiY2NjY2Y2NDkzNzMyODliZWE0ZDE0OTU0MWY3MCJ9fX0=";
 		
 	// Util Map<String,String> with english and other lang strings
 	
 	
-	private static final int grab_mode_index = 0, grab_filter_index = 1, grab_dir_index = 2,
-			sort_mode_index = 3, sort_time_index = 4, sort_index = sort_time_index + 9,
-			stack_time_index = 5, stack_index = stack_time_index + 9,
-			uncraft_index = 8;
+	private static final int grab_mode_index = 0, grab_filter_index = grab_mode_index + 9, grab_dir_index = grab_mode_index + 18,
+			sort_mode_index = 1, sort_time_index = sort_mode_index + 9, sort_index = sort_time_index + 9,
+			stack_time_index = 2 + 9, stack_index = stack_time_index + 9,
+			uncraft_index = 8,
+			external_inv_index = 27 - 1;
 	
 	private StorageMultitype storage;
 	private InventoryMenu menu = null;
@@ -64,7 +68,10 @@ public class MenuMultitype implements MenuListener {
 	
 	public Inventory getMenu() {
 		if(menu == null) {
-			int max_slot = max_slot(grab_mode_index, grab_filter_index, grab_dir_index, sort_mode_index, sort_time_index, sort_index, stack_time_index, stack_index, uncraft_index);
+			int max_slot = max_slot(grab_mode_index, grab_filter_index, grab_dir_index,
+					sort_mode_index, sort_time_index, sort_index,
+					stack_time_index, stack_index,
+					uncraft_index, external_inv_index);
 			ItemStack[] buttons = new ItemStack[max_slot + 1];
 			for (int i = 0; i <= max_slot; i++)
 				buttons[i] = null;
@@ -78,6 +85,7 @@ public class MenuMultitype implements MenuListener {
 			buttons[stack_time_index] = genStackTimeButton();
 			buttons[stack_index] = genStackButton();
 			buttons[uncraft_index] = genUncraftButton();
+			buttons[external_inv_index] = genExternalInvButton();
 			
 			menu = new InventoryMenu(this, buttons, "Storage settings", 3);
 		}
@@ -94,7 +102,7 @@ public class MenuMultitype implements MenuListener {
 	}
 	
 	@Override
-	public ItemStack onClick(int slot, ItemStack cursor_item, ItemStack slot_item, MenuAction action) {
+	public ItemStack onClick(int slot, ItemStack cursor_item, ItemStack slot_item, MenuAction action, Player clicked) {
 		if(slot == grab_mode_index) {
 			Grab new_grab = storage.canGrab();
 			if(action == MenuAction.LEFT_CLICK)
@@ -183,8 +191,13 @@ public class MenuMultitype implements MenuListener {
 			storage.setUncraftMode(uncraft_mode);
 			return genUncraftButton();
 		}
-		else
-			return slot_item;
+		else if (slot == external_inv_index) {
+			if (Utils.equal_invs(clicked.getInventory(), storage.getExternalInventory()))
+				clicked.openInventory(storage.getInventory());
+			else
+				clicked.openInventory(storage.getExternalInventory());
+		}
+		return slot_item;
 	}
 
 	private ItemStack genGrabModeButton() {
@@ -379,6 +392,16 @@ public class MenuMultitype implements MenuListener {
 		meta.setDisplayName(uncraft_name);
 		uncraft_button.setItemMeta(meta);
 		return uncraft_button;
+	}
+
+	private ItemStack genExternalInvButton() {
+		String external_inv_name = "ERROR_EXTERNAL_INV_NAME";
+		external_inv_name = "Открыть инвентарь с хранилищем";
+		ItemStack external_inv_button = new ItemStack(EXTERNAL_INV_MATERIAL);
+		ItemMeta meta = external_inv_button.getItemMeta();
+		meta.setDisplayName(external_inv_name);
+		external_inv_button.setItemMeta(meta);
+		return external_inv_button;
 	}
 	
 	private static Grab next(Grab grab) {
