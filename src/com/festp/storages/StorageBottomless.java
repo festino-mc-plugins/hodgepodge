@@ -1,5 +1,6 @@
 package com.festp.storages;
 
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import com.festp.Pair;
 import com.festp.menu.InventoryMenu;
 import com.festp.storages.Storage.StorageType;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
+import com.festp.utils.UtilsWorld;
 
 public class StorageBottomless extends Storage
 {
@@ -92,7 +95,7 @@ public class StorageBottomless extends Storage
 		Inventory inv = getPage();
 		for (ItemStack stack: inv.getStorageContents()) {
 			if (stack != null) {
-				Utils.drop(drop_from, stack, 1);
+				UtilsWorld.drop(drop_from, stack, 1);
 				amount += stack.getAmount();
 			}
 		}
@@ -102,7 +105,7 @@ public class StorageBottomless extends Storage
 	}
 	
 	public static boolean isAllowedMaterial(Material m) {
-		return !(Utils.is_shulker_box(m) || Utils.isTool(m) || Utils.isWeapon(m) || Utils.isArmor(m) || m == Material.ELYTRA || m == Material.CARROT_ON_A_STICK
+		return !(UtilsType.is_shulker_box(m) || UtilsType.isTool(m) || UtilsType.isWeapon(m) || UtilsType.isArmor(m) || m == Material.ELYTRA || m == Material.CARROT_ON_A_STICK
 				|| m == Material.ENCHANTED_BOOK || m == Material.FIREWORK_STAR || m == Material.FIREWORK_ROCKET || m == Material.SHIELD || m == Material.TIPPED_ARROW
 				|| m == Material.POTION || m == Material.SPLASH_POTION || m == Material.LINGERING_POTION || m == Material.WRITABLE_BOOK || m == Material.WRITTEN_BOOK
 				|| m == Material.FILLED_MAP || m == Material.AIR || m == Material.SPAWNER);
@@ -200,5 +203,17 @@ public class StorageBottomless extends Storage
 	
 	public boolean canGrab(Material m) {
 		return m == getMaterial();
+	}
+	
+	@Override
+	public String toString()
+	{
+		String location = "(unlocated)";
+		if (getExternalInventory() != null) {
+			Location l = getExternalInventory().getLocation();
+			DecimalFormat f = new DecimalFormat("#0.00");
+			location = "(" + f.format(l.getX()) + ";" + f.format(l.getY()) + ";" + f.format(l.getZ()) + ")";
+		}
+		return "StorageBottomless(ID=" + ID + ", location=" + location + ", Material=" + allowed_type + ", amount="+getAmount() + ", grab_mode=" + canGrab() + ")";
 	}
 }
