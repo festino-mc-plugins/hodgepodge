@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Material;
+import org.bukkit.block.Barrel;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
 
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 public class ClosedInventory {
 	private UUID closed_inv_player;
@@ -33,11 +35,14 @@ public class ClosedInventory {
 	
 	public Inventory getInventory() {
 		Material block = closed_inv.getType();
-		if(Utils.is_shulker_box(block)) {
+		if(UtilsType.is_shulker_box(block)) {
 			return ((ShulkerBox)closed_inv.getState()).getInventory();
 		}
 		else if(block == Material.CHEST || block == Material.TRAPPED_CHEST) {
 			return ((Chest)closed_inv.getState()).getInventory();
+		}
+		else if(block == Material.BARREL) {
+			return ((Barrel)closed_inv.getState()).getInventory();
 		}
 		else return null;
 	}
