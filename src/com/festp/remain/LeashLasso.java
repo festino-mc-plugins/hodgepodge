@@ -1,29 +1,20 @@
 package com.festp.remain;
 
-import java.util.function.Predicate;
-
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Turtle;
-import org.bukkit.entity.Vex;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import com.festp.utils.Utils;
-import com.mysql.jdbc.V1toV2StatementInterceptorAdapter;
+import com.festp.utils.UtilsType;
 
 //spawn thrown beacon, which will die on collide(top or bottom)
 //(and spawn leash hitch if collides with fence - directly or above(air, water, e.t.c); miss lead if lava; (despawn delay if cactus))
@@ -37,6 +28,7 @@ public class LeashLasso {
 	private static final int STICKY_DESPAWN_DELAY = 20, REMOVE_COOLDOWN = 60;
 	private static final Material[] STICKY_BLOCKS = { Material.CACTUS, Material.SLIME_BLOCK };
 	
+	ItemStack lead_drops;
 	Entity holder;
 	LivingEntity projectile;
 	LivingEntity workaround;
@@ -50,7 +42,7 @@ public class LeashLasso {
 			LeashLasso.manager = manager;
 	}
 	
-	public LeashLasso(Entity holder, Vector velocity)
+	public LeashLasso(Entity holder, Vector velocity, ItemStack drops)
 	{
 		this.holder = holder;
 		old_velocity = velocity;
@@ -65,6 +57,8 @@ public class LeashLasso {
 		//because beacon is armorstand that can't draw leash
 		workaround = Utils.spawnBeacon(spawn_loc, beacon_class, BEACON_ID, false);
 		workaround.setLeashHolder(holder);
+		
+		lead_drops = drops;
 
 		//if top of projectile in sticky block
 		if (Utils.contains(STICKY_BLOCKS, projectile.getLocation().add(0, projectile.getHeight(), 0).getBlock().getType())) {
@@ -128,7 +122,7 @@ public class LeashLasso {
 		}
 		
 		//collide with fence -> hitch
-		if (Utils.isFence(current.getType())) {
+		if (UtilsType.isFence(current.getType())) {
 			if(isFacedFence(projectile.getLocation(), projectile.getVelocity()))
 			{
 				spawnLeashHitch(current);
@@ -137,7 +131,7 @@ public class LeashLasso {
 			}
 		}
 		if(on_ground) {
-			if (Utils.isFence(current.getRelative(BlockFace.DOWN).getType()) && Utils.isAir(current.getType()))
+			if (UtilsType.isFence(current.getRelative(BlockFace.DOWN).getType()) && UtilsType.isAir(current.getType()))
 				spawnLeashHitch(current.getRelative(BlockFace.DOWN));
 			else
 				dropLead();
@@ -160,8 +154,7 @@ public class LeashLasso {
 	
 	public void dropLead()
 	{
-		Item lead = holder.getWorld().dropItem(holder.getLocation(), new ItemStack(Material.LEAD, 1));
-		lead.setPickupDelay(0);
+		Utils.giveOrDrop(holder, lead_drops);
 	}
 	public void despawnLasso()
 	{
@@ -172,14 +165,14 @@ public class LeashLasso {
 	private void leashEntity(LivingEntity e)
 	{
 		//e.setLeashHolder(holder);
-		manager.addLeashed(holder, e, REMOVE_COOLDOWN);
+		manager.addLeashed(holder, e, lead_drops, REMOVE_COOLDOWN);
 	}
 	
 	private void spawnLeashHitch(Block b)
 	{
 		Location hitch_loc = b.getLocation();
 		LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
-		manager.addLeashed(hitch, holder, REMOVE_COOLDOWN);
+		manager.addLeashed(hitch, holder, lead_drops, REMOVE_COOLDOWN);
 		despawnLasso();
 	}
 	
