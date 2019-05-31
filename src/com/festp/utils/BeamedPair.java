@@ -1,4 +1,4 @@
-package com.festp.storages;
+package com.festp.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,6 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
 import com.festp.mainListener;
-import com.festp.utils.Utils;
 
 public class BeamedPair implements Listener {	
 	private static List<BeamedPair> beamed_entities = new ArrayList<>();
@@ -42,13 +41,11 @@ public class BeamedPair implements Listener {
 		workaround = beamer.getWorld().spawn(beamer.getLocation(), Guardian.class);
 		Utils.setNoCollide(workaround, true);
 		workaround.setInvulnerable(true);
-		//workaround.setAI(false);
-		//workaround.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, really_huge_duration, 128, false, false));
+		workaround.setSilent(true);
 		workaround.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, really_huge_duration, 1, false, false));
 		workaround.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0);
 		workaround.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(0);
 		workaround.getEquipment().setHelmet(identificator.clone());
-		//beamer.getPassengers().clear();
 		beamer.addPassenger(workaround);
 		tick();
 	}
@@ -70,7 +67,7 @@ public class BeamedPair implements Listener {
 		return beamer != null && beamed != null &&
 				!beamer.isDead() && !beamed.isDead() &&
 				beamer.getWorld() == beamed.getWorld()
-				&& beamed.getLocation().distanceSquared(beamer.getLocation()) < Config.storage_signal_radius*Config.storage_signal_radius;
+				&& beamed.getLocation().distanceSquared(beamer.getLocation()) < Config.storage_signal_radius*Config.storage_signal_radius; //storage dependent
 				//&& beamed.hasLineOfSight(beamer);
 	}
 
