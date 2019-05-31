@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_13_R2.entity.CraftAnimals;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAgeable;
+import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAnimals;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -21,9 +21,10 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.mainListener;
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
-import net.minecraft.server.v1_13_R2.EntityAgeable;
-import net.minecraft.server.v1_13_R2.EntityAnimal;
+import net.minecraft.server.v1_14_R1.EntityAgeable;
+import net.minecraft.server.v1_14_R1.EntityAnimal;
 
 public class DropActions implements Listener {
 	mainListener pl;
@@ -236,7 +237,7 @@ public class DropActions implements Listener {
 					if((e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP) && ((CraftAnimals) e).isAdult()
 							&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
 					{
-						//(((CraftAnimals) e).getHandle()).f(eh);
+						//(((CraftAnimals) e).getHandle()).f(exp_hop);
 						animalFound = Utils.setLove(((CraftAnimals) e).getHandle(), f);
 						if(animalFound) loveanimal = ((CraftAnimals) e).getHandle();
 						break;
@@ -404,23 +405,23 @@ public class DropActions implements Listener {
 			int pipe_index = -1;
 			Block test_liquid = block;
 			//test available liquid below pipe
-			while(/*test_liquid.isEmpty()*/Utils.isAir(test_liquid.getType()) || Utils.isFlowingLiquid(test_liquid) || test_liquid.getType() == Material.NETHER_BRICK_FENCE
-					 || Utils.isSlab(test_liquid.getType())) {
-				if(test_liquid.isLiquid()) {
+			while (UtilsType.isAir(test_liquid.getType()) || UtilsType.isFlowingLiquid(test_liquid) || test_liquid.getType() == Material.NETHER_BRICK_FENCE
+					 || UtilsType.isSlab(test_liquid.getType())) {
+				if (test_liquid.isLiquid()) {
 					block_to_pump = findBlockToPump_regular(test_liquid);
-					if(block_to_pump == null)
+					if (block_to_pump == null)
 						test_liquid = test_liquid.getRelative(0, -1, 0);
 					else break;
 				}
 				test_liquid = test_liquid.getRelative(0, -1, 0);
 			}
 			//remove fences
-			if(findBlockToPump_regular(test_liquid) == null) {
-				if(pipes > 0) {
-					for(int i = 0; i < 9; i++) {
+			if (findBlockToPump_regular(test_liquid) == null) {
+				if (pipes > 0) {
+					for (int i = 0; i < 9; i++) {
 						ItemStack is;
 						is = inv.getItem(i);
-						if(is != null && is.getType() == Material.NETHER_BRICK_FENCE && is.getAmount() < 64)
+						if (is != null && is.getType() == Material.NETHER_BRICK_FENCE && is.getAmount() < 64)
 						{
 							pipe_index = i;
 							is.setAmount(is.getAmount()+1);
@@ -428,7 +429,7 @@ public class DropActions implements Listener {
 							break;
 						}
 					}
-					if(pipe_index < 0 && null_index >= 0) {
+					if (pipe_index < 0 && null_index >= 0) {
 						inv.setItem(null_index, new ItemStack(Material.NETHER_BRICK_FENCE, 1));
 						block.getRelative(0, 1, 0).setType(Material.AIR);
 					}
@@ -545,7 +546,7 @@ public class DropActions implements Listener {
 		if(block_to_pump == null) block_to_pump = findBlockToPump_advanced(block);
 		if(block_to_pump != null) {
 			if(bucket_index < 9)
-				if(Utils.isStationaryLiquid(block_to_pump))
+				if(UtilsType.isStationaryLiquid(block_to_pump))
 					if(block_to_pump.getType() == Material.LAVA)
 						inv.setItem(bucket_index, new ItemStack(Material.LAVA_BUCKET));
 					else if(block_to_pump.getType() == Material.WATER)
@@ -625,73 +626,78 @@ public class DropActions implements Listener {
 		int max_distance = 0;
 		Block max_dist_block = null;
 		if(!block.isLiquid()) return null;
-		if(Utils.isStationaryLiquid(block.getRelative(2, 0, 0)) && block.getRelative(1, 0, 0).isLiquid()) {
+		if(UtilsType.isStationaryLiquid(block.getRelative(2, 0, 0)) && block.getRelative(1, 0, 0).isLiquid()) {
 			max_dist_block = block.getRelative(2, 0, 0);
 			max_distance = 3;
-		} else if(max_distance < 1 && Utils.isStationaryLiquid(block.getRelative(1, 0, 0))) {
+		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, 0))) {
 			max_dist_block = block.getRelative(1, 0, 0);
 			max_distance = 1;
 		}
-		if(Utils.isStationaryLiquid(block.getRelative(0, 0, 2)) && block.getRelative(0, 0, 1).isLiquid()) {
+		if(UtilsType.isStationaryLiquid(block.getRelative(0, 0, 2)) && block.getRelative(0, 0, 1).isLiquid()) {
 			max_dist_block = block.getRelative(0, 0, 2);
 			max_distance = 3;
-		} else if(max_distance < 1 && Utils.isStationaryLiquid(block.getRelative(0, 0, 1))) {
+		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(0, 0, 1))) {
 			max_dist_block = block.getRelative(0, 0, 1);
 			max_distance = 1;
 		}
-		if(Utils.isStationaryLiquid(block.getRelative(-2, 0, 0)) && block.getRelative(-1, 0, 0).isLiquid()) {
+		if(UtilsType.isStationaryLiquid(block.getRelative(-2, 0, 0)) && block.getRelative(-1, 0, 0).isLiquid()) {
 			max_dist_block = block.getRelative(-2, 0, 0);
 			max_distance = 3;
-		} else if(max_distance < 1 && Utils.isStationaryLiquid(block.getRelative(-1, 0, 0))) {
+		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, 0))) {
 			max_dist_block = block.getRelative(-1, 0, 0);
 			max_distance = 1;
 		}
-		if(Utils.isStationaryLiquid(block.getRelative(0, 0, -2)) && block.getRelative(0, 0, -1).isLiquid()) {
+		if(UtilsType.isStationaryLiquid(block.getRelative(0, 0, -2)) && block.getRelative(0, 0, -1).isLiquid()) {
 			max_dist_block = block.getRelative(0, 0, -2);
 			max_distance = 3;
-		} else if(max_distance < 1 && Utils.isStationaryLiquid(block.getRelative(0, 0, -1))) {
+		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(0, 0, -1))) {
 			max_dist_block = block.getRelative(0, 0, -1);
 			max_distance = 1;
 		}
-		if(max_distance < 2 && Utils.isStationaryLiquid(block.getRelative(1, 0, 1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid()))
+		if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, 1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid()))
 			max_dist_block = block.getRelative(1, 0, 1);
-		else if(max_distance < 2 && Utils.isStationaryLiquid(block.getRelative(-1, 0, 1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid())) 
+		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, 1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid())) 
 			max_dist_block = block.getRelative(-1, 0, 1);
-		else if(max_distance < 2 && Utils.isStationaryLiquid(block.getRelative(-1, 0, -1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
+		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, -1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
 			max_dist_block = block.getRelative(-1, 0, -1);
-		else if(max_distance < 2 && Utils.isStationaryLiquid(block.getRelative(1, 0, -1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
+		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, -1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
 			max_dist_block = block.getRelative(1, 0, -1);
-		if(max_distance == 0 && Utils.isStationaryLiquid(block)) {
+		if(max_distance == 0 && UtilsType.isStationaryLiquid(block)) {
 			max_dist_block = block;
 		}
 		return max_dist_block;
 	}
 	
+	/** tests block <b>b</b> with positive offset from <b>layer</b>, fills and empties zp and zm
+	 * <br>*/
 	public void testWater(Block b, int dx, int dz, LayerSet layer, int depth, List<Integer> zp, List<Integer> zm) {
 		if(b.isLiquid()) {
+			//update value and break call cycles
 			if(layer.layer[dx][dz] > 0) {
 				if(layer.layer[dx][dz] > depth)
 					layer.layer[dx][dz] = depth;
 				return;
 			}
+			//create value
 			layer.layer[dx][dz] = depth;
-			int temp_x = dx - center_xz, temp_z = dx - center_xz;
 			int new_dist2 = /*temp_x*temp_x + temp_z*temp_z +*/ depth*depth;
-			if(Utils.isStationaryLiquid(b) && new_dist2 > layer.farthest_dist2) {
+			//update layer max
+			if(UtilsType.isStationaryLiquid(b) && new_dist2 > layer.farthest_dist2) {
 				layer.farthest_dist2 = new_dist2;
 				layer.farthest = b;
 				//System.out.println("START: "+b);
 			}
+			System.out.println(b);
 			Block temp_block = null;
 			depth += 1;
 			if(dz < in_test_max_dxz) {
 				temp_block = b.getRelative(0, 0, 1);
-				//testWater(temp_block, dx, dy2, dz+1, layer, depth, zp, zm);
 				zp.add(dx);
 				zp.add(dz+1);
 				zp.add(depth);
 			}
 			if(dz > 0) {
+				temp_block = b.getRelative(0, 0, -1);
 				zm.add(dx);
 				zm.add(dz-1);
 				zm.add(depth);
@@ -705,17 +711,14 @@ public class DropActions implements Listener {
 				temp_block = b.getRelative(-1, 0, 0);
 				testWater(temp_block, dx-1, dz, layer, depth, zp, zm);
 			}
-			else
-				temp_block = null;
-			if(temp_block == null || !temp_block.isLiquid()) {
-				while(!zp.isEmpty()) {
-					Integer xf = zp.remove(0), zf = zp.remove(0), depthf = zp.remove(0);
-					testWater_z(b.getRelative(xf-dx, 0, zf-dz), xf, zf, layer, depthf, zp, zm, true);
-				}
-				while(!zm.isEmpty()) {
-					Integer xf = zm.remove(0), zf = zm.remove(0), depthf = zm.remove(0);
-					testWater_z(b.getRelative(xf-dx, 0, zf-dz), xf, zf, layer, depthf, zp, zm, false);
-				}
+			
+			while(!zp.isEmpty()) {
+				Integer xf = zp.remove(0), zf = zp.remove(0), depthf = zp.remove(0);
+				testWater_z(b.getRelative(xf-dx, 0, zf-dz), xf, zf, layer, depthf, zp, zm, true);
+			}
+			while(!zm.isEmpty()) {
+				Integer xf = zm.remove(0), zf = zm.remove(0), depthf = zm.remove(0);
+				testWater_z(b.getRelative(xf-dx, 0, zf-dz), xf, zf, layer, depthf, zp, zm, false);
 			}
 		}
 	}
@@ -728,9 +731,8 @@ public class DropActions implements Listener {
 				return;
 			}
 			layer.layer[dx][dz] = depth;
-			int temp_x = dx - center_xz, temp_z = dx - center_xz;
 			int new_dist2 = /*temp_x*temp_x + temp_z*temp_z +*/ depth*depth;
-			if(Utils.isStationaryLiquid(b) && new_dist2 > layer.farthest_dist2) {
+			if(UtilsType.isStationaryLiquid(b) && new_dist2 > layer.farthest_dist2) {
 				layer.farthest_dist2 = new_dist2;
 				layer.farthest = b;
 			}
