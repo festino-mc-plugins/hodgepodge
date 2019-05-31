@@ -2,6 +2,7 @@ package com.festp.storages;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.mainListener;
 import com.festp.storages.Storage.Grab;
+import com.festp.utils.Utils;
 
 public class StoragesFileManager {
 	private mainListener pl;
@@ -21,8 +23,28 @@ public class StoragesFileManager {
 		this.pl = pl;
 	}
 
-	public boolean hasDataFile(int ID) {
+	public static boolean hasDataFile(int ID) {
 		return (new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir+System.getProperty("file.separator")+ID+".yml")).exists();
+	}
+	
+	public static List<Integer> getIDList()
+	{
+		File STpluginFolder = new File("plugins" + System.getProperty("file.separator") + mainListener.pluginname + System.getProperty("file.separator") + mainListener.storagesdir);
+		if (STpluginFolder.exists() == false) {
+    		STpluginFolder.mkdir();
+    	}
+		List<Integer> list = new ArrayList<>();
+		for(String s : STpluginFolder.list()) {
+			if(s.length() < 5) continue;
+			s = s.substring(0, s.length()-4);
+			try {
+				int ID = Integer.parseInt(s);
+				list.add(ID);
+			} catch (Exception ex) {
+				Utils.printError("["+mainListener.pluginname+"] Storages: Wrong file in directory: " + s);
+			}
+		}
+		return list;
 	}
 	
 	public boolean createDataFile(int ID) {
