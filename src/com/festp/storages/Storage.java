@@ -13,7 +13,7 @@ import org.bukkit.inventory.PlayerInventory;
 import com.festp.DelayedTask;
 import com.festp.Pair;
 import com.festp.TaskList;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_14_R1.NBTTagCompound;
