@@ -22,7 +22,6 @@ import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.FurnaceRecipe;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
@@ -31,17 +30,15 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
 
+import com.festp.maps.SmallMapManager;
 import com.festp.remain.LeashManager;
 import com.festp.remain.SoulStone;
 import com.festp.remain.SummonerTome;
 import com.festp.storages.Storage;
-import com.festp.storages.Storage.StorageType;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.storages.StorageBottomless;
-import com.festp.storages.StorageCraftManager;
 import com.festp.storages.StorageMultitype;
 import com.festp.storages.StoragesFileManager;
 
@@ -49,11 +46,11 @@ public class CraftManager implements Listener {
 	public enum CraftTag { KEEP_DATA, ONLY_SPECIFIC };
 	
 	Server server;
-	mainListener plugin;
+	Main plugin;
 	
 	List<NamespacedKey> recipe_keys = new ArrayList<>();
 	
-	public CraftManager(mainListener plugin, Server server) {
+	public CraftManager(Main plugin, Server server) {
 		this.plugin = plugin;
 		this.server = server;
 	}
@@ -64,6 +61,7 @@ public class CraftManager implements Listener {
 		addStairsAndSlabsCrafts();
 		SoulStone.addSoulStoneCrafts(plugin);
 		SummonerTome.addTomeCrafts();
+		SmallMapManager.addCrafts(plugin);
 		plugin.stcraft.addStorageCrafts();
 	}
 	
@@ -564,24 +562,40 @@ public class CraftManager implements Listener {
 	}
 	
 	private void addStairsAndSlabsCrafts() {
-    	Material[] stairs_to_blocks = {Material.ACACIA_STAIRS, Material.BIRCH_STAIRS, Material.BRICK_STAIRS, Material.COBBLESTONE_STAIRS,
-    			Material.DARK_OAK_STAIRS, Material.JUNGLE_STAIRS, Material.NETHER_BRICK_STAIRS, Material.PURPUR_STAIRS,
-    			Material.QUARTZ_STAIRS, Material.RED_SANDSTONE_STAIRS, Material.SANDSTONE_STAIRS, Material.STONE_BRICK_STAIRS,
-    			Material.SPRUCE_STAIRS, Material.OAK_STAIRS};
-    	Material[] slabs_to_blocks = {Material.ACACIA_SLAB, Material.BIRCH_SLAB, Material.BRICK_SLAB, Material.COBBLESTONE_SLAB,
-    			Material.DARK_OAK_SLAB, Material.JUNGLE_SLAB, Material.NETHER_BRICK_SLAB, Material.PURPUR_SLAB,
-    			Material.QUARTZ_SLAB, Material.RED_SANDSTONE_SLAB, Material.SANDSTONE_SLAB, Material.STONE_BRICK_SLAB,
-    			Material.SPRUCE_SLAB, Material.OAK_SLAB};
-    			//Material.STONE_SLAB};
-    	Material[] blocks_from_stairs = {Material.ACACIA_PLANKS, Material.BIRCH_PLANKS, Material.BRICK, Material.COBBLESTONE,
-    			Material.DARK_OAK_PLANKS, Material.JUNGLE_PLANKS, Material.NETHER_BRICKS, Material.PURPUR_BLOCK, 
-    			Material.QUARTZ_BLOCK, Material.RED_SANDSTONE, Material.SANDSTONE, Material.STONE_BRICKS, 
-    			Material.SPRUCE_PLANKS, Material.OAK_PLANKS};
-    			//Material.SMOOTH_STONE};
+    	Material[] stairs_to_blocks = { Material.BRICK_STAIRS, Material.STONE_STAIRS,
+    			Material.ACACIA_STAIRS, Material.BIRCH_STAIRS, Material.DARK_OAK_STAIRS, Material.JUNGLE_STAIRS, Material.SPRUCE_STAIRS, Material.OAK_STAIRS,
+    			Material.NETHER_BRICK_STAIRS, Material.RED_NETHER_BRICK_STAIRS, Material.PURPUR_STAIRS, Material.END_STONE_BRICK_STAIRS,
+    			Material.DARK_PRISMARINE_STAIRS, Material.PRISMARINE_BRICK_STAIRS, Material.PRISMARINE_STAIRS,
+    			Material.COBBLESTONE_STAIRS, Material.STONE_BRICK_STAIRS,
+    			Material.MOSSY_COBBLESTONE_STAIRS, Material.MOSSY_STONE_BRICK_STAIRS,
+    			Material.ANDESITE_STAIRS, Material.GRANITE_STAIRS, Material.DIORITE_STAIRS,
+    			Material.POLISHED_ANDESITE_STAIRS, Material.POLISHED_DIORITE_STAIRS, Material.POLISHED_GRANITE_STAIRS,
+    			Material.QUARTZ_STAIRS, Material.RED_SANDSTONE_STAIRS, Material.SANDSTONE_STAIRS,
+    			Material.SMOOTH_QUARTZ_STAIRS, Material.SMOOTH_RED_SANDSTONE_STAIRS, Material.SMOOTH_SANDSTONE_STAIRS };
+    	Material[] slabs_to_blocks = { Material.BRICK_SLAB, Material.STONE_SLAB,
+    			Material.ACACIA_SLAB, Material.BIRCH_SLAB, Material.DARK_OAK_SLAB, Material.JUNGLE_SLAB, Material.SPRUCE_SLAB, Material.OAK_SLAB,
+    			Material.NETHER_BRICK_SLAB, Material.RED_NETHER_BRICK_SLAB, Material.PURPUR_SLAB, Material.END_STONE_BRICK_SLAB,
+    			Material.DARK_PRISMARINE_SLAB, Material.PRISMARINE_BRICK_SLAB, Material.PRISMARINE_SLAB,
+    			Material.COBBLESTONE_SLAB, Material.STONE_BRICK_SLAB,
+    			Material.MOSSY_COBBLESTONE_SLAB, Material.MOSSY_STONE_BRICK_SLAB,
+    			Material.ANDESITE_SLAB, Material.GRANITE_SLAB, Material.DIORITE_SLAB,
+    			Material.POLISHED_ANDESITE_SLAB, Material.POLISHED_DIORITE_SLAB, Material.POLISHED_GRANITE_SLAB,
+    			Material.QUARTZ_SLAB, Material.RED_SANDSTONE_SLAB, Material.SANDSTONE_SLAB,
+    			Material.SMOOTH_QUARTZ_SLAB, Material.SMOOTH_RED_SANDSTONE_SLAB, Material.SMOOTH_SANDSTONE_SLAB };
+    	Material[] blocks_from_partial = { Material.BRICKS, Material.STONE,
+    			Material.ACACIA_PLANKS, Material.BIRCH_PLANKS, Material.DARK_OAK_PLANKS, Material.JUNGLE_PLANKS, Material.SPRUCE_PLANKS, Material.OAK_PLANKS,
+    			Material.NETHER_BRICKS, Material.RED_NETHER_BRICKS, Material.PURPUR_BLOCK, Material.END_STONE_BRICKS,
+    			Material.DARK_PRISMARINE, Material.PRISMARINE_BRICKS, Material.PRISMARINE,
+    			Material.COBBLESTONE, Material.STONE_BRICKS,
+    			Material.MOSSY_COBBLESTONE, Material.MOSSY_STONE_BRICKS,
+    			Material.ANDESITE, Material.GRANITE, Material.DIORITE,
+    			Material.POLISHED_ANDESITE, Material.POLISHED_DIORITE, Material.POLISHED_GRANITE,
+    			Material.QUARTZ_BLOCK, Material.RED_SANDSTONE, Material.SANDSTONE,
+    			Material.SMOOTH_QUARTZ, Material.SMOOTH_RED_SANDSTONE, Material.SMOOTH_SANDSTONE };
     	//1 stair -> 1 block
     	for (int i = 0; i < stairs_to_blocks.length; i++) {
         	NamespacedKey temp_key = new NamespacedKey(plugin, "1stairs-"+gen_key_from_material(stairs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 1) );
+        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 1) );
         	temp_recipe.addIngredient(1, stairs_to_blocks[i]);
     		server.addRecipe(temp_recipe);
     	}
@@ -591,7 +605,7 @@ public class CraftManager implements Listener {
     				&& slabs_to_blocks[i] != Material.SANDSTONE_SLAB && slabs_to_blocks[i] != Material.RED_SANDSTONE_SLAB
     				&& slabs_to_blocks[i] != Material.PURPUR_SLAB) {
             	NamespacedKey temp_key = new NamespacedKey(plugin, "2slab-"+gen_key_from_material(slabs_to_blocks[i]));
-            	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 1) );
+            	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 1) );
             	temp_recipe.addIngredient(2, slabs_to_blocks[i]);
         		server.addRecipe(temp_recipe);
     		}
@@ -599,14 +613,14 @@ public class CraftManager implements Listener {
     	//4 slabs -> 1 block
     	for (int i = 0; i < slabs_to_blocks.length; i++) {
         	NamespacedKey temp_key = new NamespacedKey(plugin, "4slab-"+gen_key_from_material(slabs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 2) );
+        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 2) );
         	temp_recipe.addIngredient(4, slabs_to_blocks[i]);
     		server.addRecipe(temp_recipe);
     	}
     	//6 slabs -> 1 block
     	for (int i = 0; i < slabs_to_blocks.length; i++) {
         	NamespacedKey temp_key = new NamespacedKey(plugin, "6slab-"+gen_key_from_material(slabs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_stairs[i], 3) );
+        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 3) );
         	temp_recipe.addIngredient(6, slabs_to_blocks[i]);
     		server.addRecipe(temp_recipe);
     	}
