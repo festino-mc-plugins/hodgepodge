@@ -20,6 +20,7 @@ import com.festp.enderchest.EnderFileStorage;
 import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
+import com.festp.maps.SmallMapManager;
 import com.festp.menu.InventoryMenu;
 import com.festp.remain.InteractHandler;
 import com.festp.remain.LeashManager;
@@ -38,11 +39,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class mainListener extends JavaPlugin implements Listener
+public class Main extends JavaPlugin implements Listener
 {
-	public static String pluginname;
 	public static final String enderdir = "EnderChestGroups";
 	public static final String storagesdir = "Storages";
+	public static final String mapsdir = "Maps";
+	private static String PATH = "plugins" + System.getProperty("file.separator") + "HodgePodge" + System.getProperty("file.separator");
+	private static String pluginname;
 	
 	Config conf;
 	private CraftManager craft_manager;
@@ -68,10 +71,15 @@ public class mainListener extends JavaPlugin implements Listener
 	ExpHoppers exp_hop; 
 	LeashManager lm;
 	
+	public static String getPath() {
+		return PATH;
+	}
+	
 	long t1;
 	public void onEnable()
 	{
 		pluginname = getName();
+		PATH = "plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator");
     	PluginManager pm = getServer().getPluginManager();
     	
 		InventoryMenu.setPlugin(this);
@@ -92,7 +100,7 @@ public class mainListener extends JavaPlugin implements Listener
 		Config.loadConfig();
     	craft_manager = new CraftManager(this, getServer());
 		
-    	File ECpluginFolder = new File("plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator") + enderdir);
+    	File ECpluginFolder = new File(PATH + enderdir);
 		if (ECpluginFolder.exists() == false) {
     		ECpluginFolder.mkdir();
     	}
@@ -148,6 +156,9 @@ public class mainListener extends JavaPlugin implements Listener
     	
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
+    	
+    	SmallMapManager minimaps = new SmallMapManager();
+    	pm.registerEvents(minimaps, this);
 
     	exp_hop = new ExpHoppers(getServer());
     	pm.registerEvents(exp_hop, this);
@@ -201,7 +212,7 @@ public class mainListener extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//items in cauldrons, saddle hp updating, hoe left click cooldown
-					interacts.onTick();
+					//interacts.onTick();
 
 					t2 = System.nanoTime();
 					metrics[5] += t2 - t1;
@@ -243,7 +254,7 @@ public class mainListener extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//drag xp
-					exp_hop.onTick();
+					//exp_hop.onTick();
 
 					t2 = System.nanoTime();
 					metrics[11] += t2 - t1;
