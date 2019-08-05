@@ -1,42 +1,67 @@
 package com.festp.dispenser;
 
-import org.bukkit.block.Block;
-
 public class LayerSet {
 	int layer[][];
-	Block farthest;
-	int farthest_dist2;
-	int N = DropActions.max_dxz*2+1;
+	int r, N;
+	int max_distance = 0;
+	Integer[] farthest = new Integer[] {null, null};
+	private static int NEXT_BLOCK_DIST = -1; // must be < 0
 	
-	public LayerSet(Block farthest, int farthest_dist2) {
-		this.layer = new int[N][N];
-		for(int o = 0; o < N; o++)
-			for(int j = 0; j < N; j++)
-				layer[j][o] = 0;
-		this.farthest = farthest;
-		this.farthest_dist2 = farthest_dist2;
+	public LayerSet(int radius) {
+		r = radius;
+		N = 2*r + 1;
+		layer = new int[N][N];
+		for (int i = 0; i < N; i++)
+			for (int j = 0; j < N; j++)
+				layer[i][j] = 0;
 	}
 	
-	public LayerSet(int[][] layer, Block farthest, int farthest_dist2) {
-		this.layer = layer;
-		this.farthest = farthest;
-		this.farthest_dist2 = farthest_dist2;
+	public void setDistance(int dx, int dz, int distance)
+	{
+		layer[r + dx][r + dz] = distance;
+	}
+	
+	public void setNext(int dx, int dz)
+	{
+		layer[r + dx][r + dz] = NEXT_BLOCK_DIST;
+	}
+	
+	public boolean isChecked(int dx, int dz)
+	{
+		return layer[r + dx][r + dz] > 0;
+	}
+	
+	public boolean isUnchecked(int dx, int dz)
+	{
+		return layer[r + dx][r + dz] == 0 && !isNext(dx, dz);
+	}
+	
+	public boolean isNext(int dx, int dz)
+	{
+		return layer[r + dx][r + dz] == NEXT_BLOCK_DIST;
+	}
+	
+	public boolean isDefinedFarthest()
+	{
+		return farthest[0] != null && farthest[1] != null;
 	}
 	
 	public void print() {
 		System.out.println("LAYER:");
-		printa();
+		print_raw();
 	}
 	public void print(int y) {
 		System.out.println("LAYER Y="+y+":");
-		printa();
+		print_raw();
 	}
-	private void printa() {
-		for(int o = 0; o < N; o++) {
+	private void print_raw()
+	{
+		for (int i = 0; i < N; i++) {
 			String s = "";
-			for(int j = 0; j < N; j++) {
-				//s += layer[j][o]==0 ? ("o") : "0";
-				s += layer[j][o];
+			for (int j = 0; j < N; j++) {
+				//if (layer[i][j] < 10)
+				//	s += " ";
+				s += layer[i][j];
 			}
 			System.out.println(s);
 		}
@@ -47,12 +72,12 @@ public class LayerSet {
 		print_scale();
 	}
 	private void print_scale() {
-		int max=0;
-		for(int o = 0; o < N; o++)
+		int max = 0;
+		for(int i = 0; i < N; i++)
 			for(int j = 0; j < N; j++) {
-				if(layer[j][o] > max) max = layer[j][o];
+				if(layer[i][j] > max) max = layer[i][j];
 		}
-		double k = 10.0/(max+1);
+		double k = 10.0/(max + 1);
 		for(int o = 0; o < N; o++) {
 			String s = "";
 			for(int j = 0; j < N; j++) {
