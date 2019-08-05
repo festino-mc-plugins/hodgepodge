@@ -27,7 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.fusesource.jansi.Ansi.Color;
 
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 
 import somebodyelse.code.OfflinePlayerLoader;
@@ -39,10 +39,10 @@ public class EnderChestHandler implements CommandExecutor, Listener {
 	public EnderChestHandler(EnderChest enderchest) {
 		this.enderchest = enderchest;
 	}*/
-	private mainListener pl;
+	private Main pl;
 	public ECConfig config = new ECConfig();
 	
-	public EnderChestHandler(mainListener pl) {
+	public EnderChestHandler(Main pl) {
 		this.pl = pl;
 	}
 	

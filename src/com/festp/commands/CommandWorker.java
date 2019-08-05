@@ -22,12 +22,12 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.Config;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.storages.Storage;
 import com.festp.utils.Utils;
 
 public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
-	private mainListener plugin;
+	private Main plugin;
 	
 	public final static String MAIN_COMMAND = "hodge";
 	
@@ -48,7 +48,7 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 	final static String name_token = "\"";
 	final static int max_name_length = 35;
 	
-	public CommandWorker(mainListener plugin) {
+	public CommandWorker(Main plugin) {
 		this.plugin = plugin;
 		item_names_en = Arrays.asList(new String[] {
 				"diamond_pickaxe", "diamond_axe", "diamond_shovel", "diamond_hoe", "diamond_sword",
@@ -147,7 +147,6 @@ public class CommandWorker implements Listener, CommandExecutor, TabCompleter {
 					reloadConfig();
 					Config.loadConfig();
 					sender.sendMessage(ChatColor.GREEN + "Конфиги обновлены.");
-					System.out.println("[FestPlugin] Config reloaded.");
 				}
 				return true;
 			}

@@ -14,16 +14,16 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.ClickResult;
 import com.festp.utils.Utils;
 
 public class InventoryMenu implements Listener {
-	private static mainListener plugin;
+	private static Main plugin;
 	private Inventory gui;
 	private HashSet<MenuListener> listeners = new HashSet<>();
 	
-	public static void setPlugin(mainListener ml) {
+	public static void setPlugin(Main ml) {
 		plugin = ml;
 	}
 	

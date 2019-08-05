@@ -7,16 +7,16 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
-import com.festp.mainListener;
+import com.festp.Main;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class EnderChestGroup {
-	private mainListener pl;
+	private Main pl;
 	List<EnderChest> groups = new ArrayList<>();
 	List<EnderChest> admingroups = new ArrayList<>();
 	
-	public EnderChestGroup(mainListener mainListener) {
+	public EnderChestGroup(Main mainListener) {
 		pl = mainListener;
 	}
 
@@ -36,7 +36,7 @@ public class EnderChestGroup {
 	{
 		//load directory
 		//add chests in loop
-		for(int i=0; i<groupnames.length; i++) {
+		for(int i = 0; i < groupnames.length; i++) {
 			if(groupnames[i].length() < 5) continue;
 			groupnames[i] = groupnames[i].substring(0, groupnames[i].length()-4);
 			/*if(ecstorage.hasDataFile(groupnames[i])) ecstorage.deleteDataFile(groupnames[i]);

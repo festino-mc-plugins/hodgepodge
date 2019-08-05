@@ -10,17 +10,17 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.festp.mainListener;
+import com.festp.Main;
 
 public class ECTabCompleter implements TabCompleter {
-	public static mainListener plugin;
+	public static Main plugin;
 	private static final String ADMIN_CREATE = "acreate",
 			CREATE = "create", DELETE = "delete", CHANGE_OWNER = "changeowner", KICK = "kick",
 			INVITE = "invite", ACCEPT = "accept", LEAVE = "leave";
 	public static final String CMD_FULL = "enderchest", CMD_REDUCED = "ec";
 	private static final List<String> no_completion = Arrays.asList("");
 	
-	public ECTabCompleter(mainListener plugin) {
+	public ECTabCompleter(Main plugin) {
 		this.plugin = plugin;
 	}
 	
