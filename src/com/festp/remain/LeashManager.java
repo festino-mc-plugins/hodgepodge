@@ -216,7 +216,7 @@ public class LeashManager {
 		if (lead == null || lead.getType() != Material.LEAD)
 			return 0;
 		
-		String len = Utils.getData(lead, LENGTH_KEY);
+		String len = Utils.getString(lead, LENGTH_KEY);
 		if (len == null)
 			return DEFAULT_R;
 		
