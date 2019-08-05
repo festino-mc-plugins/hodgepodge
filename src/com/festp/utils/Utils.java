@@ -37,7 +37,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.storages.Storage;
 import com.festp.storages.StorageMultitype;
 
@@ -46,17 +46,17 @@ import net.minecraft.server.v1_14_R1.EntityAnimal;
 import net.minecraft.server.v1_14_R1.NBTTagCompound;
 
 public class Utils {
-	private static mainListener plugin;
+	private static Main plugin;
 	private static UnsafeValues legacy;
 	private static Team team_no_collide;
 	public static final double EPSILON = 0.0001;
 	
-	public static void setPlugin(mainListener pl) {
+	public static void setPlugin(Main pl) {
 		plugin = pl;
 		legacy = pl.getServer().getUnsafe();
 	}
 
-	public static mainListener getPlugin() {
+	public static Main getPlugin() {
 		return plugin;
 	}
 	
@@ -134,7 +134,7 @@ public class Utils {
 		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
 	
-	public static ItemStack setData(ItemStack i, String field, String data) {
+	public static ItemStack setData(ItemStack i, String field, Object data) {
         if (data == null || field == null || i == null)
             return i;
 		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
@@ -145,13 +145,17 @@ public class Utils {
             compound = nmsStack.getTag();
         }
         
-        compound.setString(field, data);
+        if (data instanceof String)
+        	compound.setString(field, (String)data);
+        else if (data instanceof Integer)
+        	compound.setInt(field, (Integer)data);
+        
         nmsStack.setTag(compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
-	}	
+	}
 	
-	public static String getData(ItemStack i, String field) {
+	public static String getString(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
 		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
@@ -159,6 +163,16 @@ public class Utils {
         if (compound == null || !compound.hasKey(field))
             return null;
         return compound.getString(field);
+	}
+	
+	public static Integer getInt(ItemStack i, String field) {
+        if (field == null || i == null)
+            return null;
+		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+        NBTTagCompound compound = nmsStack.getTag();
+        if (compound == null || !compound.hasKey(field))
+            return null;
+        return compound.getInt(field);
 	}
 	
 	public static boolean hasDataField(ItemStack i, String field) {
@@ -442,29 +456,73 @@ public class Utils {
 		}
 		return found_block.getLocation().add(0.5, 0.5, 0.5);
 	}
+	
+	public static Location search33space(Material[] blocks, Location loc)
+	{
+		boolean x_priority = false, z_priority = false;
+		if (loc.getX() - Math.floor(loc.getX()) > 0.5) x_priority = true;
+		if (loc.getZ() - Math.floor(loc.getZ()) > 0.5) z_priority = true;
+		double x = loc.getX();
+		double dx = x_priority ? 1 : -1;
+		double dz = z_priority ? 1 : -1;
+		loc.setX(Math.floor(loc.getX()) + 0.5);
+		loc.setZ(Math.floor(loc.getZ()) + 0.5);
+		if (Utils.contains(blocks, loc.getBlock().getType()))
+			if (Utils.check33space(loc.getBlock()))
+				return loc.clone().add(0, 1, 0);
+		
+		loc.add(dx, 0, 0);
+		if (Utils.contains(blocks, loc.getBlock().getType()))
+			if (Utils.check33space(loc.getBlock()))
+				return loc.clone().add(0, 1, 0);
+		
+		loc.setX(x);
+		loc.add(0, 0, dz);
+		if (Utils.contains(blocks, loc.getBlock().getType()))
+			if (Utils.check33space(loc.getBlock()))
+				return loc.clone().add(0, 1, 0);
+		
+		loc.add(dx, 0, 0);
+		if (Utils.contains(blocks, loc.getBlock().getType()))
+			if (Utils.check33space(loc.getBlock()))
+				return loc.clone().add(0, 1, 0);
+		return null;
+	}
+	
+	public static boolean check33space(Block block)
+	{
+		boolean empty = true;
+		for (int dx = -1; dx <= 1; dx++)
+			for (int dz = -1; dz <= 1; dz++)
+				if (!UtilsType.playerCanFlyOn(block.getRelative(dx, 0, dz))) {
+					empty = false;
+					break;
+				}
+		return empty;
+	}
 
 	public static Location searchBlock22Platform(Material[] blocks, Location loc, double hor_radius, boolean player_can_stay) {
 		boolean x_priority = false, y_priority = false, z_priority = false;
-		if(loc.getX() - Math.floor(loc.getX()) > 0.5) x_priority = true;
-		if(loc.getY() - Math.floor(loc.getY()) > 0.5) y_priority = true;
-		if(loc.getZ() - Math.floor(loc.getZ()) > 0.5) z_priority = true;
+		if (loc.getX() - Math.floor(loc.getX()) > 0.5) x_priority = true;
+		if (loc.getY() - Math.floor(loc.getY()) > 0.5) y_priority = true;
+		if (loc.getZ() - Math.floor(loc.getZ()) > 0.5) z_priority = true;
 		boolean x_priorier_z = true;
-		if(Math.abs(loc.getX() - Math.floor(loc.getX()) - 0.5) < Math.abs(loc.getZ() - Math.floor(loc.getZ() - 0.5)))
+		if (Math.abs(loc.getX() - Math.floor(loc.getX()) - 0.5) < Math.abs(loc.getZ() - Math.floor(loc.getZ() - 0.5)))
 			x_priorier_z = false;
 		Block start_block = loc.getBlock();
 		Block found_block = null;
 		boolean player_cant_stay = !player_can_stay;
 		searching :
 		{
-			for(int r = 0; r <= 1.1*hor_radius; r++) {
-				for(int dy = 0; dy <= r/2; dy++) {
+			for (int r = 0; r <= 1.1*hor_radius; r++) {
+				for (int dy = 0; dy <= r/2; dy++) {
 					int temp = r-dy;
-					for(int d = -temp; d <= temp; d++) {
+					for (int d = -temp; d <= temp; d++) {
 						int[] dx_pool = (x_priority ? new int[]{d, -d} : new int[]{-d, d}),
 							  dz_pool = (z_priority ? new int[]{d, -d} : new int[]{-d, d});
-						if(x_priorier_z)
-							for(int dz : dz_pool)
-								for(int dx : dx_pool) {
+						if (x_priorier_z)
+							for (int dz : dz_pool)
+								for (int dx : dx_pool) {
 									found_block = start_block.getRelative(dx, dy, r-Math.abs(dz));
 									if(is22Platform(blocks, found_block, x_priority, z_priority, player_cant_stay))
 										break searching;
@@ -473,13 +531,13 @@ public class Utils {
 										break searching;
 								}
 						else
-							for(int dx : dx_pool)
-								for(int dz : dz_pool) {
+							for (int dx : dx_pool)
+								for (int dz : dz_pool) {
 									found_block = start_block.getRelative(dx, dy, r-Math.abs(dz));
-									if(is22Platform(blocks, found_block, x_priority, z_priority, player_cant_stay))
+									if (is22Platform(blocks, found_block, x_priority, z_priority, player_cant_stay))
 										break searching;
 									found_block = start_block.getRelative(dx, dy, dz);
-									if(is22Platform(blocks, found_block, x_priority, z_priority, player_cant_stay))
+									if (is22Platform(blocks, found_block, x_priority, z_priority, player_cant_stay))
 										break searching;
 								}
 					}
@@ -487,20 +545,26 @@ public class Utils {
 			}
 			return null;
 		}
-		return found_block.getLocation().add(x_priority ? 1 : 0, 0, z_priority ? 1 : 0);
+		return found_block.getLocation().add(
+				x_priority ? 1 : 0,
+				1,
+				z_priority ? 1 : 0);
 	}
 	
-	public static boolean is22Platform(Material[] valid_materials, Block start_block, boolean positive_x, boolean positive_z, boolean player_cant_stay) {
+	public static boolean is22Platform(Material[] valid_materials, Block start_block, boolean positive_x, boolean positive_z, boolean player_cant_stay)
+	{
+		int dx = positive_x ? 1 : -1;
+		int dz = positive_z ? 1 : -1;
 		if(contains(valid_materials, start_block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(start_block)))
 		{
-			start_block = start_block.getRelative(0, 0, positive_z ? 1 : -1);
-			if(contains(valid_materials, start_block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(start_block)))
+			Block block = start_block.getRelative(0, 0, dz);
+			if(contains(valid_materials, block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(block)))
 			{
-				start_block = start_block.getRelative(positive_x ? 1 : -1, 0, 0);
-				if(contains(valid_materials, start_block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(start_block)))
+				block = start_block.getRelative(dx, 0, 0);
+				if(contains(valid_materials, block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(block)))
 				{
-					start_block = start_block.getRelative(0, 0, positive_z ? -1 : 1);
-					if(contains(valid_materials, start_block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(start_block)))
+					block = start_block.getRelative(dx, 0, dz);
+					if(contains(valid_materials, block.getType()) && (player_cant_stay || UtilsType.playerCanFlyOn(block)))
 					{
 						return true;
 					}
