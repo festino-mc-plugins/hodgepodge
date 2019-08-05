@@ -44,7 +44,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
 import com.festp.CooldownPlayer;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;
 import com.festp.utils.UtilsType;
@@ -59,11 +59,11 @@ public class InteractHandler implements Listener {
 
 	List<CooldownPlayer> left_rotate_cooldown = new ArrayList<>();
 	
-	mainListener plugin;
+	Main plugin;
 	Server server;
 	LeashManager leash_manager;
 	
-	public InteractHandler(mainListener pl, LeashManager lm) {
+	public InteractHandler(Main pl, LeashManager lm) {
 		this.plugin = pl;
 		this.server = pl.getServer();
 		this.leash_manager = lm;
@@ -240,15 +240,20 @@ public class InteractHandler implements Listener {
 						washed = new ItemStack(Material.SANDSTONE, 1);
 					} else return;
 					event.setCancelled(true);
-					/*if(event.getItem().getAmount() == 1) {
-						event.getItem().setType(washed.getType());
-					} else {*/
-						event.getItem().setAmount(event.getItem().getAmount()-1);
-						event.getPlayer().getInventory().addItem(washed); //TO DO: replace all of "Inventory.addItem()" with working function #thx1.13 
+					event.getItem().setAmount(event.getItem().getAmount()-1);
+					event.getPlayer().getInventory().addItem(washed); //TO DO: replace all of "Inventory.addItem()" with working function #thx1.13 
 					Utils.lower_cauldron_water(d.getBlock().getState());
-	                //d.getData().setData((byte) (d.getData().getData()-1));
-	                //d.update();
 			}
+			
+			//grass from dirt
+			Material currentblock = event.getClickedBlock().getType();
+			if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
+				event.getClickedBlock().setType(Material.GRASS_BLOCK);
+				event.getItem().setAmount(event.getItem().getAmount() - 1);
+				event.setCancelled(true);
+				return;
+			} 
+			
 			if (UtilsType.is_dye(event.getItem().getType()) ) 
 			{
 				if ( UtilsType.is_banner(event.getClickedBlock().getType()) || UtilsType.is_wall_banner(event.getClickedBlock().getType()) && event.getItem().getAmount()>5 )
@@ -263,15 +268,6 @@ public class InteractHandler implements Listener {
 					return;
 					
 				}
-				
-				//grass from dirt
-				Material currentblock = event.getClickedBlock().getType();
-				if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
-					event.getClickedBlock().setType(Material.GRASS_BLOCK);
-					event.getItem().setAmount(event.getItem().getAmount() - 1);
-					event.setCancelled(true);
-					return;
-				} 
 				
 				DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
 				DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
