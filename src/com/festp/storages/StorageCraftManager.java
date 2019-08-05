@@ -17,16 +17,16 @@ import org.bukkit.inventory.RecipeChoice.MaterialChoice;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.CraftManager;
-import com.festp.mainListener;
+import com.festp.Main;
 
 public class StorageCraftManager {
 	Server server;
-	mainListener plugin;
+	Main plugin;
 	
 	ItemStack zero_storage_bottomless, zero_storage_multitype1, zero_storage_multitype2, zero_storage_multitype3;
 	ItemMeta storage_meta_bottomless, storage_meta_multitype;
 	
-	public StorageCraftManager(mainListener plugin, Server server) {
+	public StorageCraftManager(Main plugin, Server server) {
 		this.plugin = plugin;
 		this.server = server;
 		

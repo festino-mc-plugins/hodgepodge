@@ -38,7 +38,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.Config;
 import com.festp.Pair;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.storages.Storage.Grab;
 import com.festp.storages.StorageMultitype.HandleTime;
 import com.festp.storages.StorageMultitype.UncraftMode;
@@ -51,7 +51,7 @@ public class StorageHandler implements Listener {
 	//Перенос пусть будет на ЛКМ и перенос + на ЛКМ+Shift. Дроп хранилища и так на Q, дроп его содержимого на Ctrl+Q...
 	//На ПКМ открытие, а на Shift+ПКМ открытие настроек.
 	
-	mainListener plugin;
+	Main plugin;
 	private int storage_save_ticks = 0;
 	private int storage_save_maxticks = 3*60*20; //3 minutes
 	private int storage_unloadcheck_ticks = 0;
@@ -60,7 +60,7 @@ public class StorageHandler implements Listener {
 	private List<Inventory> grabbing_invs = new ArrayList<>();
 	public static final String LABEL_YOUR_ITEMS = "YOUR ITEMS";
 	
-	public StorageHandler(mainListener plugin)
+	public StorageHandler(Main plugin)
 	{
 		this.plugin = plugin;
 	}
@@ -671,6 +671,14 @@ public class StorageHandler implements Listener {
 		// TO DO: Inventory Utils: from(), to(), enum(CURSOR, TOP, BOTTOM, OUTSIDE)
 		delayedGrab(event.getView().getTopInventory());
 		delayedGrab(event.getView().getBottomInventory());
+	}
+
+	@EventHandler
+	public void onCraft(CraftItemEvent event)
+	{
+		if (event.isCancelled())
+			return;
+		delayedGrab(event.getView().getBottomInventory());		
 	}
 	
 	@EventHandler
