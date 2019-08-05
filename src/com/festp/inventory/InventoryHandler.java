@@ -48,9 +48,9 @@ public class InventoryHandler implements Listener {
 	
 	public void onTick() {
 		//drop inventories
-		for(int i=closed_invs.size()-1; i>=0; i--)
+		for (int i = closed_invs.size()-1; i >= 0; i--)
 		{
-			if(closed_invs.get(i).getTicks() <= 0)
+			if (closed_invs.get(i).getTicks() <= 0)
 			{
 				closed_invs.remove(i);
 				continue;
@@ -58,20 +58,23 @@ public class InventoryHandler implements Listener {
 			closed_invs.get(i).oneTick();
 		}
 		//delete armor dupes
-		for(int i=todeletecopy_players.size()-1; i>=0; i--)
+		for (int i = todeletecopy_players.size()-1; i >= 0; i--)
 		{
 			ItemStack[] inv = todeletecopy_players.get(i).getInventory().getStorageContents();
-			for(int j=0; j<inv.length; j++) {
-				if(inv[j] != null && inv[j].getItemMeta().hasLore() && !inv[j].getItemMeta().getLore().isEmpty() && inv[j].getItemMeta().getLore().get(0).equals("todelete")) {
+			for (int j=0; j<inv.length; j++) {
+				if (inv[j] != null
+						&& inv[j].getItemMeta().hasLore()
+						&& !inv[j].getItemMeta().getLore().isEmpty()
+						&& inv[j].getItemMeta().getLore().get(0).equals("todelete")) {
 					todeletecopy_players.get(i).getInventory().clear(j);
 					todeletecopy_players.remove(i);
 				}
 			}
 		}
-		for(int i=dropped_items.size()-1; i>=0; i--)
+		for (int i = dropped_items.size()-1; i >= 0; i--)
 		{
 			dropped_items.get(i).time--;
-			if(dropped_items.get(i).time < 0)
+			if (dropped_items.get(i).time < 0)
 				dropped_items.remove(i);
 		}
 		
@@ -128,7 +131,7 @@ public class InventoryHandler implements Listener {
 		
 		for (int i=dropped_items.size()-1; i>=0; i--)
 		{
-			if (dropped_items.get(i).it == event.getItem() && dropped_items.get(i).p == player)
+			if (dropped_items.get(i).item == event.getItem() && dropped_items.get(i).p == player)
 			{
 				event.setCancelled(true);
 				return;
