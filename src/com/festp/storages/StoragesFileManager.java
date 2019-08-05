@@ -10,26 +10,29 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.storages.Storage.Grab;
 import com.festp.utils.Utils;
 
 public class StoragesFileManager {
-	private mainListener pl;
 	
 	public static int nextID = 1;
+	private static final String SEP = System.getProperty("file.separator");
 	
-	public StoragesFileManager(mainListener pl) {
+	private Main pl;
+	
+	
+	public StoragesFileManager(Main pl) {
 		this.pl = pl;
 	}
 
 	public static boolean hasDataFile(int ID) {
-		return (new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir+System.getProperty("file.separator")+ID+".yml")).exists();
+		return (new File(Main.getPath() + Main.storagesdir + SEP + ID + ".yml")).exists();
 	}
 	
 	public static List<Integer> getIDList()
 	{
-		File STpluginFolder = new File("plugins" + System.getProperty("file.separator") + mainListener.pluginname + System.getProperty("file.separator") + mainListener.storagesdir);
+		File STpluginFolder = new File(Main.getPath() + Main.storagesdir);
 		if (STpluginFolder.exists() == false) {
     		STpluginFolder.mkdir();
     	}
@@ -41,7 +44,7 @@ public class StoragesFileManager {
 				int ID = Integer.parseInt(s);
 				list.add(ID);
 			} catch (Exception ex) {
-				Utils.printError("["+mainListener.pluginname+"] Storages: Wrong file in directory: " + s);
+				Utils.printError("Storages: Wrong file in directory: " + s);
 			}
 		}
 		return list;
@@ -49,7 +52,7 @@ public class StoragesFileManager {
 	
 	public boolean createDataFile(int ID) {
 		try {
-			File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
+			File dataFile = new File(Main.getPath() + Main.storagesdir, ID + ".yml");
 			if (!dataFile.exists())	{
 				dataFile.createNewFile();
 				FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
@@ -68,7 +71,7 @@ public class StoragesFileManager {
 
 	public boolean deleteDataFile(int ID) {
 		try {
-			File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
+			File dataFile = new File(Main.getPath() + Main.storagesdir, ID + ".yml");
 			if (dataFile.exists())
 			{
 				dataFile.delete();
@@ -83,7 +86,7 @@ public class StoragesFileManager {
 	}
 	
 	public Storage loadStorage(int ID){
-		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir, ID + ".yml");
+		File dataFile = new File(Main.getPath() + Main.storagesdir, ID + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//type
 		String stype = ymlFormat.getString("type");
@@ -170,7 +173,7 @@ public class StoragesFileManager {
 	}
 
 	private void saveInventory_Bottomless(StorageBottomless storage) throws Exception {
-		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir,
+		File dataFile = new File(Main.getPath() + Main.storagesdir,
 				storage.ID + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 
@@ -184,7 +187,7 @@ public class StoragesFileManager {
 
 	private void saveInventory_Multitype(StorageMultitype storage) throws Exception {
 
-		File dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.storagesdir,
+		File dataFile = new File(Main.getPath() + Main.storagesdir,
 				storage.getID() + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		
