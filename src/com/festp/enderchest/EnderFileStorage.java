@@ -12,26 +12,26 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.mainListener;
+import com.festp.Main;
 
 public class EnderFileStorage {
-    private mainListener pl;
+    private Main pl;
 	
 	File dataFile;
 	FileConfiguration ymlFormat;
 	
-	public EnderFileStorage(mainListener enderchest) {
+	public EnderFileStorage(Main enderchest) {
 		this.pl = enderchest;
 		
 	}
 
 	public boolean hasDataFile(String groupname) {
-		return (new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir+System.getProperty("file.separator")+groupname+".yml")).exists();
+		return (new File(Main.getPath() + Main.enderdir + System.getProperty("file.separator") + groupname + ".yml")).exists();
 	}
 	
 	public boolean createDataFile(String groupname, String owner) {
 		try {
-			dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+			dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 			if (!dataFile.exists())	{
 				dataFile.createNewFile();
 				FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
@@ -43,7 +43,7 @@ public class EnderFileStorage {
 			}
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.pluginname+"] Could not create data file for enderchest group " + groupname + "!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not create data file for enderchest group " + groupname + "!");
 			e.printStackTrace();
 		}
 		return false;
@@ -52,7 +52,7 @@ public class EnderFileStorage {
 	public boolean saveInventory(String groupname, Integer size, ItemStack inventory) {
 	
 		try {
-			dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+			dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 			
 			ymlFormat.set("EnderChestSlot." + size, inventory);
@@ -61,7 +61,7 @@ public class EnderFileStorage {
 			return true;
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.pluginname+"] Could not save inventory of "+groupname+"!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not save inventory of "+groupname+"!");
 			e.printStackTrace();
 		}
 		return false;
@@ -69,7 +69,7 @@ public class EnderFileStorage {
 
 	public boolean saveInventory(String groupname, Integer size, Integer maxSize, ItemStack inventory, String owner, String group, String invited) {
 		try {
-			dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+			dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 
 			ymlFormat.set("admin", false);
@@ -84,7 +84,7 @@ public class EnderFileStorage {
 			return true;
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.pluginname+"] Could not save inventory of "+groupname+"!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not save inventory of "+groupname+"!");
 			e.printStackTrace();
 		}
 		return false;
@@ -92,7 +92,7 @@ public class EnderFileStorage {
 
 	public boolean saveInventory(String groupname, Integer size, Integer maxSize, ItemStack inventory) {
 		try {
-			dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+			dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 
 			ymlFormat.set("admin", true);
@@ -104,7 +104,7 @@ public class EnderFileStorage {
 			return true;
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.pluginname+"] Could not save inventory of "+groupname+"!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not save inventory of "+groupname+"!");
 			e.printStackTrace();
 		}
 		return false;
@@ -112,7 +112,7 @@ public class EnderFileStorage {
 
 	public boolean saveEnderChest(EnderChest ec) {
 		Inventory inv = ec.getInventory();
-		dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, ec.getGroupName() + ".yml");
+		dataFile = new File(Main.getPath() + Main.enderdir, ec.getGroupName() + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		
 		for (int i = 0; i < inv.getSize(); i++) {
@@ -139,7 +139,7 @@ public class EnderFileStorage {
 	public boolean loadEnderChest(String groupname){
 		Inventory inv = pl.getServer().createInventory(null, InventoryType.ENDER_CHEST, groupname);
 		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
-		dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+		dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//System.out.println(dataFile.getAbsolutePath());
 		boolean admingroup = ymlFormat.getBoolean("admin", false);
@@ -174,7 +174,7 @@ public class EnderFileStorage {
 
 	public boolean deleteDataFile(String groupname) {
 		try {
-			dataFile = new File("plugins"+System.getProperty("file.separator")+mainListener.pluginname+System.getProperty("file.separator")+mainListener.enderdir, groupname + ".yml");
+			dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
 			if (dataFile.exists())
 			{
 				dataFile.delete();
@@ -182,7 +182,7 @@ public class EnderFileStorage {
 			}
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.pluginname+"] Could not delete data file " + groupname + "!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not delete data file " + groupname + "!");
 			e.printStackTrace();
 		}
 		return false;
