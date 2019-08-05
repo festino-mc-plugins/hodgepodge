@@ -71,7 +71,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import com.festp.CraftManager;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
@@ -81,7 +81,7 @@ import net.minecraft.server.v1_14_R1.NBTTagCompound;
 
 //entity id had replaced tome id
 public class SummonerTome implements Listener {
-	enum Tome {/*UNDEFINED, */MINECART, BOAT, HORSE, CUSTOM_HORSE, ALL, CUSTOM_ALL};
+	enum TomeType {/*UNDEFINED, */MINECART, BOAT, HORSE, CUSTOM_HORSE, ALL, CUSTOM_ALL};
 	private static final String MAIN_SEP = ";";
 	private static final String FIELD_SEP = "|";
 	private static final String KEYVAL_SEP = ":";
@@ -105,12 +105,14 @@ public class SummonerTome implements Listener {
 	
 	public static final double searching_radius_minecart_tome = 1.5;
 	public static final double searching_radius_boat_tome = 2.5;
-	
-	private static mainListener plugin;
+	private static final Material[] BOAT_BLOCKS =
+			{Material.WATER, Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE, Material.FROSTED_ICE, Material.SEA_PICKLE, Material.SEAGRASS, Material.TALL_SEAGRASS};
+
+	private static Main plugin;
 	private List<AbstractHorse> save_horse = new ArrayList<>();
 	private List<Player> save_player = new ArrayList<>();
 	
-	public SummonerTome(mainListener plugin) {
+	public SummonerTome(Main plugin) {
 		this.plugin = plugin;
 	}
 	
@@ -255,36 +257,22 @@ public class SummonerTome implements Listener {
     	
     	//united custom tome - slime block, custom horse, minecart, boat tomes, 5 xp bottles
     	//from custom horse, boat and minecart tomes
-    	ItemStack custom_all_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	custom_all_book = SummonerTome.setTome(custom_all_book, 'a', "o");
-    	ItemMeta custom_all_meta = custom_all_book.getItemMeta();
-    	custom_all_meta.setDisplayName(SummonerTome.name_eng_all_tome);
-    	custom_all_meta.setLore(Arrays.asList(SummonerTome.lore_eng_all_tome));
-    	custom_all_book.setItemMeta(custom_all_meta);
-    	ShapelessRecipe custom_all_tome = new ShapelessRecipe(key_custom_all_h, custom_all_book);
-    	//all_tome.addIngredient(3, Material.ENCHANTED_BOOK);
-    	custom_all_tome.addIngredient(minecart_choice);
-    	custom_all_tome.addIngredient(boat_choice);
-    	custom_all_tome.addIngredient(custom_horse_choice);
-    	custom_all_tome.addIngredient(5, Material.EXPERIENCE_BOTTLE);
-    	custom_all_tome.addIngredient(1, Material.SLIME_BLOCK);
-    	server.addRecipe(custom_all_tome);
     	//from united tome
 	}
 	
 	//set horse name and let spigot using custom potions
 	@EventHandler
 	public void onPrepareCraft(PrepareItemCraftEvent event) {
-		Tome type = whichTome(event.getInventory().getResult());
+		TomeType type = getTomeType(event.getInventory().getResult());
 		if(type == null) return;
 
 		//custom horse/custom all tome:   horse/all tome + NAME from nametag + jump, speed and instheal potions
-		if(type == Tome.CUSTOM_HORSE) { //custom_horse or custom_all from all
+		if(type == TomeType.CUSTOM_HORSE) { //custom_horse or custom_all from all
 			ItemStack[] matrix = event.getInventory().getMatrix();
 			
 			String custom_name = null;
 			boolean correct = true, have_ms = false, have_jump = false, have_hp = false;
-			Tome new_type = null;
+			TomeType new_type = null;
 			ItemStack old_tome = null;
 			for(int i = 0; i < matrix.length; i++) {
 				if(!correct) break;
@@ -336,12 +324,12 @@ public class SummonerTome implements Listener {
 						break;
 					}
 					old_tome = matrix[i];
-					Tome old_type = whichTome(matrix[i]);
-					if(old_type == Tome.HORSE) {
-						new_type = Tome.CUSTOM_HORSE;
+					TomeType old_type = getTomeType(matrix[i]);
+					if(old_type == TomeType.HORSE) {
+						new_type = TomeType.CUSTOM_HORSE;
 					}
-					else if(old_type == Tome.ALL) {
-						new_type = Tome.CUSTOM_ALL;
+					else if(old_type == TomeType.ALL) {
+						new_type = TomeType.CUSTOM_ALL;
 					}
 					else {
 						correct = false;
@@ -351,7 +339,7 @@ public class SummonerTome implements Listener {
 			}
 			
 			if(correct && new_type != null && have_hp && have_jump && have_ms) {
-				if(new_type == Tome.CUSTOM_ALL) {
+				if(new_type == TomeType.CUSTOM_ALL) {
 					TreeSpecies wood_type = get_boat_type(old_tome);
 			    	ItemStack custom_all2_book = setTome(old_tome, 'A', "o");
 			    	custom_all2_book = set_boat_type(custom_all2_book, wood_type);
@@ -372,48 +360,48 @@ public class SummonerTome implements Listener {
 				event.getInventory().setResult(null);
 		}
 		//all/custom all:   all three tomes
-		if(type == Tome.ALL || type == Tome.CUSTOM_ALL) {
+		if (type == TomeType.ALL || type == TomeType.CUSTOM_ALL) {
 			ItemStack[] matrix = event.getInventory().getMatrix();
 			
 			boolean correct = true, have_mc = false, have_boat = false; int have_horse = 0;
-			Tome new_type = null;
+			TomeType new_type = null;
 			ItemStack old_boat = null;
 			ItemStack old_custom_horse = null;
-			for(int i = 0; i < matrix.length; i++) {
-				if(!correct) break;
-				else if(matrix[i].getType() == Material.ENCHANTED_BOOK) {
-					Tome old_type = whichTome(matrix[i]);
-					if(old_type == Tome.MINECART) {
-						if(have_mc) {
+			for (int i = 0; i < matrix.length; i++) {
+				if (!correct) break;
+				else if (matrix[i].getType() == Material.ENCHANTED_BOOK) {
+					TomeType old_type = getTomeType(matrix[i]);
+					if (old_type == TomeType.MINECART) {
+						if (have_mc) {
 							correct = false;
 							break;
 						}
 						have_mc = true;
 					}
-					else if(old_type == Tome.BOAT) {
-						if(have_boat) {
+					else if (old_type == TomeType.BOAT) {
+						if (have_boat) {
 							correct = false;
 							break;
 						}
 						have_boat = true;
 						old_boat = matrix[i];
 					}
-					else if(old_type == Tome.HORSE) {
-						if(have_horse > 0) {
+					else if (old_type == TomeType.HORSE) {
+						if (have_horse > 0) {
 							correct = false;
 							break;
 						}
 						have_horse = 1;
-						new_type = Tome.ALL;
+						new_type = TomeType.ALL;
 					}
-					else if(old_type == Tome.CUSTOM_HORSE) {
-						if(have_horse > 0) {
+					else if (old_type == TomeType.CUSTOM_HORSE) {
+						if (have_horse > 0) {
 							correct = false;
 							break;
 						}
 						have_horse = 2;
 						old_custom_horse = matrix[i];
-						new_type = Tome.CUSTOM_ALL;
+						new_type = TomeType.CUSTOM_ALL;
 					}
 					else {
 						correct = false;
@@ -422,21 +410,21 @@ public class SummonerTome implements Listener {
 				}
 			}
 			
-			if(correct && new_type != null && have_mc && have_boat && have_horse > 0) {
-				if(new_type == Tome.ALL) {
+			if (correct && new_type != null && have_mc && have_boat && have_horse > 0) {
+				if (new_type == TomeType.ALL) {
 					TreeSpecies wood_type = get_boat_type(old_boat);
 			    	ItemStack all_book = event.getInventory().getResult();
 			    	all_book = set_boat_type(all_book, wood_type);
 			    	event.getInventory().setResult(all_book);
 				}
-				if(new_type == Tome.CUSTOM_ALL) {
+				if (new_type == TomeType.CUSTOM_ALL) {
 					TreeSpecies wood_type = get_boat_type(old_boat);
 			    	ItemStack custom_all_book = new ItemStack(Material.ENCHANTED_BOOK);
 			    	custom_all_book = setTome(event.getInventory().getResult(), 'A', "o");
 			    	custom_all_book = set_boat_type(custom_all_book, wood_type);
 			    	custom_all_book = copy_horse_data(custom_all_book, get_horse_data(old_custom_horse));
 			    	ItemMeta custom_all_meta = custom_all_book.getItemMeta();
-			    	if(old_custom_horse.getItemMeta().hasDisplayName())
+			    	if (old_custom_horse.getItemMeta().hasDisplayName() && !name_eng_custom_horse_tome.contains(old_custom_horse.getItemMeta().getDisplayName()))
 				    	custom_all_meta.setDisplayName(old_custom_horse.getItemMeta().getDisplayName());
 			    	else
 			    		custom_all_meta.setDisplayName(name_eng_custom_all_tome);
@@ -454,10 +442,10 @@ public class SummonerTome implements Listener {
 	//set boat type
 	@EventHandler
 	public void onCraft(CraftItemEvent event) {
-		Tome type = whichTome(event.getInventory().getResult());
+		TomeType type = getTomeType(event.getInventory().getResult());
 		if(type == null) return;
 		
-		if(type == Tome.BOAT) {
+		if(type == TomeType.BOAT) {
 			Material wood_type = event.getInventory().getMatrix()[4].getType(); //central cell
 			if(wood_type == Material.ACACIA_BOAT)
 				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "a"));
@@ -486,12 +474,12 @@ public class SummonerTome implements Listener {
 				return;
 		}
 
-		Tome type = whichTome(item);
+		TomeType type = getTomeType(item);
 		if(type == null) return;
 		if(hasSummoned(item)) return;
 		
 		Entity entity = event.getRightClicked();
-		if(entity instanceof Boat && (type == Tome.BOAT || type == Tome.ALL || type == Tome.CUSTOM_ALL)
+		if(entity instanceof Boat && (type == TomeType.BOAT || type == TomeType.ALL || type == TomeType.CUSTOM_ALL)
 				&& get_boat_type(item) != ((Boat)entity).getWoodType()) {
 			TreeSpecies prev_type = get_boat_type(item);
 			if(main_hand)
@@ -501,7 +489,7 @@ public class SummonerTome implements Listener {
 			((Boat)entity).setWoodType(prev_type);
 			event.setCancelled(true);
 		}
-		else if(entity instanceof Horse && (type == Tome.CUSTOM_HORSE || type == Tome.CUSTOM_ALL)) {
+		else if(entity instanceof Horse && (type == TomeType.CUSTOM_HORSE || type == TomeType.CUSTOM_ALL)) {
 			Horse horse = (Horse)entity;
 			if(horse.getInventory().getSaddle() != null) {
 				String old_data = get_horse_data(item);
@@ -534,27 +522,27 @@ public class SummonerTome implements Listener {
 			if(item == null || UtilsType.is_dye(item.getType()))
 				return;
 		}
-		Tome type = whichTome(item);
+		TomeType type = getTomeType(item);
 		if(type == null) return;
 
 		Location player_loc = event.getPlayer().getLocation();
-		if(type == Tome.MINECART) {
+		if(type == TomeType.MINECART) {
 			Location l = findForMinecart(player_loc, searching_radius_minecart_tome);
 			if(l == null) return;
 			summonMinecart(l, event.getPlayer(), main_hand);
 		}
-		else if(type == Tome.BOAT) {
+		else if(type == TomeType.BOAT) {
 			Location l = findForBoat(player_loc, searching_radius_boat_tome);
 			if(l == null) return;
 			summonBoat(l, event.getPlayer(), main_hand, get_boat_type(item));
 		}
-		else if(type == Tome.HORSE) {
+		else if(type == TomeType.HORSE) {
 			Location l = Utils.find_horse_space(player_loc);
 			if(l == null) return;
 			l.setY(player_loc.getY());
 			summonHorse(l, event.getPlayer(), main_hand);
 		}
-		else if(type == Tome.CUSTOM_HORSE) {
+		else if(type == TomeType.CUSTOM_HORSE) {
 			Location l = Utils.find_horse_space(player_loc);
 			if(l == null) return;
 			l.setY(player_loc.getY());
@@ -570,37 +558,33 @@ public class SummonerTome implements Listener {
 			else
 				set_horse_data(custom_horse, horse_data);
 		}
-		else if(type == Tome.ALL || type == Tome.CUSTOM_ALL) {
+		else if (type == TomeType.ALL || type == TomeType.CUSTOM_ALL)
+		{
 			Location l_mc = findForMinecart(player_loc, searching_radius_minecart_tome);
 			Location l_boat = findForBoat(player_loc, searching_radius_boat_tome);
-			if(l_mc != null) {
-				if(l_boat != null) {
-					if(player_loc.distanceSquared(l_mc) < player_loc.distanceSquared(l_boat)) {
-						summonMinecart(l_mc, event.getPlayer(), main_hand);
-					}
-					else {
-						summonBoat(l_boat, event.getPlayer(), main_hand, get_boat_type(item));
-					}
-				}
-				else {
+			if (l_mc != null && l_boat != null) {
+				if (player_loc.distanceSquared(l_mc) < player_loc.distanceSquared(l_boat)) {
 					summonMinecart(l_mc, event.getPlayer(), main_hand);
 				}
-			}
-			else {
-				if(l_boat != null) {
+				else {
 					summonBoat(l_boat, event.getPlayer(), main_hand, get_boat_type(item));
 				}
-				else {
-					Location l = Utils.find_horse_space(player_loc);
-					if(l == null) return;
+			}
+			else if (l_mc != null && l_boat == null) {
+				summonMinecart(l_mc, event.getPlayer(), main_hand);
+			}
+			else if (l_mc == null && l_boat != null) {
+				summonBoat(l_boat, event.getPlayer(), main_hand, get_boat_type(item));
+			}
+			else {
+				Location l = Utils.find_horse_space(player_loc);
+				if (l == null)
+					return;
 					
-					if(type == Tome.ALL) {
-						summonHorse(l, event.getPlayer(), main_hand);
-					}
-					else {
-						summonCustomHorse(l, event.getPlayer(), main_hand);
-					}
-				}
+				if (type == TomeType.ALL)
+					summonHorse(l, event.getPlayer(), main_hand);
+				else
+					summonCustomHorse(l, event.getPlayer(), main_hand);
 			}
 		}
 	}
@@ -627,17 +611,16 @@ public class SummonerTome implements Listener {
 		return mc;
 	}
 	
-	public static Location findForBoat(Location player_loc, double hor_radius) { //watered blocks
+	public static Location findForBoat(Location player_loc, double hor_radius) { // TO DO: watered bottom blocks
 		player_loc.add(0, -1, 0);
-		Location l = Utils.searchBlock22Platform(new Material[]
-				{Material.WATER, Material.ICE, Material.PACKED_ICE, Material.BLUE_ICE, Material.FROSTED_ICE, Material.SEA_PICKLE, Material.SEAGRASS, Material.TALL_SEAGRASS},
-				player_loc, hor_radius, true);
+		Location l = Utils.search33space(BOAT_BLOCKS, player_loc);
+		if (l == null)
+			l = Utils.searchBlock22Platform(BOAT_BLOCKS, player_loc, hor_radius, true);
 		player_loc.add(0, 1, 0);
 		
 		return l;
 	}
 	public static Boat summonBoat(Location l, Player p, boolean main_hand, TreeSpecies type) {
-		l.add(0, 1, 0);
 		l.setPitch(p.getLocation().getPitch());
 		l.setYaw(p.getLocation().getYaw());
 		Boat boat = l.getWorld().spawn(l, Boat.class);
@@ -759,7 +742,7 @@ public class SummonerTome implements Listener {
 		return null;
 	}
 
-	public static Tome whichTome(ItemStack item) {
+	public static TomeType getTomeType(ItemStack item) {
 		if(item == null)
 			return null;
 		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
@@ -769,22 +752,22 @@ public class SummonerTome implements Listener {
         if(compound != null && compound.hasKey(nbt_key)) {
         	String info = compound.getString(nbt_key);
         	if(info.startsWith("m")) {
-				return Tome.MINECART;
+				return TomeType.MINECART;
 			}
 			else if(info.startsWith("b")) {
-				return Tome.BOAT;
+				return TomeType.BOAT;
 			}
 			else if(info.startsWith("h")) {
-				return Tome.HORSE;
+				return TomeType.HORSE;
 			}
 			else if(info.startsWith("H")) {
-				return Tome.CUSTOM_HORSE;
+				return TomeType.CUSTOM_HORSE;
 			}
 			else if(info.startsWith("a")) {
-				return Tome.ALL;
+				return TomeType.ALL;
 			}
 			else if(info.startsWith("A")) {
-				return Tome.CUSTOM_ALL;
+				return TomeType.CUSTOM_ALL;
 			}
         }
 		return null;
@@ -1080,7 +1063,8 @@ public class SummonerTome implements Listener {
 
 	@EventHandler
 	public void onVehicleExit(VehicleExitEvent event) {
-		if(wasSummoned(event.getVehicle()))
-			event.getVehicle().remove();
+		if (event.getVehicle().getPassengers().get(0) == event.getExited()) // probably driver
+			if (wasSummoned(event.getVehicle()))
+				event.getVehicle().remove();
 	}
 }
