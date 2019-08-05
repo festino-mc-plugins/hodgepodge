@@ -18,8 +18,8 @@ public class Config {
 	public static double fallDamage = 0.71;
 	public static int portal_search_radius = 30;
 	//public static int pump_search_radius = 30;
-	public static int step1 = 1;
-	public static double step2 = 0.7;
+	public static int step_count = 1;
+	public static double step_percent = 0.7;
 	public static int max_closed_inv_ticks = 20;
 	public static int storage_signal_radius = 30;
 	public static final int LEFT_ROTATE_COOLDOWN = 4;
@@ -65,8 +65,8 @@ public class Config {
 		Config.fallDamage = plugin.getConfig().getDouble("falldamagek");
 		Config.FunctionsON.put("extendedSleep", c.getBoolean("fun-on-extendedSleep"));
 		Config.FunctionsON.put("daySleepSkip", c.getBoolean("fun-on-daySleepSkip"));
-		Config.step1 = c.getInt("maxNumberOfSleepless");
-		Config.step2 = 1-c.getDouble("maxPercentOfSleepless")/100;
+		Config.step_count = c.getInt("maxNumberOfSleepless");
+		Config.step_percent = 1-c.getDouble("maxPercentOfSleepless")/100;
 		Config.storage_signal_radius = plugin.getConfig().getInt("storage-signal-radius");
 
 		System.out.println("["+pluginName+"] Config Reloaded.");
@@ -77,8 +77,8 @@ public class Config {
 		c.set("falldamagek", Config.fallDamage);
 		c.set("fun-on-extendedSleep", Config.FunctionsON.get("extendedSleep"));
 		c.set("fun-on-daySleepSkip", Config.FunctionsON.get("daySleepSkip"));
-		c.set("maxNumberOfSleepless", Config.step1);
-		c.set("maxPercentOfSleepless", (1-Config.step2)*100);
+		c.set("maxNumberOfSleepless", Config.step_count);
+		c.set("maxPercentOfSleepless", (1-Config.step_percent)*100);
 		c.set("storage-signal-radius", Config.storage_signal_radius);
 
 		plugin.saveConfig();
