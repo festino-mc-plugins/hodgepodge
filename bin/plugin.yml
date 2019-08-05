@@ -5,7 +5,7 @@ authors: [FEST_Channel, EvilGeniys]
 description: Hodgepodge of ideas. We are trying to improve Minecraft gameplay or make the game more convenient.
 website: https://github.com/festino/hodgepodge
 
-main: com.festp.mainListener
+main: com.festp.Main
 
 commands:
          hodge:
