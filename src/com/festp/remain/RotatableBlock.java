@@ -133,7 +133,6 @@ public class RotatableBlock {
 	}
 	
 	public static boolean remerge_chest(Block b, Chest chest) {
-		boolean remerged = false;
 		//EAST => SOUTH - NORTH - NONE
 		BlockFace main_dir = chest.getFacing(), left_dir = Utils.getLeftDirection(main_dir), right_dir = Utils.getRightDirection(main_dir);
 		org.bukkit.block.data.type.Chest.Type type = chest.getType(), new_type;
@@ -290,20 +289,6 @@ public class RotatableBlock {
 	public static void rotate_door(Block b)
 	{
 		rotate_door_part(b);
-		/*BlockData data = b.getBlockData();
-		Door door = (Door)b.getBlockData();
-		if(door.getHalf() == Half.BOTTOM) {
-			b = b.getRelative(BlockFace.UP);
-			if(data instanceof Door) {
-				rotate_door_part(b);
-			}
-		}
-		else {
-			b = b.getRelative(BlockFace.DOWN);
-			if(data instanceof Door) {
-				rotate_door_part(b);
-			}
-		}*/
 	}
 	public static void rotate_door_part(Block b)
 	{
