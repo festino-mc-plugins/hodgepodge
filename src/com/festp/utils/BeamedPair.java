@@ -18,11 +18,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
-import com.festp.mainListener;
+import com.festp.Main;
 
 public class BeamedPair implements Listener {	
 	private static List<BeamedPair> beamed_entities = new ArrayList<>();
-	private static mainListener plugin;
+	private static Main plugin;
 	
 	Entity beamer;
 	LivingEntity beamed;
@@ -71,7 +71,7 @@ public class BeamedPair implements Listener {
 				//&& beamed.hasLineOfSight(beamer);
 	}
 
-	public static void setPlugin(mainListener plugin) {
+	public static void setPlugin(Main plugin) {
 		BeamedPair.plugin = plugin;
 	}
 	
