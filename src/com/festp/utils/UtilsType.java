@@ -207,12 +207,13 @@ public class UtilsType {
 	}
 	
 	public static boolean isTransparent(Material m) {
-		if(isAir(m) || is_banner(m) || is_bed(m) || is_carpet(m) || is_wall_banner(m) || isTrapdoor(m) || isDoor(m) || isGate(m)
+		if (isAir(m) || is_banner(m) || is_bed(m) || is_carpet(m) || is_wall_banner(m) || isTrapdoor(m) || isDoor(m) || isGate(m)
 				|| is_flower(m) || isPlate(m) || isButton(m) || isRail(m)
 				|| m == Material.TORCH || m == Material.WALL_TORCH|| m == Material.REDSTONE_TORCH || m == Material.REDSTONE_WALL_TORCH
 				|| isSign(m) || isWallSign(m)
 				|| m == Material.FLOWER_POT || m == Material.REDSTONE_WIRE || m == Material.COMPARATOR || m == Material.REPEATER || m == Material.LEVER
-				|| m == Material.TRIPWIRE_HOOK || m == Material.TRIPWIRE)
+				|| m == Material.TRIPWIRE_HOOK || m == Material.TRIPWIRE
+				|| m == Material.SNOW)
 			return true;
 		return false;
 	}
@@ -546,20 +547,24 @@ public class UtilsType {
 	
 	public static boolean is_flower(Material m) {
 		switch(m) {
-		case SUNFLOWER: return true;
-		case WHITE_TULIP: return true;
-		case ORANGE_TULIP: return true;
-		case PINK_TULIP: return true;
-		case RED_TULIP: return true;
-		case DANDELION: return true;
-		case ROSE_BUSH: return true;
-		case POPPY: return true;
-		case BLUE_ORCHID: return true;
-		case ALLIUM: return true;
-		case AZURE_BLUET: return true;
-		case OXEYE_DAISY: return true;
-		case LILAC: return true;
-		case PEONY: return true;
+		case SUNFLOWER:
+		case WHITE_TULIP:
+		case ORANGE_TULIP:
+		case PINK_TULIP:
+		case RED_TULIP:
+		case DANDELION:
+		case ROSE_BUSH:
+		case POPPY:
+		case BLUE_ORCHID:
+		case ALLIUM:
+		case AZURE_BLUET:
+		case OXEYE_DAISY:
+		case LILAC:
+		case PEONY:
+		case WITHER_ROSE:
+		case CORNFLOWER:
+		case LILY_OF_THE_VALLEY:
+			return true;
 		default: return false;
 		}
 	}
@@ -575,7 +580,7 @@ public class UtilsType {
 
 	public static boolean isPlant(Material m) {
 		return is_flower(m) || isMushroom(m) || isSapling(m) || m == Material.DEAD_BUSH || m == Material.VINE || m == Material.LILY_PAD
-				|| m == Material.GRASS|| m == Material.TALL_GRASS|| m == Material.FERN|| m == Material.LARGE_FERN;
+				|| m == Material.GRASS|| m == Material.TALL_GRASS || m == Material.FERN || m == Material.LARGE_FERN;
 	}
 
 	
