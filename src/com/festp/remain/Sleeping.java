@@ -1,5 +1,8 @@
 package com.festp.remain;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Statistic;
@@ -11,28 +14,28 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerBedEnterEvent;
-import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import com.festp.Config;
 import com.festp.DelayedTask;
 import com.festp.TaskList;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
 public class Sleeping implements Listener {
-	public static final int SLEEP_TICKS = 100;
 	int ticks = 0;
+	int info_ticks = 0;
+	public static final int SLEEP_TICKS = 100;
+	public static final int INFO_TICKS = 10;
 	private static Random mob_spawn_random = new Random();
-	//private static EntityType[] spawn_types = {EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.SKELETON};
 	private enum Skip {day, night};
 	int ignoredPlayersCount = 0, sleepingPlayersCount = 0, onlinePlayersCount = 0;
 	
-	private mainListener pl;
+	private Main pl;
 	
-	public Sleeping(mainListener plugin) {
+	public Sleeping(Main plugin) {
 		this.pl = plugin;
 	}
 	
@@ -45,43 +48,98 @@ public class Sleeping implements Listener {
 			try_skip();
 			ticks = 0;
 		}
+		
+		info_ticks++;
+		if (info_ticks >= INFO_TICKS)
+		{
+			sendSleepInfo();
+			info_ticks = 0;
+		}
+	}
+	
+	public void sendSleepInfo() // TO DO: sync sending with bed events
+	{
+		String sleep_data = "sendSleepInfo() error";
+		int all_players = 0, sleeping_players = 0;
+		List<Integer> sleeping_ticks = new ArrayList<>();
+		for (Player p : pl.getServer().getOnlinePlayers())
+		{
+			if (canSleep(p.getLocation().getBlock().getBiome()))
+			{
+				all_players++;
+				if (p.isSleeping())
+				{
+					sleeping_players++;
+					sleeping_ticks.add(p.getSleepTicks());
+				}
+			}
+		}
+		 
+		int min_players = get_min_sleeping(all_players);
+		int min_ticks = 0;
+		if (sleeping_players >= min_players) {
+			Integer[] sleeping_ticks_sorted = sleeping_ticks.toArray(new Integer[0]);
+			Arrays.sort(sleeping_ticks_sorted);
+			min_ticks = sleeping_ticks_sorted[sleeping_players - min_players];
+			sleep_data = (SLEEP_TICKS / 20 - (min_ticks + 10) / 20) + "";
+		}
+		else {
+			sleep_data = sleeping_players + "/" + min_players;
+		}
+		
+		int title_ticks = Math.min(INFO_TICKS * 2, SLEEP_TICKS - min_ticks + 5);
+		for (Player p : pl.getServer().getOnlinePlayers())
+			if (p.isSleeping())
+				p.sendTitle(sleep_data, "", 0, title_ticks, 0);
+	}
+	
+	private int get_min_sleeping(int all_players)
+	{
+		return (int) Math.ceil(
+						Math.max(
+							1,
+							Math.min(
+								all_players - Config.step_count,
+								all_players * Config.step_percent
+							)));
 	}
 	
 	private Runnable skip_action = new Runnable() {
 		@Override
 		public void run() { 
-			for (Player p : pl.getServer().getOnlinePlayers())
-				System.out.println("sleep: "+p.getName()+" ("+p.isSleeping()+" : "+p.getSleepTicks()+" ticks)");
+			//for (Player p : pl.getServer().getOnlinePlayers())
+			//	System.out.println("sleep: "+p.getName()+" ("+p.isSleeping()+" : "+p.getSleepTicks()+" ticks)");
 			update_sleepers();
 			try_skip();
 		}
 	};
 	@EventHandler
 	public void onBedEnter(PlayerBedEnterEvent event) {
-		DelayedTask skip_task = new DelayedTask(SLEEP_TICKS, skip_action);
+		DelayedTask skip_task = new DelayedTask(SLEEP_TICKS + 1, skip_action);
 		TaskList.add(skip_task);
 	}
 
 	@EventHandler
-	public void onBedLeave(PlayerBedLeaveEvent event) {
-		update_sleepers();
-	}
-
-	@EventHandler
 	public void onPortal(PlayerPortalEvent event) {
-		update_sleepers();
-		try_skip();
+		DelayedTask skip_task = new DelayedTask(1, skip_action);
+		TaskList.add(skip_task);
+		//update_sleepers();
+		//try_skip();
 	}
 
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		update_sleepers();
-		try_skip();
+		DelayedTask skip_task = new DelayedTask(1, skip_action);
+		TaskList.add(skip_task);
+	}
+	
+	public boolean isDeepSleeping(Player p)
+	{
+		return p.isSleeping() && p.getSleepTicks() >= SLEEP_TICKS;
 	}
 	
 	public void update_sleepers()
 	{
-		onRest();
 		if (Config.FunctionsON.get("extendedSleep")) {
 			ignoredPlayersCount = 0;
 			sleepingPlayersCount = 0;
@@ -90,10 +148,11 @@ public class Sleeping implements Listener {
 			{
 				//count
 				onlinePlayersCount++;
-				if (canSleep(p.getLocation().getBlock().getBiome()))
+				if (!canSleep(p.getLocation().getBlock().getBiome()))
 					ignoredPlayersCount++;
-				if (p.isSleeping() && p.getSleepTicks() >= SLEEP_TICKS)
+				if (isDeepSleeping(p))
 					sleepingPlayersCount++;
+				
 				//compass
 				if (p.getBedSpawnLocation() != null)
 					p.setCompassTarget(p.getBedSpawnLocation());
@@ -101,12 +160,12 @@ public class Sleeping implements Listener {
 					p.setCompassTarget(p.getWorld().getSpawnLocation());
 			}
 		}
+		update_resting();
 	}
 	
 	public void try_skip()
 	{
-		if (sleepingPlayersCount > 0 && (onlinePlayersCount-sleepingPlayersCount-ignoredPlayersCount <= Config.step1
-				|| (double)sleepingPlayersCount/(onlinePlayersCount-ignoredPlayersCount) >= Config.step2))
+		if (sleepingPlayersCount >= get_min_sleeping(onlinePlayersCount-ignoredPlayersCount))
 		{
 			if (pl.mainworld.getTime() > 12000) {
 				skipNight();
@@ -120,7 +179,7 @@ public class Sleeping implements Listener {
 	}
 	
 	public boolean canSleep(Biome b) {
-		return b == Biome.NETHER || UtilsType.isEndBiome(b);
+		return !(b == Biome.NETHER || UtilsType.isEndBiome(b));
 	}
 	
 	public void skipWeather() {
@@ -152,7 +211,7 @@ public class Sleeping implements Listener {
 		}
 	}
 	
-	private void onRest()
+	private void update_resting() // anti-phantom
 	{
 		for (Player p : pl.getServer().getOnlinePlayers())
 		{
@@ -168,7 +227,11 @@ public class Sleeping implements Listener {
 		int min_time = skipped_time;
 		Block spawn_place = null;
 		Player awakened = null;
-		for (Player p : pl.getServer().getOnlinePlayers()) {
+		for (Player p : pl.getServer().getOnlinePlayers())
+		{
+			if (!isDeepSleeping(p))
+				continue;
+			
 			Block bed_head = p.getLocation().getBlock();
 			//get 6 blocks, priority: side blocks of head, back head, side legs, front legs; condition: Utils.playerCanStay(b)+light<=7
 			//Not only Material.BEDs for sleep => 4 blocks near the head, but which priority?
