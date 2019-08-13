@@ -208,7 +208,7 @@ public class Utils {
 	
 	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity, String beacon_id, boolean gravity) {
 		T beacon;
- 		if(entity == Vex.class) { //doesn't work without the consumer
+ 		if (entity == Vex.class) { //doesn't work without the consumer: sword in main hand
  			beacon = l.getWorld().spawn(l, entity, (vex) -> {
  				vex.getEquipment().setItemInMainHand(null);
             });
@@ -225,13 +225,13 @@ public class Utils {
  		beacon.setSilent(true);
  		beacon.setCollidable(false);
  		
- 		if(beacon instanceof Turtle) {
+ 		if (beacon instanceof Turtle) {
  			Turtle turtle = (Turtle)beacon;
  			turtle.setBaby();
  			turtle.setAgeLock(true);
  		}
 
- 		if(beacon instanceof ArmorStand) {
+ 		if (beacon instanceof ArmorStand) {
  			ArmorStand stand = (ArmorStand)beacon;
  			stand.setVisible(false);
  			stand.setSmall(true);
