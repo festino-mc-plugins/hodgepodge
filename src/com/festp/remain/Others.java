@@ -2,6 +2,7 @@ package com.festp.remain;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Random;
 
@@ -35,17 +36,17 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import com.festp.Config;
-import com.festp.mainListener;
+import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
 public class Others implements Listener {
-	mainListener plugin;
+	Main plugin;
 	Server server;
 	List<Player> test_spawn_in_portal = new ArrayList<>();
 	private Random random = new Random();
 	
-	public Others(mainListener plugin) {
+	public Others(Main plugin) {
 		this.plugin = plugin;
 		this.server = plugin.getServer();
 	}
@@ -59,8 +60,12 @@ public class Others implements Listener {
 			}
 			for(Entity e : w.getEntitiesByClass(Boat.class))
 			{
-				if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL) //Exception: ConcurrentModification
-					tp_entity_from_portal(e);
+				try {
+					if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL) //Exception: ConcurrentModification
+						tp_entity_from_portal(e);
+				} catch (ConcurrentModificationException exception) {
+					System.out.println("ConcurrentModificationException on Others tick");
+				}
 			}
 		}
 		for(int i = test_spawn_in_portal.size()-1; i >= 0; i--) {
@@ -156,7 +161,7 @@ public class Others implements Listener {
 			int lvl = ((CraftLivingEntity)(eve.getEntity())).getPotionEffect(PotionEffectType.JUMP) == null ? 0 : ((CraftLivingEntity)(eve.getEntity())).getPotionEffect(PotionEffectType.JUMP).getAmplifier()+1;
 			if( eve.getCause().equals(EntityDamageEvent.DamageCause.FALL) && lvl > 0 )
 			{
-				eve.setDamage((eve.getDamage()+lvl)*Math.pow(Config.fallDamage,lvl));
+				eve.setDamage((eve.getDamage()+lvl)*Math.pow(Config.fallDamage, lvl));
 			}
 		}
 	}
