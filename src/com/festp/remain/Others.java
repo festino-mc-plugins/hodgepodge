@@ -60,12 +60,8 @@ public class Others implements Listener {
 			}
 			for(Entity e : w.getEntitiesByClass(Boat.class))
 			{
-				try {
-					if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL) //Exception: ConcurrentModification
-						tp_entity_from_portal(e);
-				} catch (ConcurrentModificationException exception) {
-					System.out.println("ConcurrentModificationException on Others tick");
-				}
+				if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL)
+					tp_entity_from_portal(e);
 			}
 		}
 		for(int i = test_spawn_in_portal.size()-1; i >= 0; i--) {
