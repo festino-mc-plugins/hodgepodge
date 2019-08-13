@@ -141,26 +141,24 @@ public class InteractHandler implements Listener {
 		ItemStack chestplate;
 		for(World w : server.getWorlds())
 		{
-			for(Turtle e : w.getEntitiesByClass(Turtle.class))
+			for(Turtle turtle : w.getEntitiesByClass(Turtle.class))
 			{
-				chestplate = e.getEquipment().getChestplate();
-				if(chestplate == null || UtilsType.isAir(chestplate.getType())) continue;
-
-				//saddled entities
-				if(Utils.hasDataField(chestplate, beacon_id_saddle)) {
-					if(e.getPassengers().size() == 0 || e.getVehicle() == null )
-						e.remove();
+				// saddled entities
+				if (Utils.hasBeaconData(turtle, beacon_id_saddle)) {
+					if (turtle.getPassengers().size() == 0 || turtle.getVehicle() == null )
+						turtle.remove();
 					else {
-						e.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( ((LivingEntity)e.getVehicle()).getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
-						e.setHealth( ((LivingEntity)e.getVehicle()).getHealth() );
+						LivingEntity camel_player = (LivingEntity)turtle.getVehicle();
+						turtle.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( camel_player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
+						turtle.setHealth( camel_player.getHealth() );
 					}
 				}
-				//leashed players
-				else if(Utils.hasDataField(chestplate, LeashedPlayer.BEACON_ID)) {
+				// leashed players
+				else if (Utils.hasBeaconData(turtle, LeashedPlayer.BEACON_ID)) {
 					
-					if(!leash_manager.isWorkaroundActive(e) || !e.isLeashed()) {
-						e.getWorld().dropItem(e.getLocation(), new ItemStack(Material.LEAD, 1));
-						e.remove();
+					if (!leash_manager.isWorkaroundActive(turtle) || !turtle.isLeashed()) {
+						turtle.getWorld().dropItem(turtle.getLocation(), new ItemStack(Material.LEAD, 1));
+						turtle.remove();
 					}
 				}
 			}
