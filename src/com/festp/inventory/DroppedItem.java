@@ -5,14 +5,14 @@ import org.bukkit.entity.Player;
 
 public class DroppedItem {
 	Player p;
-	Item it;
+	Item item;
 	int time;
 	
 	public DroppedItem(Player p, Item it) {
 		this.p = p;
-		this.it = it;
-		this.time = this.it.getPickupDelay();
-		this.it.setPickupDelay(0);
+		this.item = it;
+		this.time = this.item.getPickupDelay();
+		this.item.setPickupDelay(0);
 	}
 	
 	
