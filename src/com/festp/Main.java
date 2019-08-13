@@ -212,7 +212,7 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//items in cauldrons, saddle hp updating, hoe left click cooldown
-					//interacts.onTick();
+					interacts.onTick();
 
 					t2 = System.nanoTime();
 					metrics[5] += t2 - t1;
@@ -254,7 +254,7 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//drag xp
-					//exp_hop.onTick();
+					exp_hop.onTick();
 
 					t2 = System.nanoTime();
 					metrics[11] += t2 - t1;
