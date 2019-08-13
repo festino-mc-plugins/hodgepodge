@@ -21,7 +21,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.mainListener;
+import com.festp.Main;
 
 /* Hopper named "xp": when contains empty bottles, collects XP; once stored N xp turns bottle into xp bottle. Grab only bottles(even player can't put anything else).
  * If you pick up all the bottles, throws out the stored experience. */
@@ -30,16 +30,49 @@ public class ExpHoppers implements Listener {
 	private int save_ticks = 0;
 	
 	private static final String hopper_name = "xp";
-	 //make it configurable \/
+	 // TODO: make it configurable \/
 	private static final String filename = "xp_hoppers.data";
-	private static final String filepath = "plugins/"+mainListener.pluginname+"/"+filename;
+	private final String filepath;
 	private static final char F_SEP = '|', F_END = '\n';
-	private static final int XP_ANOUNT = 18; //3-11 xp from one bottle
+	private static final int XP_ANOUNT = 50; //3-11 xp from one bottle
 	private static final double STORE_HEIGHT = 12.0 / 16;
 	private static final Material EXP_BOTTLE = Material.EXPERIENCE_BOTTLE, EMPTY_BOTTLE = Material.GLASS_BOTTLE;
 
 	private List<PairBlockXP> hoppers = new ArrayList<>();
 	private Server server;
+	
+	//load data
+	public ExpHoppers(Server server)
+	{
+		this.server = server;
+		filepath = Main.getPath() + filename;
+		load();
+	}
+	
+	public void onTick() {
+		for (World world : server.getWorlds())
+			for (ExperienceOrb orb : world.getEntitiesByClass(ExperienceOrb.class))
+				tryStoreXP(orb);
+		
+		for (int i = hoppers.size()-1; i >= 0; i--)
+		{
+			PairBlockXP pair = hoppers.get(i);
+			if (!canStore (pair.world.getBlockAt(pair.x, pair.y, pair.z)))
+			{
+				ExperienceOrb new_orb = (ExperienceOrb) pair.world.spawnEntity(
+						new Location(pair.world, pair.x, pair.y+1, pair.z),
+						EntityType.EXPERIENCE_ORB);
+				new_orb.setExperience(pair.xp);
+				hoppers.remove(i);
+			}
+		}
+		
+		save_ticks++;
+		if (save_ticks > SAVE_RATE) {
+			save_ticks = 0;
+			save();
+		}
+	}
 	
 	//check if xp orb on "xp" hopper, check empty bottles inside, grab xp(beacon?); if N(configurable?), spend stored xp
 	void tryStoreXP(ExperienceOrb orb)
@@ -179,38 +212,6 @@ public class ExpHoppers implements Listener {
 				pair.xp = amount;
 				return;
 			}
-	}
-	
-	//load data
-	public ExpHoppers(Server server)
-	{
-		this.server = server;
-		load();
-	}
-	
-	public void onTick() {
-		for (World world : server.getWorlds())
-			for (ExperienceOrb orb : world.getEntitiesByClass(ExperienceOrb.class))
-				tryStoreXP(orb);
-		
-		for (int i = hoppers.size()-1; i >= 0; i--)
-		{
-			PairBlockXP pair = hoppers.get(i);
-			if (!canStore (pair.world.getBlockAt(pair.x, pair.y, pair.z)))
-			{
-				ExperienceOrb new_orb = (ExperienceOrb) pair.world.spawnEntity(
-						new Location(pair.world, pair.x, pair.y+1, pair.z),
-						EntityType.EXPERIENCE_ORB);
-				new_orb.setExperience(pair.xp);
-				hoppers.remove(i);
-			}
-		}
-		
-		save_ticks++;
-		if (save_ticks > SAVE_RATE) {
-			save_ticks = 0;
-			save();
-		}
 	}
 
 	//save data to FILE
