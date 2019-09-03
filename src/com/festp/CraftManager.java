@@ -106,7 +106,6 @@ public class CraftManager implements Listener {
 		String name___borsch_1 = "borsch";
 		String name___chorus_1 = "chorus_from_flower";
 		String name___stick_1 = "stick_from_arrows";
-		String name___smooth_stone_1 = "smooth_stone_from_slabs";
 		String name___smooth_sandstone_1 = "smooth_ss_from_ss";
 		String name___smooth_redsandstone_1 = "smooth_redss_from_redss";
 		String name___lead_3x = "lead_3x";
@@ -126,7 +125,6 @@ public class CraftManager implements Listener {
     	NamespacedKey key___borsch = new NamespacedKey(plugin, name___borsch_1);
     	NamespacedKey key___chorus = new NamespacedKey(plugin, name___chorus_1);
     	NamespacedKey key___stick_1 = new NamespacedKey(plugin, name___stick_1);
-    	NamespacedKey key___smooth_stone = new NamespacedKey(plugin, name___smooth_stone_1);
     	NamespacedKey key___smooth_sandstone = new NamespacedKey(plugin, name___smooth_sandstone_1);
     	NamespacedKey key___smooth_redsandstone = new NamespacedKey(plugin, name___smooth_redsandstone_1);
     	NamespacedKey key___lead_3x = new NamespacedKey(plugin, name___lead_3x);
@@ -145,7 +143,6 @@ public class CraftManager implements Listener {
 		recipe_keys.add(key___borsch);
 		recipe_keys.add(key___chorus);
 		recipe_keys.add(key___stick_1);
-		recipe_keys.add(key___smooth_stone);
 		recipe_keys.add(key___smooth_sandstone);
 		recipe_keys.add(key___smooth_redsandstone);
 		recipe_keys.add(key___lead_3x); // TO DO: add recipes(keys and etc by name) in loop, pairs "name:Recipe"
@@ -256,11 +253,6 @@ public class CraftManager implements Listener {
     	ShapelessRecipe stick_from_arrows = new ShapelessRecipe(key___stick_1, new ItemStack(Material.STICK,1) );
     	stick_from_arrows.addIngredient(4, Material.ARROW);
     	server.addRecipe(stick_from_arrows);
-
-    	ShapedRecipe smooth_stone_from_slabs = new ShapedRecipe(key___smooth_stone, new ItemStack(Material.SMOOTH_STONE,2) );
-    	smooth_stone_from_slabs.shape(new String[]{" S ", "SSS", " S "});
-    	smooth_stone_from_slabs.setIngredient('S', Material.STONE_SLAB);
-    	server.addRecipe(smooth_stone_from_slabs);
 
     	ShapelessRecipe smooth_sandstone_from_andstone = new ShapelessRecipe(key___smooth_sandstone, new ItemStack(Material.SMOOTH_SANDSTONE,4) );
     	smooth_sandstone_from_andstone.addIngredient(4, Material.CUT_SANDSTONE);
