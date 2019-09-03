@@ -20,6 +20,7 @@ import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LeashHitch;
@@ -29,12 +30,14 @@ import org.bukkit.entity.Turtle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerUnleashEntityEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dye;
@@ -51,11 +54,14 @@ import com.festp.utils.UtilsType;
 
 public class InteractHandler implements Listener {
 
-	public static final String beacon_id_saddle = "saddlemob";
+	public static final String BEACON_SADDLE_ID = "saddlemob";
+	public static final Class<? extends LivingEntity> BEACON_SADDLE_CLASS = Turtle.class;
 	
 	//cauldrons to wash items
 	List<BlockState> cauls = new ArrayList<>();
 	List<Integer> caulticks = new ArrayList<>();
+	List<Item> world_items = new ArrayList<>();
+	List<LivingEntity> world_beacons = new ArrayList<>();
 
 	List<CooldownPlayer> left_rotate_cooldown = new ArrayList<>();
 	
@@ -70,119 +76,195 @@ public class InteractHandler implements Listener {
 	}
 	
 	private LivingEntity spawnSaddleBeacon(Location l) {
-		return Utils.spawnBeacon(l, Turtle.class, beacon_id_saddle, false);
+		return Utils.spawnBeacon(l, BEACON_SADDLE_CLASS, BEACON_SADDLE_ID, false);
+	}
+	public boolean isSaddleBeacon(LivingEntity e) {
+		return Utils.hasBeaconData(e, BEACON_SADDLE_ID);
+	}
+	public boolean isLeashBeacon(LivingEntity e) {
+		return Utils.hasBeaconData(e, LeashedPlayer.BEACON_ID);
 	}
 	
-	public void onTick() {
-		long t1, t2, t3, t4;
-		t1 = System.nanoTime();
-		
-		for(int i = 0; i< caulticks.size(); i++)
-			caulticks.set(i, caulticks.get(i) + 1);
-		for(World w : server.getWorlds())
-		{
-			for(Item e : w.getEntitiesByClass(Item.class))
-			{
-				Block b = w.getBlockAt(e.getLocation());
-				if(b.getType() == Material.CAULDRON) {
-					BlockState cauldron = b.getState(); //TO DO: use Levelled BlockData
-					if(cauldron.getData().getData() > 0) {
-						int i = cauls.indexOf(cauldron);
-						if(i >= 0) {
-							if(caulticks.get(i) > 4) {
-								cauls.remove(i);
-								caulticks.remove(i);
-							}
-							continue;
-						}
-						Material m = e.getItemStack().getType();
-						ItemStack drop = null;
-						if(UtilsType.is_concrete_powder(m))
-							drop = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(m)));
-						else if(UtilsType.is_colored_terracotta(m))
-							drop = new ItemStack(Material.TERRACOTTA);
-						else if(UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
-							 if(UtilsType.is_glazed_terracotta(m)) 
-								 drop = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-							 else if(UtilsType.is_concrete(m)) 
-								 drop = new ItemStack(Material.WHITE_CONCRETE, 1);
-							 else if(UtilsType.is_wool(m)) 
-								 drop = new ItemStack(Material.WHITE_WOOL, 1);
-							 else if(UtilsType.is_carpet(m)) 
-								 drop = new ItemStack(Material.WHITE_CARPET, 1);
-						}
-						else if(m.equals(Material.RED_SAND))
-							drop = new ItemStack(Material.SAND);
-						else if(m.equals(Material.RED_SANDSTONE))
-							drop = new ItemStack(Material.SANDSTONE,1);
-						if(drop != null) {
-							e.getItemStack().setAmount(e.getItemStack().getAmount()-1);
-							w.dropItem(e.getLocation(),new ItemStack(drop));
-							Utils.lower_cauldron_water(b.getState());
-			                cauls.add(cauldron);
-			                caulticks.add(0);
-						}
-					}
-				}
-			}
-		}
-		
-		t2 = System.nanoTime();
-
-		for(int i = left_rotate_cooldown.size()-1; i >=0; i--) {
+	public void onTick()
+	{
+		for (int i = left_rotate_cooldown.size()-1; i >= 0; i--) {
 			CooldownPlayer cp = left_rotate_cooldown.get(i);
 			if(!cp.tick()) {
 				left_rotate_cooldown.remove(i);
 			}
 		}
-
-		t3 = System.nanoTime();
 		
-		ItemStack chestplate;
-		for(World w : server.getWorlds())
+		for (int i = caulticks.size() - 1; i >= 0; i--) {
+			caulticks.set(i, caulticks.get(i) + 1);
+			
+			if(caulticks.get(i) > 5) {
+				cauls.remove(i);
+				caulticks.remove(i);
+			}
+		}
+
+		List<Item> removed_items = new ArrayList<>();
+		for (Item item : world_items)
 		{
-			for(Turtle turtle : w.getEntitiesByClass(Turtle.class))
-			{
-				// saddled entities
-				if (Utils.hasBeaconData(turtle, beacon_id_saddle)) {
-					if (turtle.getPassengers().size() == 0 || turtle.getVehicle() == null )
-						turtle.remove();
-					else {
-						LivingEntity camel_player = (LivingEntity)turtle.getVehicle();
-						turtle.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( camel_player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
-						turtle.setHealth( camel_player.getHealth() );
+			if (!item.isValid()) {
+				removed_items.add(item);
+				continue;
+			}
+			World w = item.getWorld();
+			Block b = item.getLocation().getBlock();
+			if(b.getType() == Material.CAULDRON) {
+				BlockState cauldron = b.getState(); //TO DO: use Levelled BlockData
+				if(cauldron.getData().getData() > 0) {
+					int i = cauls.indexOf(cauldron);
+					if(i >= 0) {
+						continue;
 					}
-				}
-				// leashed players
-				else if (Utils.hasBeaconData(turtle, LeashedPlayer.BEACON_ID)) {
-					
-					if (!leash_manager.isWorkaroundActive(turtle) || !turtle.isLeashed()) {
-						turtle.getWorld().dropItem(turtle.getLocation(), new ItemStack(Material.LEAD, 1));
-						turtle.remove();
+					Material m = item.getItemStack().getType();
+					ItemStack drop = null;
+					if (UtilsType.is_concrete_powder(m))
+						drop = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(m)));
+					else if (UtilsType.is_colored_terracotta(m))
+						drop = new ItemStack(Material.TERRACOTTA);
+					else if (UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
+						 if (UtilsType.is_glazed_terracotta(m)) 
+							 drop = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
+						 else if (UtilsType.is_concrete(m)) 
+							 drop = new ItemStack(Material.WHITE_CONCRETE, 1);
+						 else if (UtilsType.is_wool(m)) 
+							 drop = new ItemStack(Material.WHITE_WOOL, 1);
+						 else if (UtilsType.is_carpet(m)) 
+							 drop = new ItemStack(Material.WHITE_CARPET, 1);
+					}
+					else if (m.equals(Material.RED_SAND))
+						drop = new ItemStack(Material.SAND);
+					else if (m.equals(Material.RED_SANDSTONE))
+						drop = new ItemStack(Material.SANDSTONE,1);
+					if (drop != null) {
+						item.getItemStack().setAmount(item.getItemStack().getAmount()-1);
+						w.dropItem(item.getLocation(), new ItemStack(drop));
+						Utils.lower_cauldron_water(b.getState());
+		                cauls.add(cauldron);
+		                caulticks.add(0);
+		                
+						if (item.getItemStack().getAmount() <= 0)
+							world_items.remove(item);
 					}
 				}
 			}
-			
 		}
 		
-		t4 = System.nanoTime();
-
-		//System.out.println( (t2 - t1)/(1000000000.0 / 20) + "(Item), " + (t3 - t2)/(1000000000.0 / 20) + "(cooldown), "+(t4 - t3)/(1000000000.0 / 20)+"(Turtle)." );
+		for (Item beacon : removed_items)
+			world_items.remove(beacon);
+		
+		List<LivingEntity> removed_beacons = new ArrayList<>();
+		for (LivingEntity beacon : world_beacons)
+		{
+			if (!beacon.isValid()) {
+				removed_beacons.add(beacon);
+				continue;
+			}
+			// saddled entities
+			if (isSaddleBeacon(beacon)) {
+				if (beacon.getPassengers().size() == 0 || beacon.getVehicle() == null)
+					beacon.remove();
+				else {
+					LivingEntity camel_player = (LivingEntity)beacon.getVehicle();
+					
+					if (camel_player.getEquipment().getHelmet() == null || camel_player.getEquipment().getHelmet().getType() != Material.SADDLE) // unwear saddle
+						beacon.remove();
+					else {
+						beacon.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( camel_player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
+						beacon.setHealth( camel_player.getHealth() );
+					}
+				}
+			}
+			// leashed players
+			else if (isLeashBeacon(beacon)) {
+				if (!leash_manager.isWorkaroundActive(beacon) || !beacon.isLeashed()) {
+					System.out.print("remove leash beacon");
+					beacon.getWorld().dropItem(beacon.getLocation(), new ItemStack(Material.LEAD, 1));
+					beacon.remove();
+				}
+			}
+		}
+		
+		for (LivingEntity beacon : removed_beacons)
+			world_beacons.remove(beacon);
+		
+		// System.out.print(world_beacons.size() +"   " + world_items.size());
+	}
+	
+	// TODO: getCauldroned(): concrete powder -> concrete; dirt -> null
+	// 		 isWashable(): getCauldroned() != null
+	public boolean isWashable(Item dropped_item) {
+		Material material = dropped_item.getItemStack().getType();
+		if (UtilsType.is_concrete_powder(material))
+			return true;
+		if (UtilsType.is_colored_terracotta(material))
+			return true;
+		if (material == Material.RED_SAND)
+			return true;
+		if (material == Material.RED_SANDSTONE)
+			return true;
+		if (UtilsColor.colorFromMaterial(material) != DyeColor.WHITE)
+		{
+			if (UtilsType.is_glazed_terracotta(material))
+				return true;
+			if (UtilsType.is_concrete(material))
+				return true;
+			if (UtilsType.is_wool(material))
+				return true;
+			if (UtilsType.is_carpet(material))
+				return true;
+		}
+		return false;
+	}
+	
+	// loading new items(for cauldrons) and beacons(saddle/leash)
+	public void addEntity(Entity e)
+	{
+		if (e.getType() == EntityType.DROPPED_ITEM) {
+			Item dropped_item = (Item) e;
+			if (isWashable(dropped_item))
+				world_items.add(dropped_item);
+		}
+		if (BEACON_SADDLE_CLASS.isInstance(e)) {
+			LivingEntity beacon = (LivingEntity) e;
+			if (isSaddleBeacon(beacon)
+				|| isLeashBeacon(beacon))
+				world_beacons.add(beacon);
+		}
 	}
 	
 	@EventHandler
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event){
-		if(event.isCancelled()) return;
+	public void onEntitySpawn(EntitySpawnEvent event) {
+		addEntity(event.getEntity());
+	}
+	
+	@EventHandler
+	public void on(ChunkLoadEvent event) {
+		for (Entity e : event.getChunk().getEntities())
+			addEntity(e);
+	}
+	
+	/** Saddled players clocks, multi nametag block */
+	@EventHandler
+	public void onPlayerInteractEntity(PlayerInteractEntityEvent event)
+	{
+		if (event.isCancelled()) return;
 		
         Entity rightclicked = event.getRightClicked();
-        //if(rightclick instanceof Player)
-        if(rightclicked instanceof LivingEntity) {
-    	   //ride on entity
+        Player clicker = event.getPlayer();
+		
+        if (!isPassenger(rightclicked, clicker) && rightclicked instanceof LivingEntity)
+        {
     	   ItemStack hat = ((LivingEntity)rightclicked).getEquipment().getHelmet();
-    	   if(rightclicked.getPassengers().size() == 0 && hat != null && hat.getType() == Material.SADDLE) {
+    	   if (rightclicked.getPassengers().size() == 0 && hat != null && hat.getType() == Material.SADDLE)
+    	   {
+        	   //ride on entity
     		   LivingEntity temp = spawnSaddleBeacon(rightclicked.getLocation());
         	   rightclicked.addPassenger(temp);
-        	   temp.addPassenger(event.getPlayer());
+        	   temp.addPassenger(clicker);
         	   return;
     	   }
         }
@@ -191,19 +273,31 @@ public class InteractHandler implements Listener {
     		   : (event.getPlayer().getInventory().getItemInOffHand() != null ? event.getPlayer().getInventory().getItemInOffHand() : null );
        
         boolean cancelled = leash_manager.click(rightclicked, event.getPlayer(), hand);
-        if(cancelled) {
+        if (cancelled) {
         	event.setCancelled(true);
         	return;
         }
         
-        if(hand != null) {
-        	if(hand.getType() == Material.NAME_TAG) {
-            	if(hand.getItemMeta().hasDisplayName() && hand.getItemMeta().getDisplayName() == rightclicked.getCustomName())
+        if (hand != null) {
+        	if (hand.getType() == Material.NAME_TAG) {
+            	if (hand.getItemMeta().hasDisplayName() && hand.getItemMeta().getDisplayName() == rightclicked.getCustomName())
         	    	event.setCancelled(true);
         	}
         }
     }
-	
+	private boolean isPassenger(Entity target, Entity vehicle) {
+		for (Entity passenger : vehicle.getPassengers())
+			if (passenger == target)
+				return true;
+			else {
+				boolean loop = isPassenger(target, passenger);
+				if (loop)
+					return true;
+			}
+		return false;
+	}
+
+	/** cauldron clicks(item clearing), dirt->grass, block recoloring, rotating, bed linen, lasso */
 	@SuppressWarnings("deprecation")
 	@EventHandler//(ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
@@ -293,7 +387,8 @@ public class InteractHandler implements Listener {
 						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())) {
 					if (event.getAction() == Action.LEFT_CLICK_BLOCK)
 						left_rotate_cooldown.add(new CooldownPlayer(event.getPlayer(), Config.LEFT_ROTATE_COOLDOWN));
-					byte dur = (byte) ((Math.random()*(event.getItem().getEnchantmentLevel(Enchantment.DURABILITY)+1)) > 1 ? 0 : 1);
+					int dur_lvl = event.getItem().getEnchantmentLevel(Enchantment.DURABILITY);
+					byte dur = (byte) ((Math.random()*(dur_lvl + 1)) > 1 ? 0 : 1);
 					event.getItem().setDurability((short) (event.getItem().getDurability()+dur));
 					if (event.getItem().getDurability() > event.getItem().getType().getMaxDurability())
 						if (event.getHand() == EquipmentSlot.HAND)
@@ -343,9 +438,10 @@ public class InteractHandler implements Listener {
 					}
 				}
 			}
-		} //has both block and item
+		} // has both block and item
 
-		//jump rope and lasso
+		// TODO: cancel if clicked on leashed entity
+		// jump rope and lasso
 		if(event.getItem() != null && event.getItem().getType() == Material.LEAD) {
 			ItemStack hand = event.getItem();
 			Player player = event.getPlayer();
