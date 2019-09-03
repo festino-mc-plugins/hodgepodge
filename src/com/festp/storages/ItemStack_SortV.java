@@ -144,10 +144,11 @@ public class ItemStack_SortV implements Comparable {
 		else
 		{
 			Enchantment ench = getFirstEnchantment(s);
-			if (isToolEnchantment(ench))
-				return TOOL_SECTION;
-			if (isCombatEnchantment(ench))
-				return COMBAT_SECTION;
+			if (ench != null)
+				if (isToolEnchantment(ench))
+					return TOOL_SECTION;
+				if (isCombatEnchantment(ench))
+					return COMBAT_SECTION;
 		}
 		return sections.length;
 	}
