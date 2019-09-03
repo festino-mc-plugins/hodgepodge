@@ -206,39 +206,36 @@ public class Utils {
 		return stack;
 	}
 	
-	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity, String beacon_id, boolean gravity) {
-		T beacon;
- 		if (entity == Vex.class) { //doesn't work without the consumer: sword in main hand
- 			beacon = l.getWorld().spawn(l, entity, (vex) -> {
- 				vex.getEquipment().setItemInMainHand(null);
-            });
- 		}
- 		else
- 			beacon = l.getWorld().spawn(l, entity);
- 			
- 		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
- 		beacon.setInvulnerable(true);
- 		if (!gravity) {
- 	 		beacon.setAI(false);
- 	 		beacon.setGravity(false);
- 		}
- 		beacon.setSilent(true);
- 		beacon.setCollidable(false);
- 		
- 		if (beacon instanceof Turtle) {
- 			Turtle turtle = (Turtle)beacon;
- 			turtle.setBaby();
- 			turtle.setAgeLock(true);
- 		}
+	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity_type, String beacon_id, boolean gravity) {
+ 		T new_beacon =  l.getWorld().spawn(l, entity_type, (beacon) ->
+ 		{
+ 			if (entity_type == Vex.class)
+ 				beacon.getEquipment().setItemInMainHand(null); // must be applied immediately
+ 	 		
+ 	 		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
+ 	 		beacon.setInvulnerable(true);
+ 	 		if (!gravity) {
+ 	 	 		beacon.setAI(false);
+ 	 	 		beacon.setGravity(false);
+ 	 		}
+ 	 		beacon.setSilent(true);
+ 	 		beacon.setCollidable(false);
+ 	 		
+ 	 		if (beacon instanceof Turtle) {
+ 	 			Turtle turtle = (Turtle)beacon;
+ 	 			turtle.setBaby();
+ 	 			turtle.setAgeLock(true);
+ 	 		}
 
- 		if (beacon instanceof ArmorStand) {
- 			ArmorStand stand = (ArmorStand)beacon;
- 			stand.setVisible(false);
- 			stand.setSmall(true);
- 		}
- 		setBeaconData(beacon, beacon_id);
-	 	
- 		return beacon;
+ 	 		if (beacon instanceof ArmorStand) {
+ 	 			ArmorStand stand = (ArmorStand)beacon;
+ 	 			stand.setVisible(false);
+ 	 			stand.setSmall(true);
+ 	 		}
+ 	 		setBeaconData(beacon, beacon_id); // must be applied immediately
+        });
+ 		
+ 		return new_beacon;
 	}
 	public static void setBeaconData(LivingEntity beacon, String beacon_id)
 	{
