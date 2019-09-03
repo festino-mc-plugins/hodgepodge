@@ -107,39 +107,53 @@ public class SortHoppers implements Listener {
 	
 	private static boolean word_fit(String word, ItemStack is) {
 		Material m = is.getType();
-		if(word.startsWith("minecraft:")) {
-			word.substring(10);
-		} else if(word.startsWith("mc:")) {
-			word.substring(3);
-		}
-		else if(word.startsWith("name:")) {
-			if(is.hasItemMeta() && is.getItemMeta().hasDisplayName() && is.getItemMeta().getDisplayName().contains(word.substring(5)))
-				return true;
-		} else if(word.startsWith("n:")) {
-			if(is.hasItemMeta() && is.getItemMeta().hasDisplayName() && is.getItemMeta().getDisplayName().contains(word.substring(2)))
-				return true;
-		}
-		else if(word.startsWith("e:")) {
-			if(process_ench(word.substring(2), is))
-				return true;
-		} else if(word.startsWith("ench:")) {
-			if(process_ench(word.substring(5), is))
-				return true;
-		}
 		
-		else if(word.contains("all")) {
+		boolean as_id = false;
+		if (word.startsWith("mc:")) {
+			word = word.substring(3);
+			as_id = true;
+		} else if (word.startsWith("minecraft:")) {
+			word = word.substring(10);
+			as_id = true;
+		}
+		if (as_id)
+			return is.getType().toString().equalsIgnoreCase(word);
+		
+		boolean as_name = false;
+		if (word.startsWith("name:")) {
+			word = word.substring(5);
+			as_name = true;
+		} else if (word.startsWith("n:")) {
+			word = word.substring(2);
+			as_name = true;
+		}
+		if (as_name)
+			return is.hasItemMeta() && is.getItemMeta().hasDisplayName() && is.getItemMeta().getDisplayName().contains(word);
+
+		boolean as_ench = false;
+		if (word.startsWith("e:")) {
+			word = word.substring(2);
+			as_ench = true;
+		} else if (word.startsWith("ench:")) {
+			word = word.substring(5);
+			as_ench = true;
+		}
+		if (as_ench)
+			return process_ench(word, is);
+		
+	    if (word.equalsIgnoreCase("all")) {
 			return true;
 		}
-		else if(word.contains("armor")) {
-			if(UtilsType.isArmor(m))
+		else if (word.equalsIgnoreCase("armor")) {
+			if (UtilsType.isArmor(m))
 				return true;
 		}
-		else if(word.contains("tool")) {
-			if(UtilsType.isTool(m))
+		else if (word.equalsIgnoreCase("tool")) {
+			if (UtilsType.isTool(m))
 				return true;
 		}
-		else if(word.contains("weapon")) {
-			if(UtilsType.isWeapon(m))
+		else if (word.equalsIgnoreCase("weapon")) {
+			if (UtilsType.isWeapon(m))
 				return true;
 		}
 		
