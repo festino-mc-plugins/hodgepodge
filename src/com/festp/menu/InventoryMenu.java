@@ -33,7 +33,7 @@ public class InventoryMenu implements Listener {
 		if(size > 54) size = 54;
 		gui = Bukkit.createInventory(null, size, title);
 		
-		for(int i=0; i < Math.min(grid.length, size); i++) {
+		for(int i = 0; i < Math.min(grid.length, size); i++) {
 			gui.setItem(i, grid[i]);
 		}
 		
@@ -68,8 +68,6 @@ public class InventoryMenu implements Listener {
 	
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		//event.getClickedInventory() != gui
-		//System.out.println(event.getView().getTopInventory() + " " + gui);
 		if (event.getClickedInventory() == null || !Utils.equal_invs(event.getView().getTopInventory(), gui))
 				return;
 		ClickResult click_res = ClickResult.getClickResult(event);
