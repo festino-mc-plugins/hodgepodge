@@ -13,6 +13,7 @@ import com.festp.commands.CommandWorker;
 import com.festp.commands.StorageCommand;
 import com.festp.dispenser.DropActions;
 import com.festp.enderchest.AdminChannelPlayer;
+import com.festp.enderchest.ECCommandWorker;
 import com.festp.enderchest.ECTabCompleter;
 import com.festp.enderchest.EnderChestGroup;
 import com.festp.enderchest.EnderChestHandler;
@@ -22,12 +23,12 @@ import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.maps.SmallMapManager;
 import com.festp.menu.InventoryMenu;
-import com.festp.remain.InteractHandler;
-import com.festp.remain.LeashManager;
-import com.festp.remain.Others;
-import com.festp.remain.Sleeping;
-import com.festp.remain.SoulStone;
-import com.festp.remain.SummonerTome;
+import com.festp.misc.InteractHandler;
+import com.festp.misc.LeashManager;
+import com.festp.misc.FeatureManager;
+import com.festp.misc.Sleeping;
+import com.festp.misc.SoulStone;
+import com.festp.misc.SummonerTome;
 import com.festp.storages.StorageCraftManager;
 import com.festp.storages.StorageHandler;
 import com.festp.storages.StoragesFileManager;
@@ -122,10 +123,11 @@ public class Main extends JavaPlugin implements Listener
     	pm.registerEvents(sthandler, this);
     	
     	EnderChestHandler ecH = new EnderChestHandler(this);
-    	//pm.registerEvents(new EnderChestHandler(this), this);
     	pm.registerEvents(ecH, this);
-    	getCommand("enderchest").setExecutor(ecH);
-    	getCommand("ec").setExecutor(ecH);
+    	
+    	ECCommandWorker ecCW = new ECCommandWorker(this);
+    	getCommand("enderchest").setExecutor(ecCW);
+    	getCommand("ec").setExecutor(ecCW);
     	
     	ECTabCompleter ectc = new ECTabCompleter(this);
     	getCommand("enderchest").setTabCompleter(ectc);
@@ -145,7 +147,7 @@ public class Main extends JavaPlugin implements Listener
     	InteractHandler interacts = new InteractHandler(this, lm);
     	pm.registerEvents(interacts, this);
 
-    	Others features = new Others(this);
+    	FeatureManager features = new FeatureManager(this);
     	pm.registerEvents(features, this);
     	
     	SoulStone ss = new SoulStone();
@@ -254,7 +256,7 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//drag xp
-					exp_hop.onTick();
+					//exp_hop.onTick();
 
 					t2 = System.nanoTime();
 					metrics[11] += t2 - t1;
@@ -266,6 +268,8 @@ public class Main extends JavaPlugin implements Listener
 					t2 = System.nanoTime();
 					metrics[12] += t2 - t1;
 					t1 = t2;
+					
+					ecH.tick();
 				}
 			}, 0L, 1L);
 		
