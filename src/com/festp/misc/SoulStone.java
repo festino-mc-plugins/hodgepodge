@@ -1,4 +1,4 @@
-package com.festp.remain;
+package com.festp.misc;
 
 import java.util.Random;
 

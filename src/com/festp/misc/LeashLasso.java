@@ -1,4 +1,4 @@
-package com.festp.remain;
+package com.festp.misc;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -85,7 +85,7 @@ public class LeashLasso {
 		workaround.setVelocity(projectile.getVelocity());
 		Location current_pos = projectile.getLocation();
 		double d = current_pos.distanceSquared(last_pos);
-		boolean on_ground = d*d < EPSILON;
+		boolean on_ground = projectile.isOnGround();
 			
 		Block current = projectile.getLocation().getBlock();
 		//unleash/break distance -> return lead
@@ -110,10 +110,10 @@ public class LeashLasso {
 			return false;
 		}
 		//collide top/bottom -> return lead
-		if(projectile.getVelocity().lengthSquared() < EPSILON) {
+		if (projectile.getVelocity().lengthSquared() < EPSILON) {
 			Location beacon_top = projectile.getLocation().add(0, projectile.getHeight()*0.5, 0);
 			Location ceiling = current.getRelative(BlockFace.UP).getLocation();
-			if(ceiling.subtract(beacon_top).getY() < EPSILON)
+			if (ceiling.subtract(beacon_top).getY() < EPSILON)
 			{
 				dropLead();
 				despawnLasso();
@@ -123,14 +123,14 @@ public class LeashLasso {
 		
 		//collide with fence -> hitch
 		if (UtilsType.isFence(current.getType())) {
-			if(isFacedFence(projectile.getLocation(), projectile.getVelocity()))
+			if (isFacedFence(projectile.getLocation(), projectile.getVelocity()))
 			{
 				spawnLeashHitch(current);
 				despawnLasso();
 				return false;
 			}
 		}
-		if(on_ground) {
+		if (on_ground) {
 			if (UtilsType.isFence(current.getRelative(BlockFace.DOWN).getType()) && UtilsType.isAir(current.getType()))
 				spawnLeashHitch(current.getRelative(BlockFace.DOWN));
 			else

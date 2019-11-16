@@ -1,4 +1,4 @@
-package com.festp.remain;
+package com.festp.misc;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,13 +40,13 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
-public class Others implements Listener {
+public class FeatureManager implements Listener {
 	Main plugin;
 	Server server;
 	List<Player> test_spawn_in_portal = new ArrayList<>();
 	private Random random = new Random();
 	
-	public Others(Main plugin) {
+	public FeatureManager(Main plugin) {
 		this.plugin = plugin;
 		this.server = plugin.getServer();
 	}
@@ -85,15 +85,6 @@ public class Others implements Listener {
 	@EventHandler
 	public void onPlayerLogin(PlayerLoginEvent event) {
 		test_spawn_in_portal.add(event.getPlayer());
-	}
-	
-	@EventHandler
-	public void onPlayerDeath(PlayerDeathEvent event) {
-		if(event.getEntity().getKiller() instanceof Player && random.nextDouble() < 0.5) {
-			Entity e = event.getEntity().getWorld().spawnEntity(event.getEntity().getEyeLocation(), EntityType.ENDER_DRAGON);
-			e.playEffect(EntityEffect.DEATH);
-			e.remove();
-		}
 	}
 	
 	@EventHandler
