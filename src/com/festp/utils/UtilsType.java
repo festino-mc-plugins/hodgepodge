@@ -577,6 +577,10 @@ public class UtilsType {
 		default: return false;
 		}
 	}
+	
+	public static boolean isWaterPlant(Material m) {
+		return m == Material.SEA_PICKLE || m == Material.SEAGRASS || m == Material.TALL_SEAGRASS || m == Material.KELP;
+	}
 
 	public static boolean isPlant(Material m) {
 		return is_flower(m) || isMushroom(m) || isSapling(m) || m == Material.DEAD_BUSH || m == Material.VINE || m == Material.LILY_PAD
