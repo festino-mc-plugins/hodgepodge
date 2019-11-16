@@ -32,9 +32,9 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.maps.SmallMapManager;
-import com.festp.remain.LeashManager;
-import com.festp.remain.SoulStone;
-import com.festp.remain.SummonerTome;
+import com.festp.misc.LeashManager;
+import com.festp.misc.SoulStone;
+import com.festp.misc.SummonerTome;
 import com.festp.storages.Storage;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
