@@ -274,7 +274,6 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					ecH.tick();
-					amethyst_manager.onTick();
 				}
 			}, 0L, 1L);
 		
