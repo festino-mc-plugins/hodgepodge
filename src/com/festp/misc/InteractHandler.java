@@ -242,7 +242,7 @@ public class InteractHandler implements Listener {
 	}
 	
 	@EventHandler
-	public void on(ChunkLoadEvent event) {
+	public void onChunkLoad(ChunkLoadEvent event) {
 		for (Entity e : event.getChunk().getEntities())
 			addEntity(e);
 	}
