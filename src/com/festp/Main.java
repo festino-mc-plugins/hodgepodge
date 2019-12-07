@@ -25,7 +25,8 @@ import com.festp.maps.SmallMapManager;
 import com.festp.menu.InventoryMenu;
 import com.festp.misc.InteractHandler;
 import com.festp.misc.LeashManager;
-import com.festp.misc.FeatureManager;
+import com.festp.misc.AmethystManager;
+import com.festp.misc.FeatureHandler;
 import com.festp.misc.Sleeping;
 import com.festp.misc.SoulStone;
 import com.festp.misc.SummonerTome;
@@ -147,7 +148,7 @@ public class Main extends JavaPlugin implements Listener
     	InteractHandler interacts = new InteractHandler(this, lm);
     	pm.registerEvents(interacts, this);
 
-    	FeatureManager features = new FeatureManager(this);
+    	FeatureHandler features = new FeatureHandler(this);
     	pm.registerEvents(features, this);
     	
     	SoulStone ss = new SoulStone();
@@ -161,6 +162,9 @@ public class Main extends JavaPlugin implements Listener
     	
     	SmallMapManager minimaps = new SmallMapManager();
     	pm.registerEvents(minimaps, this);
+
+    	AmethystManager amethyst_manager = new AmethystManager();
+    	pm.registerEvents(amethyst_manager, this);
 
     	exp_hop = new ExpHoppers(getServer());
     	pm.registerEvents(exp_hop, this);
@@ -270,6 +274,7 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					ecH.tick();
+					amethyst_manager.onTick();
 				}
 			}, 0L, 1L);
 		
