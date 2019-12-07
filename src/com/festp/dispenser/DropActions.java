@@ -9,6 +9,8 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAgeable;
 import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAnimals;
 import org.bukkit.enchantments.Enchantment;
@@ -49,6 +51,7 @@ public class DropActions implements Listener {
 	List<EntityAnimal> loveanimals = new ArrayList<>();
 	//dispensers to pump the water
 	List<Dispenser> disps_pump = new ArrayList<>();
+	List<Block> pumping_blocks = new ArrayList<>();
 
 	enum PumpReadiness {READY, MODULE, NONE};
 	enum PumpType {NONE, REGULAR, ADVANCED};
@@ -59,7 +62,7 @@ public class DropActions implements Listener {
 	
 	public void onTick() {
 		//dispbreed
-		for(int i=0;i<dbf_disp.size();i++) {
+		for(int i = 0; i < dbf_disp.size(); i++) {
 			dispenserAnimals(dbf_disp.get(i),dbf_block.get(i),dbf_food.get(i),dbf_food_slots.get(i));
 		}
 		dbf_disp = new ArrayList<>();
@@ -67,7 +70,7 @@ public class DropActions implements Listener {
 		dbf_food = new ArrayList<>();
 		dbf_food_slots = new ArrayList<>();
 		//lovehearths
-		for(int i=0;i<loveanimals.size();i++) {
+		for (int i = 0; i < loveanimals.size(); i++) {
 			/*int love = (Integer)getPrivateField("bx", EntityAnimal.class, loveanimals.get(i));
 			if(love > 0)
 			{
@@ -81,25 +84,26 @@ public class DropActions implements Listener {
 			/*}*/
 		}
 		//dispwater
-		for(int i=0;i<disp_caul.size();i+=2) {
-			int o = 0;
+		for (int i = 0; i < disp_caul.size(); i += 2) {
+			int j = 0;
             Inventory inv = ((Dispenser)disp_caul.get(i)).getInventory();
-			for(int slot=0;slot<9;slot++)
-				if(o<disps.get(i/2).size() && slot != disps.get(i/2).get(o) || o>=disps.get(i/2).size()) {
-					if(inv.getItem(slot) != null && inv.getItem(slot).getType() == Material.WATER_BUCKET) {
+			for (int slot = 0; slot < 9; slot++)
+				if (j < disps.get(i/2).size() && slot != disps.get(i/2).get(j) || j >= disps.get(i/2).size()) {
+					if (inv.getItem(slot) != null && inv.getItem(slot).getType() == Material.WATER_BUCKET) {
 	                	inv.setItem(slot,new ItemStack(Material.BUCKET));
 	                    Utils.full_cauldron_water(disp_caul.get(i+1));
 		                break;
 					}
-				} else o++;
+				} else j++;
 		}
 		disp_caul = new ArrayList<>();
 		disps = new ArrayList<ArrayList<Integer>>();
 		
-		for(int i=disps_pump.size()-1;i>=0;i--) {
+		for(int i = disps_pump.size()-1; i >= 0; i--) {
 			dispenserPump(disps_pump.get(i));
 			disps_pump.remove(i);
 		}
+		pumping_blocks.clear();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -375,7 +379,6 @@ public class DropActions implements Listener {
 			}
 			else if(null_index < 0) null_index = i;
 		}
-		//System.out.println("WORK: "+ module_index+" "+bucket_index+" "+multybucket_index+" "+null_index+"   "+pipe_index );
 		if(module_index >= 0 && ( bucket_index >= 0 || pipe_index >= 0 || (null_index >= 0 && multybucket_index >= 0)) ) {
 			if(pump_type == PumpType.REGULAR)
 				work_regularPump(d, bucket_index, null_index, multybucket_index);
@@ -388,8 +391,6 @@ public class DropActions implements Listener {
 		Inventory inv = d.getInventory();
 		byte data = (byte) (d.getData().getData()%8);
 		int x2 = (data==4 ? -1 : (data==5 ? 1 : 0)), y2 = (data==0 ? -1 : (data==1 ? 1 : 0)), z2 = (data==2 ? -1 : (data==3 ? 1 : 0));
-		/*int x = d.getBlock().getX(), y = d.getBlock().getY(), z = d.getBlock().getZ();
-		final Block block = d.getBlock().getWorld().getBlockAt(x+x2, y+y2, z+z2);*/
 		Block block = d.getBlock().getRelative(x2, y2, z2);
 		Block block_to_pump = null;
 		//can place pipe
@@ -461,18 +462,20 @@ public class DropActions implements Listener {
 		//pump
 		if (block_to_pump == null)
 			block_to_pump = findBlockToPump_regular(block);
-		if (block_to_pump != null) {
+		if (block_to_pump != null)
+		{
+			pumping_blocks.add(block_to_pump);
+			Material pumped = pump(block_to_pump);
 			if (bucket_index < 9) {
 				if (bucket_index < 0) {
 					inv.getItem(multybucket_index).setAmount(inv.getItem(multybucket_index).getAmount()-1);
 					bucket_index = null_index;
 				}
-				if (block_to_pump.getType() == Material.LAVA)
+				if (pumped == Material.LAVA)
 					inv.setItem(bucket_index, new ItemStack(Material.LAVA_BUCKET));
-				else if (block_to_pump.getType() == Material.WATER)
+				else if (pumped == Material.WATER)
 					inv.setItem(bucket_index, new ItemStack(Material.WATER_BUCKET));
 			}
-			block_to_pump.setType(Material.AIR);
 		}
 	}
 	
@@ -557,25 +560,31 @@ public class DropActions implements Listener {
 		//pump
 		if (block_to_pump == null)
 			block_to_pump = findBlockToPump_advanced(block);
-		if (block_to_pump != null) {
+
+		if (block_to_pump != null)
+		{
+			pumping_blocks.add(block_to_pump);
+			Material pumped = pump(block_to_pump);
+			if (pumped == null)
+				return;
+			
 			if (bucket_index < 9) {
 				if (bucket_index < 0) {
 					inv.getItem(multybucket_index).setAmount(inv.getItem(multybucket_index).getAmount() - 1);
 					bucket_index = null_index;
 				}
-				if (block_to_pump.getType() == Material.LAVA)
+				if (pumped == Material.LAVA)
 					inv.setItem(bucket_index, new ItemStack(Material.LAVA_BUCKET));
-				else if (block_to_pump.getType() == Material.WATER)
+				else if (pumped == Material.WATER)
 					inv.setItem(bucket_index, new ItemStack(Material.WATER_BUCKET));
 			}
-			block_to_pump.setType(Material.AIR);
 		}
 	}
 
 	public Block findBlockToPump_advanced(Block block)
 	{
 		Block max_dist_block = null;
-		if(block.isLiquid())
+		if (continuePump(block))
 		{
 			int top_layer_dy = 0;
 			List<LayerSet> layers = new ArrayList<>();
@@ -602,7 +611,7 @@ public class DropActions implements Listener {
 						layers.add(top_layer);
 						top_layer_dy++;
 					}
-					if (dy == top_layer_dy && UtilsType.isStationaryLiquid(b))
+					if (dy == top_layer_dy && canPump(b))
 					{
 						if (top_layer.farthest[0] == null || dist > top_layer.max_distance)
 						{
@@ -616,8 +625,8 @@ public class DropActions implements Listener {
 					
 					Block rel;
 					if (dy < max_dy) {
-						rel = b.getRelative(0, 1, 0); //BlockFace.UP
-						if (rel.isLiquid())
+						rel = b.getRelative(0, 1, 0);
+						if (continuePump(rel))
 							if (dy >= top_layer_dy)
 								next_unchecked.add(new Vector3i(dx, dy + 1, dz));
 							else if (layers.get(dy + 1).isUnchecked(dx, dz)) {
@@ -627,7 +636,7 @@ public class DropActions implements Listener {
 					}
 					if (dx < max_dxz) {
 						rel = b.getRelative(1, 0, 0);
-						if (rel.isLiquid())
+						if (continuePump(rel))
 							if (layers.get(dy).isUnchecked(dx + 1, dz)) {
 								next_unchecked.add(new Vector3i(dx + 1, dy, dz));
 								layers.get(dy).setNext(dx + 1, dz);
@@ -635,7 +644,7 @@ public class DropActions implements Listener {
 					}
 					if (min_dxz < dx) {
 						rel = b.getRelative(-1, 0, 0);
-						if (rel.isLiquid())
+						if (continuePump(rel))
 							if (layers.get(dy).isUnchecked(dx - 1, dz)) {
 								next_unchecked.add(new Vector3i(dx - 1, dy, dz));
 								layers.get(dy).setNext(dx - 1, dz);
@@ -643,7 +652,7 @@ public class DropActions implements Listener {
 					}
 					if (dz < max_dxz) {
 						rel = b.getRelative(0, 0, 1);
-						if (rel.isLiquid())
+						if (continuePump(rel))
 							if (layers.get(dy).isUnchecked(dx, dz + 1)) {
 								next_unchecked.add(new Vector3i(dx, dy, dz + 1));
 								layers.get(dy).setNext(dx, dz + 1);
@@ -651,7 +660,7 @@ public class DropActions implements Listener {
 					}
 					if (min_dxz < dz) {
 						rel = b.getRelative(0, 0, -1);
-						if (rel.isLiquid())
+						if (continuePump(rel))
 							if (layers.get(dy).isUnchecked(dx, dz - 1)) {
 								next_unchecked.add(new Vector3i(dx, dy, dz - 1));
 								layers.get(dy).setNext(dx, dz - 1);
@@ -684,46 +693,109 @@ public class DropActions implements Listener {
 	{
 		int max_distance = 0;
 		Block max_dist_block = null;
-		if(!block.isLiquid()) return null;
-		if(UtilsType.isStationaryLiquid(block.getRelative(2, 0, 0)) && block.getRelative(1, 0, 0).isLiquid()) {
+		if (!continuePump(block))
+			return null;
+		
+		if (canPump(block.getRelative(2, 0, 0)) && continuePump(block.getRelative(1, 0, 0))) {
 			max_dist_block = block.getRelative(2, 0, 0);
 			max_distance = 3;
-		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, 0))) {
+		} else if (max_distance < 1 && canPump(block.getRelative(1, 0, 0))) {
 			max_dist_block = block.getRelative(1, 0, 0);
 			max_distance = 1;
 		}
-		if(UtilsType.isStationaryLiquid(block.getRelative(0, 0, 2)) && block.getRelative(0, 0, 1).isLiquid()) {
+		if (canPump(block.getRelative(0, 0, 2)) && continuePump(block.getRelative(0, 0, 1))) {
 			max_dist_block = block.getRelative(0, 0, 2);
 			max_distance = 3;
-		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(0, 0, 1))) {
+		} else if (max_distance < 1 && canPump(block.getRelative(0, 0, 1))) {
 			max_dist_block = block.getRelative(0, 0, 1);
 			max_distance = 1;
 		}
-		if(UtilsType.isStationaryLiquid(block.getRelative(-2, 0, 0)) && block.getRelative(-1, 0, 0).isLiquid()) {
+		if (canPump(block.getRelative(-2, 0, 0)) && continuePump(block.getRelative(-1, 0, 0))) {
 			max_dist_block = block.getRelative(-2, 0, 0);
 			max_distance = 3;
-		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, 0))) {
+		} else if (max_distance < 1 && canPump(block.getRelative(-1, 0, 0))) {
 			max_dist_block = block.getRelative(-1, 0, 0);
 			max_distance = 1;
 		}
-		if(UtilsType.isStationaryLiquid(block.getRelative(0, 0, -2)) && block.getRelative(0, 0, -1).isLiquid()) {
+		if (canPump(block.getRelative(0, 0, -2)) && continuePump(block.getRelative(0, 0, -1))) {
 			max_dist_block = block.getRelative(0, 0, -2);
 			max_distance = 3;
-		} else if(max_distance < 1 && UtilsType.isStationaryLiquid(block.getRelative(0, 0, -1))) {
+		} else if (max_distance < 1 && canPump(block.getRelative(0, 0, -1))) {
 			max_dist_block = block.getRelative(0, 0, -1);
 			max_distance = 1;
 		}
-		if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, 1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid()))
+		if (max_distance < 2 && canPump(block.getRelative(1, 0, 1)) && (continuePump(block.getRelative(1, 0, 0)) || continuePump(block.getRelative(0, 0, 1))))
 			max_dist_block = block.getRelative(1, 0, 1);
-		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, 1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, 1).isLiquid())) 
+		else if (max_distance < 2 && canPump(block.getRelative(-1, 0, 1)) && (continuePump(block.getRelative(-1, 0, 0)) || continuePump(block.getRelative(0, 0, 1)))) 
 			max_dist_block = block.getRelative(-1, 0, 1);
-		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(-1, 0, -1)) && (block.getRelative(-1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
+		else if (max_distance < 2 && canPump(block.getRelative(-1, 0, -1)) && (continuePump(block.getRelative(-1, 0, 0)) || continuePump(block.getRelative(0, 0, -1)))) 
 			max_dist_block = block.getRelative(-1, 0, -1);
-		else if(max_distance < 2 && UtilsType.isStationaryLiquid(block.getRelative(1, 0, -1)) && (block.getRelative(1, 0, 0).isLiquid() || block.getRelative(0, 0, -1).isLiquid())) 
+		else if (max_distance < 2 && canPump(block.getRelative(1, 0, -1)) && (continuePump(block.getRelative(1, 0, 0)) || continuePump(block.getRelative(0, 0, -1)))) 
 			max_dist_block = block.getRelative(1, 0, -1);
-		if(max_distance == 0 && UtilsType.isStationaryLiquid(block)) {
+		if (max_distance == 0 && canPump(block)) {
 			max_dist_block = block;
 		}
 		return max_dist_block;
+	}
+	
+	static boolean continuePump(Block b)
+	{
+		if (isPumpable(b))
+			return true;
+		if (b.isLiquid())
+			return true;
+		return false;
+	}
+	
+	static boolean isPumpable(Block b)
+	{
+		if (UtilsType.isStationaryLiquid(b))
+			return true;
+		BlockData block_data = b.getBlockData();
+		Material material = b.getType();
+		if (block_data instanceof Waterlogged)
+			return ((Waterlogged) block_data).isWaterlogged();
+		if (UtilsType.isWaterPlant(material))
+			return true;
+		return false;
+	}
+	
+	boolean canPump(Block b)
+	{
+		if (pumping_blocks.contains(b))
+			return false;
+		return isPumpable(b);
+	}
+	
+	/** @return Liquid material: Material.LAVA or Material.WATER */
+	static Material pump(Block b)
+	{
+		Material material = b.getType();
+		if (material == Material.LAVA || material == Material.WATER)
+		{
+			b.setType(Material.AIR);
+			
+			return material;
+		}
+		
+		BlockData data = b.getBlockData();
+		if (data instanceof Waterlogged)
+		{
+			Waterlogged waterlogged = (Waterlogged) data;
+			if (waterlogged.isWaterlogged())
+			{
+				waterlogged.setWaterlogged(false);
+				b.setBlockData(waterlogged);
+				b.getState().update(); // destroy lily pads and etc
+				return Material.WATER;
+			}
+		}
+		else if (UtilsType.isWaterPlant(material))
+		{
+			b.breakNaturally();
+			return Material.WATER;
+		}
+		
+		return null;
 	}
 }
