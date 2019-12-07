@@ -40,13 +40,13 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
-public class FeatureManager implements Listener {
+public class FeatureHandler implements Listener {
 	Main plugin;
 	Server server;
 	List<Player> test_spawn_in_portal = new ArrayList<>();
 	private Random random = new Random();
 	
-	public FeatureManager(Main plugin) {
+	public FeatureHandler(Main plugin) {
 		this.plugin = plugin;
 		this.server = plugin.getServer();
 	}
