@@ -46,6 +46,7 @@ public class StorageCommand implements Listener, CommandExecutor, TabCompleter {
 	private final static String KEY_OPEN_SETTINGS = "settings";
 	private final static String KEY_EXAMPLE_ID = "0";
 
+	private final static String ERR_NO_PERM = ChatColor.RED + "You have not permission to use this command.";
 	private final static String ERR_ADD_NEED_LVL = ChatColor.RED + "Can't get correct lvl from \"%s\".";
 	private final static String ERR_ADD_INCORRECT_TYPE = ChatColor.RED + "Can't add \"%s\" storage.";
 	private final static String ERR_NEED_NUMBER = ChatColor.RED + "There a number was expected.";
@@ -117,8 +118,13 @@ public class StorageCommand implements Listener, CommandExecutor, TabCompleter {
 	@EventHandler
 	public boolean onCommand(CommandSender sender, Command cmd, String lbl, String[] args)
 	{
-		if (cmd.getName().equalsIgnoreCase(ST_COMMAND) && sender.isOp())
+		if (cmd.getName().equalsIgnoreCase(ST_COMMAND))
 		{
+			if (!sender.isOp()) {
+				sender.sendMessage(ERR_NO_PERM);
+				return false;
+			}
+			
 			//   /storage   or   /storage help
 			if (args.length == 0
 				|| args[0].equalsIgnoreCase(CMD_HELP))
