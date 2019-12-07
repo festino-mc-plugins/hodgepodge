@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftItem;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -59,6 +59,7 @@ public class StorageHandler implements Listener {
 	private List<Inventory> updating_invs = new ArrayList<>();
 	private List<Inventory> grabbing_invs = new ArrayList<>();
 	public static final String LABEL_YOUR_ITEMS = "YOUR ITEMS";
+	private static Sound PICKUP_SOUND = Sound.ENTITY_CHICKEN_EGG;
 	
 	public StorageHandler(Main plugin)
 	{
@@ -71,10 +72,10 @@ public class StorageHandler implements Listener {
 		BeamedPair.tickAll();
 		
 		//new beams
-		for(World world : plugin.getServer().getWorlds()) {
-			for(Item item : world.getEntitiesByClass(Item.class)) {
-				if(Storage.isStorage(item.getItemStack())) {
-					Utils.setPrivateField("age", Utils.getNMSClass("EntityItem"), ((CraftItem)item).getHandle(), 0);
+		for (World world : plugin.getServer().getWorlds()) {
+			for (Item item : world.getEntitiesByClass(Item.class)) {
+				if (Storage.isStorage(item.getItemStack())) {
+					item.setTicksLived(0);
 					
 					if(BeamedPair.existsBeamer(item))
 						continue;
@@ -82,16 +83,16 @@ public class StorageHandler implements Listener {
 					item.setInvulnerable(true);
 					Player nearest_player = null;
 					double dist_squared = Config.storage_signal_radius*Config.storage_signal_radius;
-					for(Entity entity : item.getNearbyEntities(Config.storage_signal_radius, Config.storage_signal_radius, Config.storage_signal_radius)) {
-						if(entity instanceof Player) {
+					for (Entity entity : item.getNearbyEntities(Config.storage_signal_radius, Config.storage_signal_radius, Config.storage_signal_radius)) {
+						if (entity instanceof Player) {
 							double cur_dist_squared = item.getLocation().distanceSquared(entity.getLocation());
-							if(BeamedPair.canBeBeamed(item, (Player)entity) && dist_squared >= cur_dist_squared) {
+							if (BeamedPair.canBeBeamed(item, (Player)entity) && dist_squared >= cur_dist_squared) {
 								nearest_player = (Player)entity;
 								dist_squared = cur_dist_squared;
 							}
 						}
 					}
-					if(nearest_player != null) {
+					if (nearest_player != null) {
 						BeamedPair.add(item, nearest_player);
 					}
 				}
@@ -727,7 +728,11 @@ public class StorageHandler implements Listener {
 		if(event.isCancelled()) return;
 		if (event.getEntityType() != EntityType.PLAYER) return;
 
-		work_pickup_event(((Player)event.getEntity()).getInventory(), event.getItem(), event);
+		Player player = (Player) event.getEntity();
+		boolean storage_pickup = work_pickup_event(((Player)event.getEntity()).getInventory(), event.getItem(), event);
+		if (storage_pickup) {
+			player.playSound(player.getLocation(), PICKUP_SOUND, 0.9F, 2F);
+		}
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
@@ -737,8 +742,9 @@ public class StorageHandler implements Listener {
 		work_pickup_event(event.getInventory(), event.getItem(), event);
 	}
 	
-	private void work_pickup_event(Inventory inv, Item eitem, Cancellable event) {
-		ItemStack item = eitem.getItemStack();
+	/** @return <b>true</b> if event was cancelled */
+	private boolean work_pickup_event(Inventory inv, Item entity_item, Cancellable event) {
+		ItemStack item = entity_item.getItemStack();
 		Storage st = Storage.getByItemStack(item);
 		if(st != null) // Storage had been picked up
 			st.setExternalInventory(inv);
@@ -748,16 +754,18 @@ public class StorageHandler implements Listener {
 			if (item.getAmount() - amount != 0) {
 				event.setCancelled(true);
 				if (amount == 0) {
-					eitem.remove();
+					entity_item.remove();
 				}
 				else {
-					ItemStack edited = eitem.getItemStack();
+					ItemStack edited = entity_item.getItemStack();
 					edited.setAmount(amount);
-					eitem.setItemStack(edited);
+					entity_item.setItemStack(edited);
 				}
 				StorageBottomless.update_item_counts(inv);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
