@@ -179,10 +179,14 @@ public class ItemStack_SortV implements Comparable {
 	}
 	
 	public static boolean isToolEnchantment(Enchantment ench) {
+		if (ench == null)
+			return false;
 		return ench.equals(Enchantment.DIG_SPEED) || ench.equals(Enchantment.SILK_TOUCH) || ench.equals(Enchantment.DURABILITY) || ench.equals(Enchantment.LOOT_BONUS_BLOCKS)
 				|| ench.equals(Enchantment.LUCK) || ench.equals(Enchantment.LURE) || ench.equals(Enchantment.MENDING) || ench.equals(Enchantment.VANISHING_CURSE);
 	}
 	public static boolean isCombatEnchantment(Enchantment ench) {
+		if (ench == null)
+			return false;
 		return ench.equals(Enchantment.PROTECTION_ENVIRONMENTAL) || ench.equals(Enchantment.PROTECTION_FIRE) || ench.equals(Enchantment.PROTECTION_FALL)
 				|| ench.equals(Enchantment.PROTECTION_EXPLOSIONS) || ench.equals(Enchantment.PROTECTION_PROJECTILE) || ench.equals(Enchantment.OXYGEN)
 				|| ench.equals(Enchantment.WATER_WORKER) || ench.equals(Enchantment.THORNS) || ench.equals(Enchantment.DEPTH_STRIDER) || ench.equals(Enchantment.FROST_WALKER)
