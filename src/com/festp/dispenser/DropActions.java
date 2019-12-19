@@ -611,17 +611,20 @@ public class DropActions implements Listener {
 						layers.add(top_layer);
 						top_layer_dy++;
 					}
-					if (dy == top_layer_dy && canPump(b))
+					
+					LayerSet cur_layer = layers.get(dy);
+					
+					if (canPump(b))
 					{
-						if (top_layer.farthest[0] == null || dist > top_layer.max_distance)
+						if (!cur_layer.isDefinedFarthest() || dist > cur_layer.max_distance)
 						{
-							top_layer.farthest[0] = dx;
-							top_layer.farthest[1] = dz;
-							top_layer.max_distance = dist;
+							cur_layer.farthest[0] = dx;
+							cur_layer.farthest[1] = dz;
+							cur_layer.max_distance = dist;
 						}
 					}
 					
-					layers.get(dy).setDistance(dx, dz, dist);
+					cur_layer.setDistance(dx, dz, dist);
 					
 					Block rel;
 					if (dy < max_dy) {
@@ -637,33 +640,33 @@ public class DropActions implements Listener {
 					if (dx < max_dxz) {
 						rel = b.getRelative(1, 0, 0);
 						if (continuePump(rel))
-							if (layers.get(dy).isUnchecked(dx + 1, dz)) {
+							if (cur_layer.isUnchecked(dx + 1, dz)) {
 								next_unchecked.add(new Vector3i(dx + 1, dy, dz));
-								layers.get(dy).setNext(dx + 1, dz);
+								cur_layer.setNext(dx + 1, dz);
 							}
 					}
 					if (min_dxz < dx) {
 						rel = b.getRelative(-1, 0, 0);
 						if (continuePump(rel))
-							if (layers.get(dy).isUnchecked(dx - 1, dz)) {
+							if (cur_layer.isUnchecked(dx - 1, dz)) {
 								next_unchecked.add(new Vector3i(dx - 1, dy, dz));
-								layers.get(dy).setNext(dx - 1, dz);
+								cur_layer.setNext(dx - 1, dz);
 							}
 					}
 					if (dz < max_dxz) {
 						rel = b.getRelative(0, 0, 1);
 						if (continuePump(rel))
-							if (layers.get(dy).isUnchecked(dx, dz + 1)) {
+							if (cur_layer.isUnchecked(dx, dz + 1)) {
 								next_unchecked.add(new Vector3i(dx, dy, dz + 1));
-								layers.get(dy).setNext(dx, dz + 1);
+								cur_layer.setNext(dx, dz + 1);
 							}
 					}
 					if (min_dxz < dz) {
 						rel = b.getRelative(0, 0, -1);
 						if (continuePump(rel))
-							if (layers.get(dy).isUnchecked(dx, dz - 1)) {
+							if (cur_layer.isUnchecked(dx, dz - 1)) {
 								next_unchecked.add(new Vector3i(dx, dy, dz - 1));
-								layers.get(dy).setNext(dx, dz - 1);
+								cur_layer.setNext(dx, dz - 1);
 							}
 					}
 				}
