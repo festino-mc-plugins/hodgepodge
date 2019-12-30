@@ -8,9 +8,12 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerUnleashEntityEvent;
@@ -21,6 +24,11 @@ import org.bukkit.util.Vector;
 
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
+
+import net.minecraft.server.v1_14_R1.BlockPosition;
+import net.minecraft.server.v1_14_R1.EntityLeash;
+import net.minecraft.server.v1_14_R1.EnumDirection;
+import net.minecraft.server.v1_14_R1.WorldServer;
 
 public class LeashManager {
 	JavaPlugin plugin;
@@ -225,5 +233,57 @@ public class LeashManager {
 		} catch (Exception e) {
 			return DEFAULT_R;
 		}
+	}
+	
+	public static LeashHitch spawnHitch(Location hitch_loc)
+	{
+		hitch_loc = hitch_loc.getBlock().getLocation();
+		
+		// neat way => "Unable to get CCW facing of up/down"
+		//System.out.println(hitch_loc);
+		//LeashHitch hitch = (LeashHitch) hitch_loc.getWorld().spawnEntity(hitch_loc, EntityType.LEASH_HITCH);//.spawn(hitch_loc, LeashHitch.class);
+
+		/*
+		// bugfix - edited code from: https://www.spigotmc.org/threads/1-13-2-exception-when-spawnentity-of-entitytype-leash_hitch.393082/
+		// save fence type
+		Material m_fence = hitch_loc.getBlock().getType();
+		// select blocks, save it and set to air
+		// block below
+		hitch_loc.add(0, -1, 0);
+		BlockData data_down = hitch_loc.getBlock().getBlockData();
+		hitch_loc.getBlock().setType(Material.AIR);
+		// block above
+		hitch_loc.add(0, 2, 0);
+		BlockData data_top = hitch_loc.getBlock().getBlockData();
+		hitch_loc.getBlock().setType(Material.AIR);
+
+		// select the fence block and update
+		hitch_loc.add(0, -1, 0);
+		hitch_loc.getBlock().setType(Material.AIR);
+		hitch_loc.getBlock().setType(m_fence);
+		
+		LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
+
+		// select blocks and back up data
+		// block below
+		hitch_loc.add(0, -1, 0);
+		hitch_loc.getBlock().setBlockData(data_down);
+		// block above
+		hitch_loc.add(0, 2, 0);
+		hitch_loc.getBlock().setBlockData(data_top);
+		
+		// bugs: chest below or above will drop its items
+		*/
+		
+		// workaround from
+		// https://hub.spigotmc.org/jira/browse/SPIGOT-4674?focusedCommentId=32808&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-32808
+		WorldServer world = ((CraftWorld) hitch_loc.getWorld()).getHandle();
+
+		EntityLeash nmsLeashHitch = new EntityLeash(world,
+				new BlockPosition(hitch_loc.getX(), hitch_loc.getY(), hitch_loc.getZ()));
+		world.addEntity(nmsLeashHitch);
+		LeashHitch hitch = (LeashHitch) nmsLeashHitch.getBukkitEntity();
+		
+		return hitch;
 	}
 }
