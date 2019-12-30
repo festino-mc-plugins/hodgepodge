@@ -84,7 +84,6 @@ public class LeashLasso {
 		teleport_workaround();
 		workaround.setVelocity(projectile.getVelocity());
 		Location current_pos = projectile.getLocation();
-		double d = current_pos.distanceSquared(last_pos);
 		boolean on_ground = projectile.isOnGround();
 			
 		Block current = projectile.getLocation().getBlock();
@@ -93,8 +92,9 @@ public class LeashLasso {
 			despawnLasso();
 			return false;
 		}
-		if(holder instanceof Player && !((Player)holder).isOnline()
-				|| projectile.getLocation().distanceSquared(holder.getLocation()) > LeashManager.LASSO_BREAK_SQUARE) {
+		if (holder instanceof Player && !((Player)holder).isOnline()
+				|| projectile.getLocation().distanceSquared(holder.getLocation()) > LeashManager.LASSO_BREAK_SQUARE
+				|| current.getType() == Material.WATER) {
 			dropLead();
 			despawnLasso();
 			return false;
@@ -171,7 +171,7 @@ public class LeashLasso {
 	private void spawnLeashHitch(Block b)
 	{
 		Location hitch_loc = b.getLocation();
-		LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
+		LeashHitch hitch = LeashManager.spawnHitch(hitch_loc);
 		manager.addLeashed(hitch, holder, lead_drops, REMOVE_COOLDOWN);
 		despawnLasso();
 	}
