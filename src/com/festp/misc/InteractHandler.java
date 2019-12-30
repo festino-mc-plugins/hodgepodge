@@ -456,7 +456,7 @@ public class InteractHandler implements Listener {
 				
 				event.setCancelled(true);
 				Location hitch_loc = event.getClickedBlock().getLocation();
-				LeashHitch hitch = hitch_loc.getWorld().spawn(hitch_loc, LeashHitch.class);
+				LeashHitch hitch = LeashManager.spawnHitch(hitch_loc);
 				leash_manager.addLeashed(hitch, event.getPlayer(), lead_drops);
 		    	if(player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
