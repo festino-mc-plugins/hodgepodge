@@ -16,9 +16,9 @@ import org.bukkit.Server;
 import org.bukkit.TreeSpecies;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftHorse;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftHorse;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
@@ -75,7 +75,7 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
-import net.minecraft.server.v1_14_R1.NBTTagCompound;
+import net.minecraft.server.v1_15_R1.NBTTagCompound;
 
 //to AbstractHorse and Donkeys
 
@@ -714,7 +714,7 @@ public class SummonerTome implements Listener {
 		return getHasSummoned(tome) != null;
 	}
 	public static ItemStack setHasSummoned(ItemStack tome, UUID entity_uuid) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -731,7 +731,7 @@ public class SummonerTome implements Listener {
 	public static Entity getHasSummoned(ItemStack tome) {
 		if(tome == null)
 			return null;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return null;
@@ -745,7 +745,7 @@ public class SummonerTome implements Listener {
 	public static TomeType getTomeType(ItemStack item) {
 		if(item == null)
 			return null;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound == null)
         	return null;
@@ -775,7 +775,7 @@ public class SummonerTome implements Listener {
 	public static boolean isTome(ItemStack item) {
 		if(item == null)
 			return false;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return false;
@@ -784,7 +784,7 @@ public class SummonerTome implements Listener {
 		return false;
 	}
 	public static ItemStack setTome(ItemStack i, char data, String metadata) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -799,7 +799,7 @@ public class SummonerTome implements Listener {
 	}
 	
 	private static TreeSpecies get_boat_type(ItemStack tome) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound == null)
         	return null;
@@ -818,7 +818,7 @@ public class SummonerTome implements Listener {
 		return TreeSpecies.GENERIC;
 	}
 	private static ItemStack set_boat_type(ItemStack tome, TreeSpecies type) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
             compound = new NBTTagCompound();
@@ -845,7 +845,7 @@ public class SummonerTome implements Listener {
 	}
 
 	private static ItemStack copy_horse_data(ItemStack tome, String data) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
         	compound = new NBTTagCompound();
@@ -859,7 +859,7 @@ public class SummonerTome implements Listener {
 		return CraftItemStack.asBukkitCopy(nmsStack);
 	}
 	private static String get_horse_data(ItemStack tome) {
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
 	    NBTTagCompound compound = nmsStack.getTag();
 	    if(compound != null && compound.hasKey(nbt_key)) {
 	    	String info = compound.getString(nbt_key);
