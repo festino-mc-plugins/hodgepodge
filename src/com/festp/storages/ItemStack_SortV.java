@@ -735,6 +735,10 @@ public class ItemStack_SortV implements Comparable {
 		case BELL:  						g++;
 		case LANTERN:  						g++;
 		case CAMPFIRE:  						g++;
+		case BEE_NEST:  						g++;
+		case BEEHIVE:  						g++;
+		case HONEY_BLOCK:  						g++;
+		case HONEYCOMB_BLOCK:  						g++;
 		// REDSTONE
 		case DISPENSER: 						g++;
 		case NOTE_BLOCK: 						g++;
@@ -977,6 +981,7 @@ public class ItemStack_SortV implements Comparable {
 		case SKULL_BANNER_PATTERN: 						g++;
 		case MOJANG_BANNER_PATTERN: 						g++;
 		case GLOBE_BANNER_PATTERN: 						g++;
+		case HONEYCOMB:  						g++;
 		// FOODSTUFFS
 		case APPLE: 						g++;
 		case MUSHROOM_STEW: 						g++;
@@ -1014,6 +1019,7 @@ public class ItemStack_SortV implements Comparable {
 		case BEETROOT: 						g++;
 		case BEETROOT_SOUP: 						g++;
 		case SWEET_BERRIES: 						g++;
+		case HONEY_BOTTLE:
 		// TOOLS
 		case IRON_SHOVEL: 						g++;
 		case IRON_PICKAXE: 						g++;
