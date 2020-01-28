@@ -16,7 +16,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Bed.Part;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLeash;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
