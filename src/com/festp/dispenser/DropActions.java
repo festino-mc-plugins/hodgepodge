@@ -11,8 +11,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftAnimals;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAgeable;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAnimals;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -26,9 +26,11 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.utils.Vector3i;
+import com.festp.dispenser.PumpManager.PumpReadiness;
+import com.festp.dispenser.PumpManager.PumpType;
 
-import net.minecraft.server.v1_14_R1.EntityAgeable;
-import net.minecraft.server.v1_14_R1.EntityAnimal;
+import net.minecraft.server.v1_15_R1.EntityAgeable;
+import net.minecraft.server.v1_15_R1.EntityAnimal;
 
 public class DropActions implements Listener {
 	Main pl;
@@ -38,23 +40,14 @@ public class DropActions implements Listener {
 	int min_dxz = -max_dxz;
 	int pump_area = max_dxz*2 + 1;
 	
-	static Enchantment bottomless_bucket_metaench = Enchantment.ARROW_INFINITE;
-	
 	//cauldrons to fill with dispenser
 	List<ArrayList<Integer>> disps = new ArrayList<ArrayList<Integer>>();
 	List<BlockState> disp_caul = new ArrayList<>();
 	//dispensers to feed animals
-	List<BlockState> dbf_disp = new ArrayList<>();
-	List<Block> dbf_block = new ArrayList<>();
-	List<Material> dbf_food = new ArrayList<>();
-	List<Integer[]> dbf_food_slots = new ArrayList<>();
-	List<EntityAnimal> loveanimals = new ArrayList<>();
+	List<DispenserFeeder> feeders = new ArrayList<>();
 	//dispensers to pump the water
 	List<Dispenser> disps_pump = new ArrayList<>();
 	List<Block> pumping_blocks = new ArrayList<>();
-
-	enum PumpReadiness {READY, MODULE, NONE};
-	enum PumpType {NONE, REGULAR, ADVANCED};
 	
 	public DropActions(Main plugin) {
 		this.pl = plugin;
@@ -62,27 +55,11 @@ public class DropActions implements Listener {
 	
 	public void onTick() {
 		//dispbreed
-		for(int i = 0; i < dbf_disp.size(); i++) {
-			dispenserAnimals(dbf_disp.get(i),dbf_block.get(i),dbf_food.get(i),dbf_food_slots.get(i));
+		for (DispenserFeeder f : feeders) {
+			f.feed();
 		}
-		dbf_disp = new ArrayList<>();
-		dbf_block = new ArrayList<>();
-		dbf_food = new ArrayList<>();
-		dbf_food_slots = new ArrayList<>();
-		//lovehearths
-		for (int i = 0; i < loveanimals.size(); i++) {
-			/*int love = (Integer)getPrivateField("bx", EntityAnimal.class, loveanimals.get(i));
-			if(love > 0)
-			{
-				//loveanimals.get(i).n();
-				//setPrivateField("bx", EntityAnimal.class, loveanimals.get(i), love);
-				if(love%10 == 0) summonHearths(loveanimals.get(i));
-			}
-			else {*/
-				loveanimals.remove(i);
-				i--;
-			/*}*/
-		}
+		feeders.clear();
+		
 		//dispwater
 		for (int i = 0; i < disp_caul.size(); i += 2) {
 			int j = 0;
@@ -184,22 +161,15 @@ public class DropActions implements Listener {
 						}
 			}
 			
-			if(breed)
+			if (breed)
 			{
-				dbf_disp.add(dispenser);
-				dbf_block.add(block);
-				dbf_food.add(event.getItem().getType());
 				Inventory inv = ((Dispenser)dispenser).getInventory();
-				dbf_food_slots.add(new Integer[] {
-						inv.getItem(0) == null ? 0 : inv.getItem(0).getAmount(),
-						inv.getItem(1) == null ? 0 : inv.getItem(1).getAmount(),
-						inv.getItem(2) == null ? 0 : inv.getItem(2).getAmount(),
-						inv.getItem(3) == null ? 0 : inv.getItem(3).getAmount(), 
-						inv.getItem(4) == null ? 0 : inv.getItem(4).getAmount(),
-						inv.getItem(5) == null ? 0 : inv.getItem(5).getAmount(),
-						inv.getItem(6) == null ? 0 : inv.getItem(6).getAmount(),
-						inv.getItem(7) == null ? 0 : inv.getItem(7).getAmount(),
-						inv.getItem(8) == null ? 0 : inv.getItem(8).getAmount() });
+				Integer[] food_slots = new Integer[inv.getSize()];
+				for (int i = 0; i < food_slots.length; i++) {
+					food_slots[i] = inv.getItem(i) == null ? 0 : inv.getItem(i).getAmount();
+				}
+				DispenserFeeder f = new DispenserFeeder((Dispenser)dispenser, block, event.getItem().getType(), food_slots);
+				feeders.add(f);
 				event.setCancelled(true);
 			}
 			
@@ -207,7 +177,7 @@ public class DropActions implements Listener {
 			
 			else {
 				Dispenser d = ((Dispenser)dispenser);
-				PumpReadiness pr = dispenserPump_test(d, event.getItem());
+				PumpReadiness pr = PumpManager.test(d, event.getItem());
 				if(pr == PumpReadiness.READY) {
 					disps_pump.add(d);
 					event.setCancelled(true);
@@ -221,117 +191,6 @@ public class DropActions implements Listener {
 	
 	public void dispenserCauldron() {
 		
-	}
-	
-	public void dispenserAnimals(BlockState d, Block b, Material f, Integer[] slots) {
-		//dispencer test and handle slot
-		Inventory inv = ((Dispenser)d).getInventory();
-		Integer it = null;
-		for(int slot=0;slot<9;slot++)
-			if(inv.getItem(slot) != null && inv.getItem(slot).getType() == f && inv.getItem(slot).getAmount() != slots[slot]) {
-				it = slot;
-			}
-		if(it == null) return;
-		
-		//Breeding
-		boolean animalFound = false;
-		EntityAnimal loveanimal = null;
-		if(f.equals(Material.WHEAT))
-		{
-			for(Entity e : b.getWorld().getNearbyEntities(b.getLocation(), 1, 1, 1))
-					if((e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP) && ((CraftAnimals) e).isAdult()
-							&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
-					{
-						//(((CraftAnimals) e).getHandle()).f(exp_hop);
-						animalFound = Utils.setLove(((CraftAnimals) e).getHandle(), f);
-						if(animalFound) loveanimal = ((CraftAnimals) e).getHandle();
-						break;
-					} else if((e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP) && !((CraftAnimals) e).isAdult()) {
-						((CraftAgeable) e).getHandle().setAge((int)(-((CraftAgeable) e).getAge() / 20 * 0.1F), true);
-						animalFound = true;
-						break;
-					}
-		}
-		else if(f.equals(Material.CARROT) || f.equals(Material.POTATO) || f.equals(Material.BEETROOT))
-		{
-			for(Entity e : b.getWorld().getNearbyEntities(b.getLocation(), 1, 1, 1))
-					if(e.getType() == EntityType.PIG && ((CraftAnimals) e).isAdult()
-					&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
-					{
-						animalFound = Utils.setLove(((CraftAnimals) e).getHandle(), f);
-						if(animalFound) loveanimal = ((CraftAnimals) e).getHandle();
-						break;
-					} else if(e.getType() == EntityType.PIG && !((CraftAnimals) e).isAdult()) {
-						((CraftAgeable) e).getHandle().setAge((int)(-((CraftAgeable) e).getAge() / 20 * 0.1F), true);
-						animalFound = true;
-						break;
-					}
-		}
-		else if(f.equals(Material.WHEAT_SEEDS) || f.equals(Material.MELON_SEEDS) || f.equals(Material.PUMPKIN_SEEDS) || f.equals(Material.BEETROOT_SEEDS))
-		{
-			for(Entity e : b.getWorld().getNearbyEntities(b.getLocation(), 1, 1, 1))
-					if(e.getType() == EntityType.CHICKEN && ((CraftAnimals) e).isAdult()
-					&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
-					{
-						animalFound = Utils.setLove(((CraftAnimals) e).getHandle(), f);
-						if(animalFound) loveanimal = ((CraftAnimals) e).getHandle();
-						break;
-					} else if(e.getType() == EntityType.CHICKEN && !((CraftAnimals) e).isAdult()) {
-						((CraftAgeable) e).getHandle().setAge((int)(-((CraftAgeable) e).getAge() / 20 * 0.1F), true);
-						animalFound = true;
-						break;
-					}
-		}
-		
-		if(animalFound) {
-			inv.setItem(it, inv.getItem(it).getAmount() > 1 ? new ItemStack(f, inv.getItem(it).getAmount()-1) : new ItemStack(Material.AIR));
-			loveanimals.add(loveanimal);
-		}
-	}
-	
-	public PumpReadiness dispenserPump_test(Dispenser d, ItemStack dropped) {
-		Inventory inv = d.getInventory();
-		//test empty bucket
-		//test pump module??? - it had already worked
-		int bucket_index = -2, module_index = -2, multybucket_index = -2, null_index = -1, pipe_index = -1;
-		ItemStack is;
-		for(int i = -1; i < 9; i++) {
-			if(i<0) is = dropped;
-			else is = inv.getItem(i);
-			if(is != null)
-			{
-				if(module_index < -1 && is.getType() == Material.BLAZE_ROD
-						&& is.hasItemMeta() && is.getItemMeta().hasLore()) {
-					String lore = is.getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH);
-					if(lore.contains("pump") || lore.contains("помп") ) {
-						module_index = i;
-						if(bucket_index >= -1 || (multybucket_index >= -1 && null_index >= 0)) break;
-					}
-				}
-				else if( is.getType() == Material.BUCKET ) {
-					if(is.getEnchantmentLevel(bottomless_bucket_metaench) > 0)
-						bucket_index = 9;
-					else if(is.getAmount() == 1 && bucket_index < -1)
-						bucket_index = i;
-					else if( multybucket_index < -1) {
-						multybucket_index = i;
-						if(null_index < 0) continue;
-					}
-					if(module_index >= -1) break;
-				}
-				else if(is.getType() == Material.NETHER_BRICK_FENCE)
-					pipe_index = i;
-			}
-			else if(null_index < 0) null_index = i;
-		}
-		//System.out.println("TEST: "+ module_index+" "+bucket_index+" "+multybucket_index+" "+null_index);
-		if(module_index >= -1) {
-			if(bucket_index >= -1 || (multybucket_index >= -1 && null_index >= 0) || pipe_index >= -1) {
-				return PumpReadiness.READY;
-			}
-			return PumpReadiness.MODULE;
-		}
-		return PumpReadiness.NONE;
 	}
 	
 	public void dispenserPump(Dispenser d) {
@@ -363,7 +222,7 @@ public class DropActions implements Listener {
 					}
 				}
 				else if( is.getType() == Material.BUCKET ) {
-					if(is.getEnchantmentLevel(bottomless_bucket_metaench) > 0)
+					if(is.getEnchantmentLevel(PumpManager.bottomless_bucket_metaench) > 0) // TODO
 						bucket_index = 9;
 					else if(is.getAmount() == 1 && bucket_index < 0)
 						bucket_index = i;
