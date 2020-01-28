@@ -9,8 +9,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_14_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_14_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LeashHitch;
@@ -25,10 +25,10 @@ import org.bukkit.util.Vector;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
 
-import net.minecraft.server.v1_14_R1.BlockPosition;
-import net.minecraft.server.v1_14_R1.EntityLeash;
-import net.minecraft.server.v1_14_R1.EnumDirection;
-import net.minecraft.server.v1_14_R1.WorldServer;
+import net.minecraft.server.v1_15_R1.BlockPosition;
+import net.minecraft.server.v1_15_R1.EntityLeash;
+import net.minecraft.server.v1_15_R1.EnumDirection;
+import net.minecraft.server.v1_15_R1.WorldServer;
 
 public class LeashManager {
 	JavaPlugin plugin;
@@ -130,18 +130,26 @@ public class LeashManager {
 	{
 		EntityType et = e.getType();
 		switch (et) {
+		case BEE:
 		case CAT:
 		case CHICKEN:
 		case COW:
+		case DOLPHIN:
 		case DONKEY:
 		case FOX:
-		case HORSE:
+		case IRON_GOLEM:
 		case LLAMA:
+		case MUSHROOM_COW:
+		case HORSE:
 		case MULE:
 		case OCELOT:
+		case PARROT:
 		case PIG:
+		case POLAR_BEAR:
 		case RABBIT:
 		case SHEEP:
+		case SQUID:
+		case SNOWMAN:
 		case WOLF:
 			return true;
 		default:
