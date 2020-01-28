@@ -17,7 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -41,9 +41,9 @@ import com.festp.Main;
 import com.festp.storages.Storage;
 import com.festp.storages.StorageMultitype;
 
-import net.minecraft.server.v1_14_R1.EntityAgeable;
-import net.minecraft.server.v1_14_R1.EntityAnimal;
-import net.minecraft.server.v1_14_R1.NBTTagCompound;
+import net.minecraft.server.v1_15_R1.EntityAgeable;
+import net.minecraft.server.v1_15_R1.EntityAnimal;
+import net.minecraft.server.v1_15_R1.NBTTagCompound;
 
 public class Utils {
 	private static Main plugin;
@@ -137,7 +137,7 @@ public class Utils {
 	public static ItemStack setData(ItemStack i, String field, Object data) {
         if (data == null || field == null || i == null)
             return i;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -158,7 +158,7 @@ public class Utils {
 	public static String getString(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null || !compound.hasKey(field))
             return null;
@@ -168,7 +168,7 @@ public class Utils {
 	public static Integer getInt(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null || !compound.hasKey(field))
             return null;
@@ -178,7 +178,7 @@ public class Utils {
 	public static boolean hasDataField(ItemStack i, String field) {
         if (field == null || i == null)
             return false;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound != null && compound.hasKey(field))
         	return true;
@@ -188,7 +188,7 @@ public class Utils {
 	public static boolean hasData(ItemStack i, String field, String data) {
         if (data == null || field == null || i == null)
             return false;
-		net.minecraft.server.v1_14_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
         	return true;
@@ -331,19 +331,6 @@ public class Utils {
             e.printStackTrace();
         }
     }
- 
-	public static boolean setLove(EntityAnimal ea, Material food)
-	{
-		//setPrivateField("bx", int.class, ea, 600);
-		//setPrivateField("love", ea.getClass(), ea, 600);
-		if( (Integer)( getPrivateField("b", EntityAgeable.class, ea) ) > 0)
-			return false;
-		setPrivateField("bC", ea.getClass().getSuperclass(), ea, 600);
-		ea.breedItem = CraftItemStack.asNMSCopy(new ItemStack(food));
-		ea.world.broadcastEntityEffect(ea, (byte)18);
-		//ea.n();
-		return true;
-	}
 
 	public static void summonHearths(EntityAnimal ea) {
 		Random random = new Random();
@@ -610,9 +597,9 @@ public class Utils {
 		return null;
 	}
 	
-	public static boolean contains(Material[] list, Material find) {
-		for(Material m : list)
-			if(m == find)
+	public static boolean contains(Object[] list, Object find) {
+		for (Object m : list)
+			if (m == find)
 				return true;
 		return false;
 	}
