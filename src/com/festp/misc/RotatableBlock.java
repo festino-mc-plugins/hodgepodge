@@ -59,8 +59,8 @@ public class RotatableBlock {
 			rotate_orientable(b);
 			return true;
 		}
-		//  || block == Material.CAMPFIRE
-		if(UtilsType.is_glazed_terracotta(block) || block == Material.PUMPKIN || block == Material.CARVED_PUMPKIN || block == Material.JACK_O_LANTERN) { // || data instanceof Pumpkin) {
+		if(UtilsType.is_glazed_terracotta(block) || block == Material.PUMPKIN || block == Material.CARVED_PUMPKIN || block == Material.JACK_O_LANTERN
+				|| block == Material.CAMPFIRE || block == Material.BEEHIVE || block == Material.BEE_NEST) { // || data instanceof Pumpkin) {
 			rotate_directional_4(b);
 			return true;
 		}
