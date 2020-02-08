@@ -121,10 +121,12 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 			Material item_material;
 			ItemStack item;
 			// TODO FIX WORKAROUND
-			if (item_id.equalsIgnoreCase("minecart_tome") || item_id.equalsIgnoreCase("том_вагонеток")) {
+			if (item_id.equalsIgnoreCase("minecart_tome") || item_id.equalsIgnoreCase("том_вагонетки")) {
 				item = SummonerTome.getTome(TomeType.MINECART);
-			} else if (item_id.equalsIgnoreCase("boat_tome") || item_id.equalsIgnoreCase("том_лодок")) {
+			} else if (item_id.equalsIgnoreCase("boat_tome") || item_id.equalsIgnoreCase("том_лодки")) {
 				item = SummonerTome.getTome(TomeType.BOAT);
+			} else if (item_id.equalsIgnoreCase("horse_tome") || item_id.equalsIgnoreCase("том_коня")) {
+				item = SummonerTome.getTome(TomeType.HORSE);
 			} else {
 				item_material = getMaterial(item_id);
 				if (item_material == null) {
