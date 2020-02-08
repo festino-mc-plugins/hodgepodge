@@ -19,6 +19,8 @@ import com.festp.utils.ClickResult;
 import com.festp.utils.Utils;
 
 public class InventoryMenu implements Listener {
+	private static final int ROW_LENGTH = 9;
+	
 	private static Main plugin;
 	private Inventory gui;
 	private HashSet<MenuListener> listeners = new HashSet<>();
@@ -29,7 +31,7 @@ public class InventoryMenu implements Listener {
 	
 	public InventoryMenu(MenuListener listener, ItemStack[] grid, String title) {
 		addListener(listener);
-		int size = ( (int) (grid.length / 9)+1 )*9;
+		int size = ceilSize(grid.length);
 		if(size > 54) size = 54;
 		gui = Bukkit.createInventory(null, size, title);
 		
@@ -42,7 +44,7 @@ public class InventoryMenu implements Listener {
 	
 	public InventoryMenu(MenuListener listener, ItemStack[] grid, String title, int rows) {
 		addListener(listener);
-		int size = ((int) (grid.length / 9)+1)*9; //minimum size
+		int size = ceilSize(grid.length); //minimum size
 		size = Math.max(size, rows*9);
 		if(size > 54) size = 54;
 		gui = Bukkit.createInventory(null, size, title);
@@ -116,5 +118,9 @@ public class InventoryMenu implements Listener {
 
 	public void changeSlot(int slot, ItemStack button) {
 		gui.setItem(slot, button);
+	}
+	
+	private int ceilSize(int grid_length) {
+		return (grid_length - 1) / ROW_LENGTH * ROW_LENGTH + ROW_LENGTH;
 	}
 }
