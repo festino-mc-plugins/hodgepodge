@@ -271,7 +271,9 @@ public class Sleeping implements Listener {
 	}
 	
 	private boolean can_spawn_mob(Block b, Skip time) {
-		return UtilsType.playerCanStay(b) && (time == Skip.day ? b.getLightLevel() : b.getLightFromBlocks()) <= 7;
+		Biome biome = b.getBiome();
+		return biome != Biome.THE_VOID && b.getBiome() != Biome.MUSHROOM_FIELD_SHORE && b.getBiome() != Biome.MUSHROOM_FIELDS
+				&& UtilsType.playerCanStay(b) && (time == Skip.day ? b.getLightLevel() : b.getLightFromBlocks()) <= 7;
 	}
 	
 	private int time_spawnMob(int time) {
