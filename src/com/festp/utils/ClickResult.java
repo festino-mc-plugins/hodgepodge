@@ -42,7 +42,6 @@ public class ClickResult {
 	}
 	public boolean fromTop()
 	{
-		System.out.println(items_1_to_2+" "+from);
 		return items_1_to_2 > 0 && (from == ClickDir.TOP || from == ClickDir.BOTH)
 			|| items_2_to_1 > 0 && (to == ClickDir.TOP || to == ClickDir.BOTH);
 	}
