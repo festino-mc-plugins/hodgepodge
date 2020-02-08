@@ -19,14 +19,14 @@ import com.google.common.collect.Lists;
 
 public class AmethystManager implements Listener {
 	public static final Material AMETHYST_MATERIAL = Material.DIAMOND_BLOCK;
-	private static final int MAX_HOR = 10, MAX_VERT = 10, MAX_DIAG = 14;
+	private static final int MAX_HOR = 10, MAX_VERT = 10, MAX_DIAG = 140;
 	private List<EntityType> BLOCKED_TYPES = new ArrayList<>();
 
 	public AmethystManager() {
 		BLOCKED_TYPES = Lists.newArrayList(EntityType.SKELETON, EntityType.STRAY,
 											EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HUSK,
 											EntityType.SPIDER, EntityType.CAVE_SPIDER,
-											EntityType.CREEPER);
+											EntityType.CREEPER, EntityType.GUARDIAN);
 	}
 	
 	// cancel spawn
