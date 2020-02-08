@@ -39,11 +39,11 @@ import com.festp.utils.UtilsType;
 import com.festp.utils.UtilsWorld;
 
 public class InventoryHandler implements Listener {
-
+	private enum EquipAction { NO_ACTION, SWAP, EQUIP };
+	private enum ArmorSlot { BOOTS, LEGGINGS, CHESTPLATE, HELMET };
 	private List<ClosedInventory> closed_invs = new ArrayList<>();
 	private List<DroppedItem> dropped_items = new ArrayList<>();
 	
-	private List<Player> todeletecopy_players = new ArrayList<>(); //smelling code
 	private List<Player> broken_tools_players = new ArrayList<>();
 	
 	public void onTick() {
@@ -56,20 +56,6 @@ public class InventoryHandler implements Listener {
 				continue;
 			}
 			closed_invs.get(i).oneTick();
-		}
-		//delete armor dupes
-		for (int i = todeletecopy_players.size()-1; i >= 0; i--)
-		{
-			ItemStack[] inv = todeletecopy_players.get(i).getInventory().getStorageContents();
-			for (int j=0; j<inv.length; j++) {
-				if (inv[j] != null
-						&& inv[j].getItemMeta().hasLore()
-						&& !inv[j].getItemMeta().getLore().isEmpty()
-						&& inv[j].getItemMeta().getLore().get(0).equals("todelete")) {
-					todeletecopy_players.get(i).getInventory().clear(j);
-					todeletecopy_players.remove(i);
-				}
-			}
 		}
 		for (int i = dropped_items.size()-1; i >= 0; i--)
 		{
@@ -129,7 +115,7 @@ public class InventoryHandler implements Listener {
 		
 		Player player = (Player)event.getEntity();
 		
-		for (int i=dropped_items.size()-1; i>=0; i--)
+		for (int i = dropped_items.size()-1; i >= 0; i--)
 		{
 			if (dropped_items.get(i).item == event.getItem() && dropped_items.get(i).p == player)
 			{
@@ -139,77 +125,40 @@ public class InventoryHandler implements Listener {
 		}
 
 		ItemStack pickedup = event.getItem().getItemStack();
-		Material armor_material = pickedup.getType();
-		String string_id = armor_material.toString();
-		//кожанка-золото-кольчуга-железо-алмазы
-		boolean isEquiped = false, deleteItem = false;
-		if (string_id.contains("HELMET"))
-		{
-			if ( player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType().equals(Material.AIR) ) {
-				isEquiped = true;
-				deleteItem = true;
-				player.getInventory().setHelmet(pickedup);
-			} else if (  armorMaterial(armor_material) < itemMaterial(player.getInventory().getHelmet().getType()) ) {
-				isEquiped = true;
-				event.getItem().setItemStack(player.getInventory().getHelmet());
-				player.getInventory().setHelmet(pickedup);
-			}
-		}
-		else if (string_id.contains("CHESTPLATE"))
-		{
-			if ( player.getInventory().getChestplate() == null || player.getInventory().getChestplate().getType().equals(Material.AIR) ) {
-				isEquiped = true;
-				deleteItem = true;
-				player.getInventory().setChestplate(pickedup);
-			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getChestplate().getType()) ) {
-				isEquiped = true;
-				event.getItem().setItemStack(player.getInventory().getChestplate());
-				player.getInventory().setChestplate(pickedup);
-			}
-		}
-		/*else if(armor_material.equals(Material.ELYTRA) && player.getInventory().getChestplate() == null)
-		{
+		if (pickedup.containsEnchantment(Enchantment.BINDING_CURSE))
+			return;
+		
+		ArmorSlot slot = getArmorSlot(pickedup);
+		if (slot == null)
+			return;
+		
+		ItemStack current_item = getBySlot(player.getInventory(), slot);
+		int current_power = getEquipingPower(current_item);
+		int new_power = getEquipingPower(pickedup);
+		if (current_power == 0)
+			return;
+
+		boolean isEquiped = false, delete_item = false;
+		if (new_power > 0 && current_power > 0 && current_power < new_power) {
+			event.getItem().setItemStack(current_item);
+			setBySlot(player.getInventory(), slot, pickedup);
 			isEquiped = true;
-			deleteItem = true;
-			player.getInventory().setChestplate(pickedup);
-		}*/
-		else if (string_id.contains("LEGGINGS"))
-		{
-			if ( player.getInventory().getLeggings() == null || player.getInventory().getLeggings().getType().equals(Material.AIR) ) {
-				isEquiped = true;
-				deleteItem = true;
-				player.getInventory().setLeggings(pickedup);
-			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getLeggings().getType()) ) {
-				isEquiped = true;
-				event.getItem().setItemStack(player.getInventory().getLeggings());
-				player.getInventory().setLeggings(pickedup);
-			}
 		}
-		else if (string_id.contains("BOOTS"))
-		{
-			if ( player.getInventory().getBoots() == null || player.getInventory().getBoots().getType().equals(Material.AIR) ) {
-				isEquiped = true;
-				deleteItem = true;
-				player.getInventory().setBoots(pickedup);
-			} else if ( armorMaterial(armor_material) < itemMaterial(player.getInventory().getBoots().getType()) ) {
-				isEquiped = true;
-				event.getItem().setItemStack(player.getInventory().getBoots());
-				player.getInventory().setBoots(pickedup);
-			}
+		
+		if (new_power >= 0 && current_power < 0) {
+			setBySlot(player.getInventory(), slot, pickedup);
+			isEquiped = true;
+			delete_item = true;
 		}
+		
 		if (isEquiped) {
-			/*ItemStack item = pickedup;
-			ItemMeta im = item.getItemMeta();
-			im.setLore(Arrays.asList("todelete"));
-			item.setItemMeta(im);
-			event.getItem().setItemStack(item);
-			todeletecopy_players.add(player);*/
 			event.setCancelled(true);
-			//event.getItem().setItemStack(new ItemStack(Material.AIR));
-			if(deleteItem)
+			if(delete_item) {
 				event.getItem().remove();
-			else
+			} else {
 				event.setCancelled(true);
+				player.updateInventory();
+			}
 			player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1F, 0.4F);
 		}
 	}
@@ -221,7 +170,7 @@ public class InventoryHandler implements Listener {
 		dropped_items.add(new DroppedItem(event.getPlayer(), event.getItemDrop()));
 	}
 	
-	//empty bottles, 
+	//empty bottles
 	@EventHandler
 	public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
 		if(event.getItem().getType() == Material.POTION && ( event.getPlayer().getGameMode() == GameMode.SURVIVAL || event.getPlayer().getGameMode() == GameMode.ADVENTURE))
@@ -307,12 +256,16 @@ public class InventoryHandler implements Listener {
 		Material m = event.getBrokenItem().getType();
 		
 		int slot = player_inv.getHeldItemSlot();
-		if(!(player_inv.getItem(slot) != null && player_inv.getItem(slot).hasItemMeta() && player_inv.getItem(slot).getItemMeta() instanceof Damageable
-				&& ((Damageable)player_inv.getItem(slot).getItemMeta()).getDamage() == m.getMaxDurability()))
+		ItemStack item = player_inv.getItem(slot);
+		if (!(item != null && item.hasItemMeta() && item.getItemMeta() instanceof Damageable
+				&& ((Damageable)item.getItemMeta()).getDamage() == m.getMaxDurability()))
+		{
 			slot = player_inv.getSize()-1; //second hand
-		if(!(player_inv.getItem(slot) != null && player_inv.getItem(slot).hasItemMeta() && player_inv.getItem(slot).getItemMeta() instanceof Damageable
-				&& ((Damageable)player_inv.getItem(slot).getItemMeta()).getDamage() == m.getMaxDurability()))
-			return;
+			item = player_inv.getItem(slot);
+			if (!(item != null && item.hasItemMeta() && item.getItemMeta() instanceof Damageable
+					&& ((Damageable)item.getItemMeta()).getDamage() == m.getMaxDurability()))
+				return;
+		}
 		
 		replace_tool(player_inv, slot);
 	}
@@ -325,50 +278,50 @@ public class InventoryHandler implements Listener {
 		
 		int slot_new_tool = -1;
 		//from off hand
-		if(slot != player_inv.getSize()-1)
-			if(player_inv.getItem(player_inv.getSize()-1) != null && player_inv.getItem(player_inv.getSize()-1).getType() == m && ((Damageable)player_inv.getItem(slot).getItemMeta()).getDamage() < m.getMaxDurability()) {
+		if (slot != player_inv.getSize()-1)
+			if (player_inv.getItem(player_inv.getSize()-1) != null && player_inv.getItem(player_inv.getSize()-1).getType() == m && ((Damageable)player_inv.getItem(slot).getItemMeta()).getDamage() < m.getMaxDurability()) {
 				slot_new_tool = player_inv.getSize()-1;
 			}
 
-		if(slot_new_tool < 0)
+		if (slot_new_tool < 0)
 			//from hotbar and from inventory
-			for(int i=0; i<36; i++) {
-				if(i != slot && player_inv.getItem(i) != null && player_inv.getItem(i).getType() == m && ((Damageable)player_inv.getItem(i).getItemMeta()).getDamage() < m.getMaxDurability()) {
+			for (int i = 0; i < 36; i++) {
+				if (i != slot && player_inv.getItem(i) != null && player_inv.getItem(i).getType() == m && ((Damageable)player_inv.getItem(i).getItemMeta()).getDamage() < m.getMaxDurability()) {
 					slot_new_tool = i;
 					break;
 				}
 			}
 
-		if(save_tool) {
-			if(slot_new_tool >= 0) {
+		if (save_tool) {
+			if (slot_new_tool >= 0) {
 				ItemStack temp = player_inv.getItem(slot);
 				player_inv.setItem(slot, player_inv.getItem(slot_new_tool));
 				player_inv.setItem(slot_new_tool, temp);
 			}
 			else {
-				if(player_inv.getItemInOffHand() == null)
+				if (player_inv.getItemInOffHand() == null)
 					slot_new_tool = player_inv.getSize()-1;
 				else
-					for(int i=0; i<36; i++)
+					for(int i = 0; i < 36; i++)
 						if(player_inv.getItem(i) == null) {
 							slot_new_tool = i;
 							break;
 						}
-				if(slot_new_tool >= 0) {
+				if (slot_new_tool >= 0) {
 					ItemStack temp = player_inv.getItem(slot);
 					player_inv.setItem(slot, player_inv.getItem(slot_new_tool));
 					player_inv.setItem(slot_new_tool, temp);
 				}
 				else {
-					if(!UtilsType.isTool(player_inv.getItemInOffHand().getType()))
+					if (!UtilsType.isTool(player_inv.getItemInOffHand().getType()))
 						slot_new_tool = player_inv.getSize()-1;
 					else
-						for(int i=0; i<36; i++)
-							if(!UtilsType.isTool(player_inv.getItem(i).getType())) {
+						for (int i = 0; i < 36; i++)
+							if (!UtilsType.isTool(player_inv.getItem(i).getType())) {
 								slot_new_tool = i;
 								break;
 							}
-					if(slot_new_tool >= 0) {
+					if (slot_new_tool >= 0) {
 						ItemStack temp = player_inv.getItem(slot);
 						player_inv.setItem(slot, player_inv.getItem(slot_new_tool));
 						player_inv.setItem(slot_new_tool, temp);
@@ -376,44 +329,77 @@ public class InventoryHandler implements Listener {
 				}
 			}
 		}
-		else if(slot_new_tool >= 0) {
+		else if (slot_new_tool >= 0) {
 			player_inv.setItem(slot, player_inv.getItem(slot_new_tool));
 			player_inv.setItem(slot_new_tool, null);
 		}
 		return slot_new_tool >= 0;
 	}
-	 
-	public int itemMaterial(Material m) {
-		String mat = m.toString();
-		if(!(mat.contains("BOOTS") || mat.contains("LEGGINGS") || mat.contains("CHESTPLATE") || mat.contains("HELMET")))
-		{
-			return 0;
-		}
-		if(mat.contains("DIAMOND"))
-			return 1;
-		if(mat.contains("IRON"))
-			return 2;
-		if(mat.contains("CHAIN"))
-			return 3;
-		if(mat.contains("GOLD"))
-			return 4;
-		if(mat.contains("LEATHER"))
-			return 5;
-		return 0;
+	
+	private static ItemStack getBySlot(PlayerInventory inv, ArmorSlot slot) {
+		if (slot == ArmorSlot.BOOTS)
+			return inv.getBoots();
+		if (slot == ArmorSlot.LEGGINGS)
+			return inv.getLeggings();
+		if (slot == ArmorSlot.CHESTPLATE)
+			return inv.getChestplate();
+		if (slot == ArmorSlot.HELMET)
+			return inv.getHelmet();
+		return null;
+	}
+	
+	private static void setBySlot(PlayerInventory inv, ArmorSlot slot, ItemStack is) {
+		if (slot == ArmorSlot.BOOTS)
+			inv.setBoots(is);
+		else if (slot == ArmorSlot.LEGGINGS)
+			inv.setLeggings(is);
+		else if (slot == ArmorSlot.CHESTPLATE)
+			inv.setChestplate(is);
+		else if (slot == ArmorSlot.HELMET)
+			inv.setHelmet(is);
+	}
+	
+	private static ArmorSlot getArmorSlot(ItemStack is) {
+		if (is == null)
+			return null;
+		
+		Material item = is.getType();
+		String item_name = item.toString();
+		if (item_name.contains("BOOTS"))
+			return ArmorSlot.BOOTS;
+		if (item_name.contains("LEGGINGS"))
+			return ArmorSlot.LEGGINGS;
+		if (item_name.contains("CHESTPLATE"))
+			return ArmorSlot.CHESTPLATE;
+		if (item_name.contains("HELMET"))
+			return ArmorSlot.HELMET;
+		
+		if (item == Material.ELYTRA)
+			return ArmorSlot.CHESTPLATE;
+		if (item == Material.TURTLE_HELMET)
+			return ArmorSlot.HELMET;
+		return null;
 	}
 	 
-	public int armorMaterial(Material m) {
-		String mat = m.toString();
-		if(mat.contains("DIAMOND"))
-			return 1;
-		if(mat.contains("IRON"))
-			return 2;
-		if(mat.contains("CHAIN"))
-			return 3;
-		if(mat.contains("GOLD"))
-			return 4;
-		if(mat.contains("LEATHER"))
+	private int getEquipingPower(ItemStack is) {
+		if (is == null || is.getType().equals(Material.AIR))
+			return -1;
+		
+		if (is.containsEnchantment(Enchantment.BINDING_CURSE))
+			return 0;
+		
+		String mat = is.getType().toString();
+		if (mat.contains("DIAMOND"))
 			return 5;
+		if (mat.contains("IRON"))
+			return 4;
+		if (mat.contains("CHAIN"))
+			return 3;
+		if (mat.contains("GOLD"))
+			return 2;
+		if (mat.contains("LEATHER"))
+			return 1;
+		
 		return 0;
 	}
 }
