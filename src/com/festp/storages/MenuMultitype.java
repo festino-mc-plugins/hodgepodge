@@ -192,10 +192,12 @@ public class MenuMultitype implements MenuListener {
 			return genUncraftButton();
 		}
 		else if (slot == external_inv_index) {
-			if (Utils.equal_invs(clicked.getInventory(), storage.getExternalInventory()))
-				clicked.openInventory(storage.getInventory());
-			else
-				clicked.openInventory(storage.getExternalInventory());
+			if (storage.getExternalInventory() != null) {
+				if (Utils.equal_invs(clicked.getInventory(), storage.getExternalInventory()))
+					clicked.openInventory(storage.getInventory());
+				else
+					clicked.openInventory(storage.getExternalInventory());
+			}
 		}
 		return slot_item;
 	}
