@@ -15,26 +15,19 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
 import org.bukkit.TreeSpecies;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftHorse;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.ChestedHorse;
 import org.bukkit.entity.Donkey;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
-import org.bukkit.entity.Llama;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mule;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.SkeletonHorse;
-import org.bukkit.entity.Turtle;
 import org.bukkit.entity.ZombieHorse;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -43,11 +36,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
@@ -59,12 +49,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.inventory.meta.Repairable;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -81,7 +69,8 @@ import net.minecraft.server.v1_15_R1.NBTTagCompound;
 
 //entity id had replaced tome id
 public class SummonerTome implements Listener {
-	enum TomeType {/*UNDEFINED, */MINECART, BOAT, HORSE, CUSTOM_HORSE, ALL, CUSTOM_ALL};
+	public enum TomeType { MINECART, BOAT, HORSE, CUSTOM_HORSE, ALL, CUSTOM_ALL };
+	private static final int REPAIR_COST = 1000;
 	private static final String MAIN_SEP = ";";
 	private static final String FIELD_SEP = "|";
 	private static final String KEYVAL_SEP = ":";
@@ -128,6 +117,53 @@ public class SummonerTome implements Listener {
 			save_player.remove(i);
 		}
 	}
+	
+	public static ItemStack getTome(TomeType type) {
+		if (type == null)
+			return null;
+    	ItemStack tome = new ItemStack(Material.ENCHANTED_BOOK);
+    	Repairable rmeta = (Repairable) tome.getItemMeta();
+    	rmeta.setRepairCost(REPAIR_COST);
+    	tome.setItemMeta((ItemMeta) rmeta);
+    	ItemMeta meta = tome.getItemMeta();
+    	switch (type) {
+    	case MINECART:
+        	meta.setDisplayName(SummonerTome.name_eng_minecart_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_minecart_tome)); break;
+    	case BOAT:
+        	meta.setDisplayName(SummonerTome.name_eng_boat_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_boat_tome)); break;
+    	case HORSE:
+    		meta.setDisplayName(SummonerTome.name_eng_horse_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_horse_tome)); break;
+    	case CUSTOM_HORSE:
+    		meta.setDisplayName(SummonerTome.name_eng_custom_horse_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_custom_horse_tome)); break;
+    	case ALL:
+    		meta.setDisplayName(SummonerTome.name_eng_all_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_all_tome)); break;
+    	case CUSTOM_ALL:
+    		meta.setDisplayName(SummonerTome.name_eng_custom_all_tome);
+        	meta.setLore(Arrays.asList(SummonerTome.lore_eng_custom_all_tome)); break;
+    	}
+    	tome.setItemMeta(meta);
+    	
+    	switch (type) {
+    	case MINECART:
+    		tome = SummonerTome.setTome(tome, 'm', " "); break;
+    	case BOAT:
+    		tome = SummonerTome.setTome(tome, 'b', "o"); break; // "o" means "oak"
+    	case HORSE:
+    		tome = SummonerTome.setTome(tome, 'h', " "); break;
+    	case CUSTOM_HORSE:
+    		tome = SummonerTome.setTome(tome, 'H', " "); break;
+    	case ALL:
+    		tome = SummonerTome.setTome(tome, 'a', " "); break;
+    	case CUSTOM_ALL:
+    		tome = SummonerTome.setTome(tome, 'A', "o"); break;
+    	}
+    	return tome;
+	}
 
 	@SuppressWarnings("deprecation")
 	public static void addTomeCrafts() {
@@ -151,12 +187,7 @@ public class SummonerTome implements Listener {
     	cm.addCraftbookRecipe(key_custom_all_a);
 		
 		//minecart tome - book, 4 xp bottle and 4 minecarts
-    	ItemStack minecart_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	minecart_book = SummonerTome.setTome(minecart_book, 'm', " ");
-    	ItemMeta mc_meta = minecart_book.getItemMeta();
-    	mc_meta.setDisplayName(SummonerTome.name_eng_minecart_tome);
-    	mc_meta.setLore(Arrays.asList(SummonerTome.lore_eng_minecart_tome));
-    	minecart_book.setItemMeta(mc_meta);
+    	ItemStack minecart_book = getTome(TomeType.MINECART);
     	ShapelessRecipe minecart_tome = new ShapelessRecipe(key_minecart, minecart_book);
     	minecart_tome.addIngredient(1, Material.BOOK);
     	minecart_tome.addIngredient(4, Material.EXPERIENCE_BOTTLE);
@@ -165,12 +196,7 @@ public class SummonerTome implements Listener {
 		
 		//boat tome - book, 2 xp bottle and 6 colors boats
     	//all tomes with boats can be customized by all the 6 boat types
-    	ItemStack boat_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	boat_book = SummonerTome.setTome(boat_book, 'b', "o"); //"o" means "oak"
-    	ItemMeta boat_meta = boat_book.getItemMeta();
-    	boat_meta.setDisplayName(SummonerTome.name_eng_boat_tome);
-    	boat_meta.setLore(Arrays.asList(SummonerTome.lore_eng_boat_tome));
-    	boat_book.setItemMeta(boat_meta);
+    	ItemStack boat_book = getTome(TomeType.BOAT);
     	ShapelessRecipe boat_tome = new ShapelessRecipe(key_boat, boat_book);
     	boat_tome.addIngredient(1, Material.BOOK);
     	boat_tome.addIngredient(2, Material.EXPERIENCE_BOTTLE);
@@ -184,12 +210,7 @@ public class SummonerTome implements Listener {
     	
 		//horse tome - book, 2 xp bottles, 4 saddles, 2 (leads?)
     	//unwearable armor, untakeable saddle
-    	ItemStack horse_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	horse_book = SummonerTome.setTome(horse_book, 'h', " ");
-    	ItemMeta horse_meta = horse_book.getItemMeta();
-    	horse_meta.setDisplayName(SummonerTome.name_eng_horse_tome);
-    	horse_meta.setLore(Arrays.asList(SummonerTome.lore_eng_horse_tome));
-    	horse_book.setItemMeta(horse_meta);
+    	ItemStack horse_book = getTome(TomeType.HORSE);
     	ShapelessRecipe horse_tome = new ShapelessRecipe(key_horse, horse_book);
     	horse_tome.addIngredient(1, Material.BOOK);
     	horse_tome.addIngredient(2, Material.EXPERIENCE_BOTTLE);
@@ -205,12 +226,7 @@ public class SummonerTome implements Listener {
     	
 		//custom horse tome - horse tome, 4 xp bottles, jump potion, speed potion, instheal potion, label
     	//in craft events because of Horse tome and potions
-    	ItemStack custom_horse_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	custom_horse_book = SummonerTome.setTome(custom_horse_book, 'H', " ");
-    	ItemMeta custom_horse_meta = custom_horse_book.getItemMeta();
-    	custom_horse_meta.setDisplayName(SummonerTome.name_eng_custom_horse_tome);
-    	custom_horse_meta.setLore(Arrays.asList(SummonerTome.lore_eng_custom_horse_tome));
-    	custom_horse_book.setItemMeta(custom_horse_meta);
+    	ItemStack custom_horse_book = getTome(TomeType.CUSTOM_HORSE);
     	ShapelessRecipe custom_horse_tome = new ShapelessRecipe(key_custom_horse, custom_horse_book);
     	custom_horse_tome.addIngredient(4, Material.EXPERIENCE_BOTTLE);
     	custom_horse_tome.addIngredient(1, Material.NAME_TAG);
@@ -240,12 +256,7 @@ public class SummonerTome implements Listener {
     	RecipeChoice.ExactChoice custom_horse_choice = new RecipeChoice.ExactChoice(custom_horse_book);
 		
 		//united tome - horse, minecart, boat tomes, slime block, 5 xp bottles
-    	ItemStack all_book = new ItemStack(Material.ENCHANTED_BOOK);
-    	all_book = SummonerTome.setTome(all_book, 'a', "o");
-    	ItemMeta all_meta = all_book.getItemMeta();
-    	all_meta.setDisplayName(SummonerTome.name_eng_all_tome);
-    	all_meta.setLore(Arrays.asList(SummonerTome.lore_eng_all_tome));
-    	all_book.setItemMeta(all_meta);
+    	ItemStack all_book = getTome(TomeType.ALL);
     	ShapelessRecipe all_tome = new ShapelessRecipe(key_all, all_book);
     	//all_tome.addIngredient(3, Material.ENCHANTED_BOOK);
     	all_tome.addIngredient(minecart_choice);
@@ -442,21 +453,22 @@ public class SummonerTome implements Listener {
 	//set boat type
 	@EventHandler
 	public void onCraft(CraftItemEvent event) {
-		TomeType type = getTomeType(event.getInventory().getResult());
+		ItemStack cur_result = event.getInventory().getResult();
+		TomeType type = getTomeType(cur_result);
 		if(type == null) return;
 		
 		if(type == TomeType.BOAT) {
 			Material wood_type = event.getInventory().getMatrix()[4].getType(); //central cell
 			if(wood_type == Material.ACACIA_BOAT)
-				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "a"));
+				event.getInventory().setResult(setTome(cur_result, 'b', "a"));
 			else if(wood_type == Material.BIRCH_BOAT)
-				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "b"));
+				event.getInventory().setResult(setTome(cur_result, 'b', "b"));
 			else if(wood_type == Material.DARK_OAK_BOAT)
-				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "d"));
+				event.getInventory().setResult(setTome(cur_result, 'b', "d"));
 			else if(wood_type == Material.JUNGLE_BOAT)
-				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "j"));
+				event.getInventory().setResult(setTome(cur_result, 'b', "j"));
 			else if(wood_type == Material.SPRUCE_BOAT)
-				event.getInventory().setResult(setTome(event.getInventory().getResult(), 'b', "s"));
+				event.getInventory().setResult(setTome(cur_result, 'b', "s"));
 		}
 	}
 	
