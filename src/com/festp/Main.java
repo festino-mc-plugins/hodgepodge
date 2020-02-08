@@ -10,6 +10,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.festp.commands.CommandWorker;
+import com.festp.commands.ItemCommand;
 import com.festp.commands.StorageCommand;
 import com.festp.dispenser.DropActions;
 import com.festp.enderchest.AdminChannelPlayer;
@@ -117,7 +118,8 @@ public class Main extends JavaPlugin implements Listener
     	
     	CommandWorker command_worker = new CommandWorker(this);
     	getCommand(CommandWorker.MAIN_COMMAND).setExecutor(command_worker);
-    	getCommand(CommandWorker.ITEM_COMMAND).setExecutor(command_worker);
+    	ItemCommand item_worker = new ItemCommand();
+    	getCommand(ItemCommand.ITEM_COMMAND).setExecutor(item_worker);
     	StorageCommand storage_worker = new StorageCommand(stlist, ststorage);
     	getCommand(StorageCommand.ST_COMMAND).setExecutor(storage_worker);
     	
