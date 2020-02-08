@@ -734,7 +734,7 @@ public class StorageHandler implements Listener {
 		Player player = (Player) event.getEntity();
 		boolean storage_pickup = work_pickup_event(((Player)event.getEntity()).getInventory(), event.getItem(), event);
 		if (storage_pickup) {
-			player.playSound(player.getLocation(), PICKUP_SOUND, 0.9F, 2F);
+			player.playSound(player.getLocation(), PICKUP_SOUND, 0.7F, 2F);
 		}
 	}
 
