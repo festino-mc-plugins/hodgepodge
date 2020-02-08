@@ -1,5 +1,8 @@
 package com.festp.dispenser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -13,6 +16,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsRandom;
 
 import net.minecraft.server.v1_15_R1.EntityAgeable;
 import net.minecraft.server.v1_15_R1.EntityAnimal;
@@ -72,16 +76,14 @@ public class DispenserFeeder {
 		if (feedable == null) {
 			return;
 		}
-		
+
+		List<Animals> delayed_babies = new ArrayList<>();
 		boolean animalFound = false;
-		
 		for (Entity e : block.getWorld().getNearbyEntities(block.getLocation(), 1, 1, 1)) {
 			if (Utils.contains(feedable, e.getType())) {
 				Animals animal = (Animals) e;
 				if (!animal.isAdult()) {
-					animal.setAge((int)(animal.getAge() * 0.9F));
-					animalFound = true;
-					break;
+					delayed_babies.add(animal);
 				} else if (!animal.isLoveMode() && animal.canBreed()) {
 					// animal.setBreedCause();
 					loveanimal = animal;
@@ -91,8 +93,15 @@ public class DispenserFeeder {
 				}
 			}
 		}
+		
+		if (!animalFound && delayed_babies.size() > 0) {
+			int index = UtilsRandom.getInt(delayed_babies.size());
+			Animals animal = delayed_babies.get(index);
+			animal.setAge((int)(animal.getAge() * 0.9F));
+			animalFound = true;
+		}
 
-		if(animalFound) {
+		if (animalFound) {
 			ItemStack new_item;
 			if (inv.getItem(it).getAmount() > 1) {
 				new_item = new ItemStack(food, inv.getItem(it).getAmount() - 1);
