@@ -493,7 +493,7 @@ public class StorageHandler implements Listener {
 						}
 						else if (event.getClick() == ClickType.RIGHT) // drag items from storage
 						{
-							// TO DO: StorageBottomless grab functions, grab-Utils, ignore GrabFilter on SHIFT clicks
+							// TODO: StorageBottomless grab functions, grab-Utils, ignore GrabFilter on SHIFT clicks
 							Material pattern_material = stb.getMaterial();
 							ItemStack pattern = new ItemStack(pattern_material);
 							ItemStack[] stacks = box_inv.getContents();
@@ -593,7 +593,7 @@ public class StorageHandler implements Listener {
 					if (st instanceof StorageMultitype) {
 						event.getWhoClicked().openInventory(((StorageMultitype)st).getMenu());
 					}
-					break;
+					return;
 				case CONTROL_DROP:
 					st.drop(event.getWhoClicked().getEyeLocation());
 					delayedUpdate(event.getClickedInventory());
@@ -615,20 +615,22 @@ public class StorageHandler implements Listener {
 				}
 			}
 			
-			// storage moved to other inventory by special approaches
-			switch(event.getAction())
-			{
-			case MOVE_TO_OTHER_INVENTORY:
-				//if there is empty slots
-				Inventory inv = null;
-				if (event.getView().getTopInventory() == event.getClickedInventory())
-					inv = event.getView().getBottomInventory();
-				else if (event.getView().getBottomInventory() == event.getClickedInventory())
-					inv = event.getView().getTopInventory();
-				if (inv != null && inv.firstEmpty() >= 0)
-					st.setExternalInventory(inv);
-			default:
-				break;
+			if (!event.isCancelled()) {
+				// storage moved to other inventory by special approaches
+				switch(event.getAction())
+				{
+				case MOVE_TO_OTHER_INVENTORY:
+					//if there is empty slots
+					Inventory inv = null;
+					if (event.getView().getTopInventory() == event.getClickedInventory())
+						inv = event.getView().getBottomInventory();
+					else if (event.getView().getBottomInventory() == event.getClickedInventory())
+						inv = event.getView().getTopInventory();
+					if (inv != null && inv.firstEmpty() >= 0)
+						st.setExternalInventory(inv);
+				default:
+					break;
+				}
 			}
 		}
 
