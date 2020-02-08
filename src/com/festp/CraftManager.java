@@ -31,6 +31,7 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import com.festp.dispenser.PumpManager;
 import com.festp.maps.SmallMapManager;
 import com.festp.misc.LeashManager;
 import com.festp.misc.SoulStone;
@@ -220,6 +221,7 @@ public class CraftManager implements Listener {
     	reg_pump_meta.setDisplayName(RUS_reg_pump_name);
     	reg_pump_meta.setLore(Arrays.asList(RUS_reg_pump_lore));
     	reg_pump.setItemMeta(reg_pump_meta);
+    	reg_pump = applyTag(reg_pump, CraftTag.ONLY_SPECIFIC);
     	ShapedRecipe regular_pump = new ShapedRecipe(key___pump_regular, reg_pump);
     	regular_pump.shape(new String[]{"RPR", "PHP", "RPR"});
     	regular_pump.setIngredient('R', Material.REDSTONE);
@@ -234,6 +236,7 @@ public class CraftManager implements Listener {
     	top_pump_meta.setDisplayName(RUS_top_pump_name);
     	top_pump_meta.setLore(Arrays.asList(RUS_top_pump_lore));
     	top_pump.setItemMeta(top_pump_meta);
+    	top_pump = applyTag(top_pump, CraftTag.ONLY_SPECIFIC);
     	ShapedRecipe advanced_pump = new ShapedRecipe(key___pump_advanced, top_pump);
     	advanced_pump.shape(new String[]{"RMR", "MSM", "RMR"});
     	advanced_pump.setIngredient('R', Material.REDSTONE_BLOCK);
@@ -289,6 +292,8 @@ public class CraftManager implements Listener {
 		for (int i = 0; i < matrix.length; i++) {
 			if (matrix[i] != null && hasTag(matrix[i], CraftTag.ONLY_SPECIFIC))
 			{
+				if (PumpManager.isPump(ci.getResult()))
+					break;
 				//try to find these recipes
 				ci.setResult(null);
 				return;
