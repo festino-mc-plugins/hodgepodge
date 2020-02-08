@@ -59,7 +59,7 @@ public class PumpManager {
 	}
 	
 	public static boolean isPump(ItemStack is) {
-		if (is.getType() != PUMP_MATERIAL || !is.hasItemMeta() || !is.getItemMeta().hasLore()) {
+		if (is == null || is.getType() != PUMP_MATERIAL || !is.hasItemMeta() || !is.getItemMeta().hasLore()) {
 			return false;
 		}
 		String lore = is.getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH);
