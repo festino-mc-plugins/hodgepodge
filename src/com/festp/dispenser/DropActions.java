@@ -26,7 +26,7 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.utils.Vector3i;
-import com.festp.dispenser.PumpManager.PumpReadiness;
+import com.festp.dispenser.PumpManager.PumpState;
 import com.festp.dispenser.PumpManager.PumpType;
 
 import net.minecraft.server.v1_15_R1.EntityAgeable;
@@ -177,12 +177,12 @@ public class DropActions implements Listener {
 			
 			else {
 				Dispenser d = ((Dispenser)dispenser);
-				PumpReadiness pr = PumpManager.test(d, event.getItem());
-				if(pr == PumpReadiness.READY) {
+				PumpState pr = PumpManager.test(d, event.getItem());
+				if(pr == PumpState.READY) {
 					disps_pump.add(d);
 					event.setCancelled(true);
 				}
-				else if(pr == PumpReadiness.MODULE) {
+				else if(pr == PumpState.MODULE) {
 					event.setCancelled(true);
 				}
 			}

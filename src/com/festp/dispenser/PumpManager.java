@@ -12,10 +12,10 @@ public class PumpManager {
 	public static final Material PUMP_MATERIAL = Material.BLAZE_ROD;
 	public static final Enchantment bottomless_bucket_metaench = Enchantment.ARROW_INFINITE;
 
-	enum PumpReadiness {READY, MODULE, NONE};
+	enum PumpState {READY, MODULE, NONE};
 	enum PumpType {NONE, REGULAR, ADVANCED};
 	
-	public static PumpReadiness test(Dispenser d, ItemStack dropped) {
+	public static PumpState test(Dispenser d, ItemStack dropped) {
 		Inventory inv = d.getInventory();
 		//test empty bucket
 		//test pump module??? - it had already worked
@@ -51,11 +51,11 @@ public class PumpManager {
 		//System.out.println("TEST: "+ module_index+" "+bucket_index+" "+multybucket_index+" "+null_index);
 		if(module_index >= -1) {
 			if(bucket_index >= -1 || (multybucket_index >= -1 && null_index >= 0) || pipe_index >= -1) {
-				return PumpReadiness.READY;
+				return PumpState.READY;
 			}
-			return PumpReadiness.MODULE;
+			return PumpState.MODULE;
 		}
-		return PumpReadiness.NONE;
+		return PumpState.NONE;
 	}
 	
 	public static boolean isPump(ItemStack is) {
