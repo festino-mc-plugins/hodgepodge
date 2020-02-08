@@ -331,15 +331,6 @@ public class Utils {
             e.printStackTrace();
         }
     }
-
-	public static void summonHearths(EntityAnimal ea) {
-		Random random = new Random();
-		double d0 = random.nextGaussian() * 0.02D;
-		double d1 = random.nextGaussian() * 0.02D;
-		double d2 = random.nextGaussian() * 0.02D;
-		
-		//ea.world.addParticle(Particles..HEART, ea.locX + random.nextFloat() * ea.width * 2.0F - ea.width, ea.locY + 0.5D + random.nextFloat() * ea.length, ea.locZ + random.nextFloat() * ea.width * 2.0F - ea.width, d0, d1, d2, new int[0]);
-	}
 	
 	public static ItemStack resetName(ItemStack item) {
 		ItemMeta meta = item.getItemMeta();
@@ -354,7 +345,7 @@ public class Utils {
 		{
 			Storage st = Storage.getByItemStack(stacks[i]);
 			if(st != null)
-				result += "ItemStack{StorageID="+st.getID()+", type="+st.getType()+"}";
+				result += st.toString();
 			else
 				result += stacks[i];
 			if(i != stacks.length-1)
