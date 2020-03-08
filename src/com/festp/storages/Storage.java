@@ -3,17 +3,13 @@ package com.festp.storages;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import com.festp.DelayedTask;
 import com.festp.Pair;
 import com.festp.TaskList;
-import com.festp.Main;
 import com.festp.utils.Utils;
 
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
