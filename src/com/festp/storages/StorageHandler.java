@@ -75,6 +75,7 @@ public class StorageHandler implements Listener {
 		//new beams
 		for (World world : plugin.getServer().getWorlds()) {
 			for (Item item : world.getEntitiesByClass(Item.class)) {
+				// System.out.print(Utils.toString(item.getLocation()));
 				if (Storage.isStorage(item.getItemStack())) {
 					Utils.setPrivateField("age", Utils.getNMSClass("EntityItem"), ((CraftItem)item).getHandle(), -32768); // TODO NMS reflection Utils / deobfuscation map using
 					
