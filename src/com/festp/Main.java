@@ -25,6 +25,7 @@ import com.festp.inventory.SortHoppers;
 import com.festp.maps.SmallMapManager;
 import com.festp.menu.InventoryMenu;
 import com.festp.misc.InteractHandler;
+import com.festp.misc.JukeboxHandler;
 import com.festp.misc.LeashManager;
 import com.festp.misc.AmethystManager;
 import com.festp.misc.FeatureHandler;
@@ -174,6 +175,9 @@ public class Main extends JavaPlugin implements Listener
     	craft_manager.addCrafts();
     	pm.registerEvents(craft_manager, this);
     	
+    	JukeboxHandler jukebox_handler = new JukeboxHandler();
+    	pm.registerEvents(jukebox_handler, this);
+    	
 		t1 = System.nanoTime();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
@@ -276,6 +280,8 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					ecH.tick();
+					
+					jukebox_handler.onTick();
 				}
 			}, 0L, 1L);
 		
