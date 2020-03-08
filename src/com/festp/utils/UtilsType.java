@@ -208,12 +208,12 @@ public class UtilsType {
 	
 	public static boolean isTransparent(Material m) {
 		if (isAir(m) || is_banner(m) || is_bed(m) || is_carpet(m) || is_wall_banner(m) || isTrapdoor(m) || isDoor(m) || isGate(m)
-				|| is_flower(m) || isPlate(m) || isButton(m) || isRail(m)
+				|| isPlant(m) || isPlate(m) || isButton(m) || isRail(m)
 				|| m == Material.TORCH || m == Material.WALL_TORCH|| m == Material.REDSTONE_TORCH || m == Material.REDSTONE_WALL_TORCH
 				|| isSign(m) || isWallSign(m)
 				|| m == Material.FLOWER_POT || m == Material.REDSTONE_WIRE || m == Material.COMPARATOR || m == Material.REPEATER || m == Material.LEVER
 				|| m == Material.TRIPWIRE_HOOK || m == Material.TRIPWIRE
-				|| m == Material.SNOW)
+				|| m == Material.SNOW || isPlessurePlate(m))
 			return true;
 		return false;
 	}
@@ -570,11 +570,29 @@ public class UtilsType {
 	}
 	public static boolean isRail(Material m) {
 		switch(m) {
-		case RAIL: return true;
-		case ACTIVATOR_RAIL: return true;
-		case POWERED_RAIL: return true;
-		case DETECTOR_RAIL: return true;
-		default: return false;
+		case RAIL:
+		case ACTIVATOR_RAIL:
+		case POWERED_RAIL:
+		case DETECTOR_RAIL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	public static boolean isPlessurePlate(Material m) {
+		switch(m) {
+		case ACACIA_PRESSURE_PLATE:
+		case BIRCH_PRESSURE_PLATE:
+		case DARK_OAK_PRESSURE_PLATE:
+		case JUNGLE_PRESSURE_PLATE:
+		case OAK_PRESSURE_PLATE:
+		case SPRUCE_PRESSURE_PLATE:
+		case HEAVY_WEIGHTED_PRESSURE_PLATE:
+		case LIGHT_WEIGHTED_PRESSURE_PLATE:
+		case STONE_PRESSURE_PLATE:
+			return true;
+		default:
+			return false;
 		}
 	}
 	
