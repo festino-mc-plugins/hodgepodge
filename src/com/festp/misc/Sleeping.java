@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.GameMode;
 import org.bukkit.Statistic;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -60,22 +61,18 @@ public class Sleeping implements Listener {
 	public void sendSleepInfo() // TO DO: sync sending with bed events
 	{
 		String sleep_data = "sendSleepInfo() error";
-		int all_players = 0, sleeping_players = 0;
+		int sleeping_players = 0;
 		List<Integer> sleeping_ticks = new ArrayList<>();
 		for (Player p : pl.getServer().getOnlinePlayers())
 		{
-			if (canSleep(p.getLocation().getBlock().getBiome()))
+			if (p.isSleeping())
 			{
-				all_players++;
-				if (p.isSleeping())
-				{
-					sleeping_players++;
-					sleeping_ticks.add(p.getSleepTicks());
-				}
+				sleeping_players++;
+				sleeping_ticks.add(p.getSleepTicks());
 			}
 		}
 		 
-		int min_players = get_min_sleeping(all_players);
+		int min_players = get_min_sleeping(onlinePlayersCount - ignoredPlayersCount);
 		int min_ticks = 0;
 		if (sleeping_players >= min_players) {
 			Integer[] sleeping_ticks_sorted = sleeping_ticks.toArray(new Integer[0]);
@@ -148,7 +145,8 @@ public class Sleeping implements Listener {
 			{
 				//count
 				onlinePlayersCount++;
-				if (!canSleep(p.getLocation().getBlock().getBiome()))
+				GameMode gm = p.getGameMode();
+				if (!canSleep(p.getLocation().getBlock().getBiome()) || !(gm == GameMode.SURVIVAL || gm == GameMode.ADVENTURE))
 					ignoredPlayersCount++;
 				if (isDeepSleeping(p))
 					sleepingPlayersCount++;
