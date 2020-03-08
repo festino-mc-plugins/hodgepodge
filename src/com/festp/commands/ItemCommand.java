@@ -127,6 +127,8 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 				item = SummonerTome.getTome(TomeType.BOAT);
 			} else if (item_id.equalsIgnoreCase("horse_tome") || item_id.equalsIgnoreCase("том_коня")) {
 				item = SummonerTome.getTome(TomeType.HORSE);
+			} else if (item_id.equalsIgnoreCase("all_tome") || item_id.equalsIgnoreCase("том_всего")) {
+				item = SummonerTome.getTome(TomeType.ALL);
 			} else {
 				item_material = getMaterial(item_id);
 				if (item_material == null) {
