@@ -83,10 +83,16 @@ public class SmallMapManager implements Listener {
 	}
 
 	/** init new small map */
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerInitMap(PlayerInteractEvent event)
 	{
+		if (event.isCancelled())
+			return;
 		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
+			return;
+		
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType().isInteractable())
 			return;
 		
 		if (event.hasItem() && event.getItem().getType() == Material.MAP)
@@ -134,7 +140,7 @@ public class SmallMapManager implements Listener {
 			public void run() {
 				ItemStack pre_map = getMap(id, true);
 				if (inv.contains(Material.PAPER) && map.getScale() / 2 > 1) {
-					pre_map = getPreExtandedMap(id);
+					pre_map = getPreExtendedMap(id);
 				}
 				else if(inv.contains(Material.GLASS_PANE)) {
 					ItemMeta pre_map_meta = pre_map.getItemMeta();
@@ -266,7 +272,7 @@ public class SmallMapManager implements Listener {
 		if (small_maps == 1 && paper == 8)
 		{
 			int id = getMapId(small_map);
-			ItemStack pre_map = getPreExtandedMap(id);
+			ItemStack pre_map = getPreExtendedMap(id);
 			
 			event.getInventory().setResult(pre_map);
 		}
@@ -373,7 +379,7 @@ public class SmallMapManager implements Listener {
 		}
 		return item;
 	}
-	public static ItemStack getPreExtandedMap(int id)
+	public static ItemStack getPreExtendedMap(int id)
 	{
 		SmallMap map = SmallMapFileManager.load(id);
 		ItemStack pre_map = getMap(id, true);
