@@ -8,6 +8,7 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -48,17 +49,23 @@ public class EnderChestHandler implements Listener {
 	
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.getClickedBlock() != null) {
-			if (event.getClickedBlock().getType() == Material.ENDER_CHEST) {
+		Block block = event.getClickedBlock();
+		if (block != null) {
+			if (block.getType() == Material.ENDER_CHEST) {
 				if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 					Player p = event.getPlayer();
-					if (p.isSneaking() == false) {
-						EnderChest ec = pl.ecgroup.getAdminByPlayer(event.getPlayer());
-						if(ec == null) ec = pl.ecgroup.getByNick(event.getPlayer().getName());
+					if (!p.isSneaking()) {
+						if (block.getRelative(BlockFace.UP).getType().isOccluding()) {
+							event.setCancelled(true);
+							return;
+						}
+						EnderChest ec = pl.ecgroup.getAdminByPlayer(p);
+						if(ec == null)
+							ec = pl.ecgroup.getByNick(p.getName());
 						if(ec != null) {
 							event.setCancelled(true);
 							p.openInventory(ec.getInventory());
-							sendEnderchestOpenSound(event.getPlayer());
+							sendEnderchestOpenSound(p);
 							addOpenedEnderchest(p, event.getClickedBlock());
 						}
 					}
