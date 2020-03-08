@@ -62,6 +62,7 @@ import com.festp.CraftManager;
 import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
+import com.festp.utils.UtilsWorld;
 
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
 
@@ -526,10 +527,10 @@ public class SummonerTome implements Listener {
 		if (!(event.getAction() == Action.RIGHT_CLICK_AIR
 				|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !UtilsType.isInteractable(event.getClickedBlock().getType()) )) return;
 
-		boolean main_hand = true;
+		boolean in_main_hand = true;
 		ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
 		if(item == null || UtilsType.is_dye(item.getType())) { //dye only on coloring click
-			main_hand = false;
+			in_main_hand = false;
 			item = event.getPlayer().getInventory().getItemInOffHand();
 			if(item == null || UtilsType.is_dye(item.getType()))
 				return;
@@ -541,32 +542,32 @@ public class SummonerTome implements Listener {
 		if(type == TomeType.MINECART) {
 			Location l = findForMinecart(player_loc, searching_radius_minecart_tome);
 			if(l == null) return;
-			summonMinecart(l, event.getPlayer(), main_hand);
+			summonMinecart(l, event.getPlayer(), in_main_hand);
 		}
 		else if(type == TomeType.BOAT) {
 			Location l = findForBoat(player_loc, searching_radius_boat_tome);
 			if(l == null) return;
-			summonBoat(l, event.getPlayer(), main_hand, get_boat_type(item));
+			summonBoat(l, event.getPlayer(), in_main_hand, get_boat_type(item));
 		}
 		else if(type == TomeType.HORSE) {
-			Location l = Utils.find_horse_space(player_loc);
+			Location l = UtilsWorld.find_horse_space(player_loc);
 			if(l == null) return;
 			l.setY(player_loc.getY());
-			summonHorse(l, event.getPlayer(), main_hand);
+			summonHorse(l, event.getPlayer(), in_main_hand);
 		}
-		else if(type == TomeType.CUSTOM_HORSE) {
-			Location l = Utils.find_horse_space(player_loc);
-			if(l == null) return;
+		else if (type == TomeType.CUSTOM_HORSE) {
+			Location l = UtilsWorld.find_horse_space(player_loc);
+			if (l == null) return;
 			l.setY(player_loc.getY());
-			Horse custom_horse = summonCustomHorse(l, event.getPlayer(), main_hand);
+			Horse custom_horse = summonCustomHorse(l, event.getPlayer(), in_main_hand);
 			//horse name from tome name
-			if(item.getItemMeta().hasDisplayName() && !name_eng_custom_horse_tome.contains(item.getItemMeta().getDisplayName())) {
+			if (item.getItemMeta().hasDisplayName() && !name_eng_custom_horse_tome.contains(item.getItemMeta().getDisplayName())) {
 				custom_horse.setCustomName(item.getItemMeta().getDisplayName());
 			}
 			String horse_data = get_horse_data(item);
-			if(horse_data == "") //new horse
-				if(main_hand) 	event.getPlayer().getInventory().setItemInMainHand(copy_horse_data(item, get_horse_data(custom_horse)));
-				else 			event.getPlayer().getInventory().setItemInOffHand(copy_horse_data(item, get_horse_data(custom_horse)));
+			if (horse_data == "") //new horse
+				if (in_main_hand) event.getPlayer().getInventory().setItemInMainHand(copy_horse_data(item, get_horse_data(custom_horse)));
+				else 			  event.getPlayer().getInventory().setItemInOffHand(copy_horse_data(item, get_horse_data(custom_horse)));
 			else
 				set_horse_data(custom_horse, horse_data);
 		}
@@ -576,33 +577,33 @@ public class SummonerTome implements Listener {
 			Location l_boat = findForBoat(player_loc, searching_radius_boat_tome);
 			if (l_mc != null && l_boat != null) {
 				if (player_loc.distanceSquared(l_mc) < player_loc.distanceSquared(l_boat)) {
-					summonMinecart(l_mc, event.getPlayer(), main_hand);
+					summonMinecart(l_mc, event.getPlayer(), in_main_hand);
 				}
 				else {
-					summonBoat(l_boat, event.getPlayer(), main_hand, get_boat_type(item));
+					summonBoat(l_boat, event.getPlayer(), in_main_hand, get_boat_type(item));
 				}
 			}
 			else if (l_mc != null && l_boat == null) {
-				summonMinecart(l_mc, event.getPlayer(), main_hand);
+				summonMinecart(l_mc, event.getPlayer(), in_main_hand);
 			}
 			else if (l_mc == null && l_boat != null) {
-				summonBoat(l_boat, event.getPlayer(), main_hand, get_boat_type(item));
+				summonBoat(l_boat, event.getPlayer(), in_main_hand, get_boat_type(item));
 			}
 			else {
-				Location l = Utils.find_horse_space(player_loc);
+				Location l = UtilsWorld.find_horse_space(player_loc);
 				if (l == null)
 					return;
 					
 				if (type == TomeType.ALL)
-					summonHorse(l, event.getPlayer(), main_hand);
+					summonHorse(l, event.getPlayer(), in_main_hand);
 				else
-					summonCustomHorse(l, event.getPlayer(), main_hand);
+					summonCustomHorse(l, event.getPlayer(), in_main_hand);
 			}
 		}
 	}
 	
 	public static Location findForMinecart(Location player_loc, double hor_radius) {
-		Location l = Utils.searchBlock(new Material[]
+		Location l = UtilsWorld.searchBlock(new Material[]
 				{Material.RAIL, Material.ACTIVATOR_RAIL, Material.DETECTOR_RAIL, Material.POWERED_RAIL},
 				player_loc, hor_radius, false);
 		
@@ -623,13 +624,21 @@ public class SummonerTome implements Listener {
 		return mc;
 	}
 	
-	public static Location findForBoat(Location player_loc, double hor_radius) { // TO DO: watered bottom blocks
-		player_loc.add(0, -1, 0);
-		Location l = Utils.search33space(BOAT_BLOCKS, player_loc);
-		if (l == null)
-			l = Utils.searchBlock22Platform(BOAT_BLOCKS, player_loc, hor_radius, true);
-		player_loc.add(0, 1, 0);
+	public static Location findForBoat(Location player_loc, double hor_radius) { // TODO: watered bottom blocks
+		Location loc = player_loc.clone();
+		loc.add(0, 0.5, 0);
+		loc.setY(Math.floor(loc.getY() - 1));
+		Location l_3x3 = UtilsWorld.search33space(BOAT_BLOCKS, loc);
+		Location l_2x2 = UtilsWorld.searchBlock22Platform(BOAT_BLOCKS, loc, hor_radius, false);
 		
+		Location l = l_3x3;
+		if (l == null) {
+			l = l_2x2;
+		} else if (l_2x2 != null) {
+			if (loc.distanceSquared(l_2x2) < loc.distanceSquared(l)) {
+				l = l_2x2;
+			}
+		}
 		return l;
 	}
 	public static Boat summonBoat(Location l, Player p, boolean main_hand, TreeSpecies type) {
@@ -650,49 +659,64 @@ public class SummonerTome implements Listener {
 	}
 
 	public static Horse summonHorse(Location l, Player p, boolean main_hand) { //Donkey
-		Horse horse = l.getWorld().spawn(l, Horse.class);
-		horse.setTamed(true);
-		horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-		horse.setOwner(p);
-		horse.addPassenger(p);
-		setSummoned(horse);
-		
-		ItemStack tome;
-		if(main_hand) tome = p.getInventory().getItemInMainHand();
-		else tome = p.getInventory().getItemInOffHand();
-		tome = setHasSummoned(tome, horse.getUniqueId());
-		if(main_hand) p.getInventory().setItemInMainHand(tome);
-		else p.getInventory().setItemInOffHand(tome);
+		Horse horse = l.getWorld().spawn(l, Horse.class, (new_horse) ->
+		{
+			new_horse.setTamed(true);
+			new_horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+			new_horse.setOwner(p);
+			new_horse.addPassenger(p);
+			setSummoned(new_horse);
+			
+			ItemStack tome;
+			if (main_hand)
+				tome = p.getInventory().getItemInMainHand();
+			else
+				tome = p.getInventory().getItemInOffHand();
+			
+			tome = setHasSummoned(tome, new_horse.getUniqueId());
+			if (main_hand)
+				p.getInventory().setItemInMainHand(tome);
+			else
+				p.getInventory().setItemInOffHand(tome);
+		});
 		return horse;
 	}
+	
 	public static Horse summonCustomHorse(Location l, Player p, boolean main_hand) { //Donkey
-		Horse horse = l.getWorld().spawn(l, Horse.class);
-		horse.setTamed(true);
-		horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-		horse.setOwner(p);
-		horse.addPassenger(p);
-		setSummoned(horse);
-		setCustomHorse(horse);
+		Horse horse = l.getWorld().spawn(l, Horse.class, (new_horse) ->
+		{
+			new_horse.setTamed(true);
+			new_horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+			new_horse.setOwner(p);
+			new_horse.addPassenger(p);
+			setSummoned(new_horse);
+			setCustomHorse(new_horse);
 
-		ItemStack tome;
-		if(main_hand) tome = p.getInventory().getItemInMainHand();
-		else tome = p.getInventory().getItemInOffHand();
-		tome = setHasSummoned(tome, horse.getUniqueId());
-		if(tome.getItemMeta().hasDisplayName() && !(name_eng_custom_horse_tome.contains(tome.getItemMeta().getDisplayName())
-				|| name_eng_custom_all_tome.contains(tome.getItemMeta().getDisplayName()))) {
-			horse.setCustomName(tome.getItemMeta().getDisplayName());
-		}
-		String horse_data = get_horse_data(tome);
-		if(horse_data.equals(""))
-			tome = copy_horse_data(tome, get_horse_data(horse));
-		else
-			set_horse_data(horse, horse_data);
+			ItemStack tome;
+			if (main_hand)
+				tome = p.getInventory().getItemInMainHand();
+			else
+				tome = p.getInventory().getItemInOffHand();
+			
+			tome = setHasSummoned(tome, new_horse.getUniqueId());
+			if (tome.getItemMeta().hasDisplayName() && !(name_eng_custom_horse_tome.contains(tome.getItemMeta().getDisplayName())
+					|| name_eng_custom_all_tome.contains(tome.getItemMeta().getDisplayName()))) {
+				new_horse.setCustomName(tome.getItemMeta().getDisplayName());
+			}
+			String horse_data = get_horse_data(tome);
+			if (horse_data.equals(""))
+				tome = copy_horse_data(tome, get_horse_data(new_horse));
+			else
+				set_horse_data(new_horse, horse_data);
 
-		if(main_hand) p.getInventory().setItemInMainHand(tome);
-		else p.getInventory().setItemInOffHand(tome);
-		
-		if(!horse.isAdult())
-			horse.setAgeLock(true);
+			if (main_hand)
+				p.getInventory().setItemInMainHand(tome);
+			else
+				p.getInventory().setItemInOffHand(tome);
+			
+			if (!new_horse.isAdult())
+				new_horse.setAgeLock(true);
+		});
 		
 		return horse;
 	}
