@@ -31,11 +31,13 @@ import com.festp.misc.AmethystManager;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.Sleeping;
 import com.festp.misc.SoulStone;
-import com.festp.misc.SummonerTome;
 import com.festp.storages.StorageCraftManager;
 import com.festp.storages.StorageHandler;
 import com.festp.storages.StoragesFileManager;
 import com.festp.storages.StoragesList;
+import com.festp.tome.TomeClickHandler;
+import com.festp.tome.TomeEntityHandler;
+import com.festp.tome.TomeItemHandler;
 import com.festp.utils.BeamedPair;
 import com.festp.utils.Utils;
 
@@ -157,8 +159,12 @@ public class Main extends JavaPlugin implements Listener
     	SoulStone ss = new SoulStone();
     	pm.registerEvents(ss, this);
     	
-    	SummonerTome summoner_tomes = new SummonerTome(this);
+    	TomeItemHandler summoner_tomes = new TomeItemHandler();
     	pm.registerEvents(summoner_tomes, this);
+    	TomeClickHandler click_tomes = new TomeClickHandler();
+    	pm.registerEvents(click_tomes, this);
+    	TomeEntityHandler entity_tomes = new TomeEntityHandler();
+    	pm.registerEvents(entity_tomes, this);
     	
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
@@ -252,7 +258,7 @@ public class Main extends JavaPlugin implements Listener
 					t1 = t2;
 					
 					//save horse data to tome
-					summoner_tomes.onTick();
+					click_tomes.saveAll();
 
 					t2 = System.nanoTime();
 					metrics[9] += t2 - t1;
