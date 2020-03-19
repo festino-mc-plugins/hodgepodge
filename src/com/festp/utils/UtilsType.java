@@ -608,7 +608,7 @@ public class UtilsType {
 	
 	//Sort Hoppers - ARMOR, TOOL, WEAPON
 	public static boolean isHorseArmor(Material m) {
-		return m == Material.IRON_HORSE_ARMOR || m == Material.GOLDEN_HORSE_ARMOR || m == Material.DIAMOND_HORSE_ARMOR;
+		return m.toString().toUpperCase().contains("HORSE_ARMOR");
 	}
 	public static boolean isArmor(Material m) {
 		return isBoots(m) || isLeggings(m) || isChestplate(m) || isHelmet(m);
