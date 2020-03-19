@@ -35,13 +35,13 @@ import com.festp.dispenser.PumpManager;
 import com.festp.maps.SmallMapManager;
 import com.festp.misc.LeashManager;
 import com.festp.misc.SoulStone;
-import com.festp.misc.SummonerTome;
 import com.festp.storages.Storage;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.storages.StorageBottomless;
 import com.festp.storages.StorageMultitype;
 import com.festp.storages.StoragesFileManager;
+import com.festp.tome.TomeItemHandler;
 
 public class CraftManager implements Listener {
 	public enum CraftTag { KEEP_DATA, ONLY_SPECIFIC };
@@ -61,7 +61,7 @@ public class CraftManager implements Listener {
 		addSomeCrafts();
 		addStairsAndSlabsCrafts();
 		SoulStone.addSoulStoneCrafts(plugin);
-		SummonerTome.addTomeCrafts();
+		TomeItemHandler.addTomeCrafts(plugin);
 		SmallMapManager.addCrafts(plugin);
 		plugin.stcraft.addStorageCrafts();
 	}
