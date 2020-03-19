@@ -18,6 +18,7 @@ import org.bukkit.craftbukkit.v1_15_R1.map.CraftMapCanvas;
 import org.bukkit.craftbukkit.v1_15_R1.map.CraftMapRenderer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -87,14 +88,17 @@ public class SmallMapManager implements Listener {
 	@EventHandler
 	public void onPlayerInitMap(PlayerInteractEvent event)
 	{
-		if (event.isCancelled())
+		if (event.useInteractedBlock() == Result.DEFAULT)
 			return;
+		if (event.useItemInHand() == Result.DENY)
+			return;
+		
 		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
 			return;
-		
+
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType().isInteractable())
 			return;
-		
+
 		if (event.hasItem() && event.getItem().getType() == Material.MAP)
 		{
 			if (!Utils.hasDataField(event.getItem(), SCALE_FIELD))
@@ -109,6 +113,7 @@ public class SmallMapManager implements Listener {
 					return;
 			
 			event.setCancelled(true);
+			event.setUseInteractedBlock(Result.DENY);
 			SmallMap map = genSmallMap(event.getPlayer().getLocation(), scale);
 			ItemStack map_item = getMap(map.getId(), USE_SCALE_NAMES);
 			Utils.giveOrDrop(event.getPlayer(), map_item);
