@@ -20,6 +20,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.festp.tome.SummonUtils.HorseSetter;
+import com.festp.utils.Utils;
 
 public class HorseFormat {
 	double max_health;
@@ -41,7 +42,7 @@ public class HorseFormat {
 	public String toString()
 	{
 		JSONObject json = new JSONObject();
-		json.put("type", type.getName());
+		json.put("type", Utils.getShortBukkitClass(type));
 		json.put("max_health", max_health);
 		json.put("movement_speed", speed);
 		json.put("jump_strength", jump_strength);
@@ -91,12 +92,12 @@ public class HorseFormat {
 		}
 		
 		HorseFormat res = new HorseFormat();
-		try {
-			res.type = (Class<? extends AbstractHorse>) Class.forName((String) json.get("type"));
-		} catch (ClassNotFoundException e) {
+		Class<?> resClass = Utils.getBukkitClass((String) json.get("type"));
+		if (resClass == null) {
 			System.out.print("[] SummonerTome horse class parse error: " + s);
 			return null;
 		}
+		res.type = (Class<? extends AbstractHorse>) resClass;
 		res.max_health = (double) json.get("max_health");
 		res.speed = (double) json.get("movement_speed");
 		res.jump_strength = (double) json.get("jump_strength");
