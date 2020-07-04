@@ -17,6 +17,9 @@ public class CommandWorker implements Listener, CommandExecutor {
 	private Main plugin;
 	
 	public final static String MAIN_COMMAND = "hodge";
+	public final static String MAIN_USAGE = "Usage:\n"
+			+ "/" + MAIN_COMMAND + " info\n"
+			+ "/" + MAIN_COMMAND + " metrics\n";
 	
 	public CommandWorker(Main plugin) {
 		this.plugin = plugin;
@@ -33,7 +36,8 @@ public class CommandWorker implements Listener, CommandExecutor {
 		{
 			if (args.length == 0)
 			{
-				
+				sender.sendMessage(ChatColor.GRAY + MAIN_USAGE);
+				return true;
 			}
 			if (args.length == 1)
 			{

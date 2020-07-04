@@ -34,6 +34,7 @@ public class ItemStack_SortV implements Comparable {
 			Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_PROJECTILE, Enchantment.OXYGEN,
 			Enchantment.WATER_WORKER, Enchantment.THORNS, Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER,
 			Enchantment.BINDING_CURSE,
+			Enchantment.SOUL_SPEED,
 			Enchantment.DAMAGE_ALL, Enchantment.DAMAGE_UNDEAD, Enchantment.DAMAGE_ARTHROPODS, Enchantment.KNOCKBACK,
 			Enchantment.FIRE_ASPECT, Enchantment.LOOT_BONUS_MOBS, Enchantment.SWEEPING_EDGE, Enchantment.DURABILITY,
 			Enchantment.ARROW_DAMAGE, Enchantment.ARROW_KNOCKBACK, Enchantment.ARROW_FIRE, Enchantment.ARROW_INFINITE,
@@ -191,6 +192,7 @@ public class ItemStack_SortV implements Comparable {
 				|| ench.equals(Enchantment.PROTECTION_EXPLOSIONS) || ench.equals(Enchantment.PROTECTION_PROJECTILE) || ench.equals(Enchantment.OXYGEN)
 				|| ench.equals(Enchantment.WATER_WORKER) || ench.equals(Enchantment.THORNS) || ench.equals(Enchantment.DEPTH_STRIDER) || ench.equals(Enchantment.FROST_WALKER)
 				|| ench.equals(Enchantment.BINDING_CURSE)
+				|| ench.equals(Enchantment.SOUL_SPEED)
 				|| ench.equals(Enchantment.DAMAGE_ALL) || ench.equals(Enchantment.DAMAGE_UNDEAD) || ench.equals(Enchantment.DAMAGE_ARTHROPODS) || ench.equals(Enchantment.KNOCKBACK)
 				|| ench.equals(Enchantment.FIRE_ASPECT) || ench.equals(Enchantment.LOOT_BONUS_MOBS) || ench.equals(Enchantment.SWEEPING_EDGE) || ench.equals(Enchantment.DURABILITY)
 				|| ench.equals(Enchantment.ARROW_DAMAGE) || ench.equals(Enchantment.ARROW_KNOCKBACK) || ench.equals(Enchantment.ARROW_FIRE) || ench.equals(Enchantment.ARROW_INFINITE)
@@ -245,6 +247,8 @@ public class ItemStack_SortV implements Comparable {
 		case DIRT: 						g++;
 		case COARSE_DIRT: 						g++;
 		case PODZOL: 						g++;
+		case CRIMSON_NYLIUM: 						g++;
+		case WARPED_NYLIUM: 						g++;
 		case COBBLESTONE: 						g++;
 		case OAK_PLANKS: 						g++;
 		case SPRUCE_PLANKS: 						g++;
@@ -252,6 +256,8 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_PLANKS: 						g++;
 		case ACACIA_PLANKS: 						g++;
 		case DARK_OAK_PLANKS: 						g++;
+		case CRIMSON_PLANKS: 						g++;
+		case WARPED_PLANKS: 						g++;
 		case BEDROCK: 						g++;
 		case SAND: 						g++;
 		case RED_SAND:  						g++;
@@ -259,30 +265,39 @@ public class ItemStack_SortV implements Comparable {
 		case GOLD_ORE: 						g++;
 		case IRON_ORE: 						g++;
 		case COAL_ORE: 						g++;
+		case NETHER_GOLD_ORE: 						g++;
 		case OAK_LOG: 						g++;
 		case SPRUCE_LOG:  						g++;
 		case BIRCH_LOG: 						g++;
 		case JUNGLE_LOG: 						g++;
 		case ACACIA_LOG: 						g++;
 		case DARK_OAK_LOG: 						g++;
+		case CRIMSON_STEM: 						g++;
+		case WARPED_STEM: 						g++;
 		case STRIPPED_OAK_LOG: 						g++;
 		case STRIPPED_SPRUCE_LOG: 						g++;
 		case STRIPPED_BIRCH_LOG: 						g++;
 		case STRIPPED_JUNGLE_LOG: 						g++;
 		case STRIPPED_ACACIA_LOG: 						g++;
 		case STRIPPED_DARK_OAK_LOG: 						g++;
+		case STRIPPED_CRIMSON_STEM: 						g++;
+		case STRIPPED_WARPED_STEM: 						g++;
 		case STRIPPED_OAK_WOOD: 						g++;
 		case STRIPPED_SPRUCE_WOOD: 						g++;
 		case STRIPPED_BIRCH_WOOD: 						g++;
 		case STRIPPED_JUNGLE_WOOD: 						g++;
 		case STRIPPED_ACACIA_WOOD: 						g++;
 		case STRIPPED_DARK_OAK_WOOD: 						g++;
+		case STRIPPED_CRIMSON_HYPHAE: 						g++;
+		case STRIPPED_WARPED_HYPHAE: 						g++;
 		case OAK_WOOD: 						g++;
 		case SPRUCE_WOOD: 						g++;
 		case BIRCH_WOOD: 						g++;
 		case JUNGLE_WOOD: 						g++;
 		case ACACIA_WOOD: 						g++;
 		case DARK_OAK_WOOD: 						g++;
+		case CRIMSON_HYPHAE: 						g++;
+		case WARPED_HYPHAE: 						g++;
 		case SPONGE: 						g++;
 		case WET_SPONGE: 						g++;
 		case GLASS: 						g++;
@@ -315,6 +330,8 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_SLAB: 						g++;
 		case ACACIA_SLAB: 						g++;
 		case DARK_OAK_SLAB: 						g++;
+		case CRIMSON_SLAB: 						g++;
+		case WARPED_SLAB: 						g++;
 		case STONE_SLAB: 						g++;
 		case SMOOTH_STONE_SLAB: 						g++;
 		case SANDSTONE_SLAB: 						g++;
@@ -354,6 +371,9 @@ public class ItemStack_SortV implements Comparable {
 		case CARVED_PUMPKIN: 						g++;
 		case NETHERRACK: 						g++;
 		case SOUL_SAND: 						g++;
+		case SOUL_SOIL: 						g++;
+		case BASALT: 						g++;
+		case POLISHED_BASALT: 						g++;
 		case GLOWSTONE: 						g++;
 		case JACK_O_LANTERN: 						g++;
 		case STONE_BRICKS: 						g++;
@@ -365,6 +385,8 @@ public class ItemStack_SortV implements Comparable {
 		case STONE_BRICK_STAIRS: 						g++;
 		case MYCELIUM: 						g++;
 		case NETHER_BRICKS: 						g++;
+		case CHISELED_NETHER_BRICKS: 						g++;
+		case CRACKED_NETHER_BRICKS: 						g++;
 		case NETHER_BRICK_STAIRS: 						g++;
 		case END_STONE: 						g++;
 		case END_STONE_BRICKS: 						g++;
@@ -374,6 +396,10 @@ public class ItemStack_SortV implements Comparable {
 		case SPRUCE_STAIRS: 						g++;
 		case BIRCH_STAIRS: 						g++;
 		case JUNGLE_STAIRS: 						g++;
+		case ACACIA_STAIRS: 						g++;
+		case DARK_OAK_STAIRS: 						g++;
+		case CRIMSON_STAIRS: 						g++;
+		case WARPED_STAIRS: 						g++;
 		case NETHER_QUARTZ_ORE: 						g++;
 		case CHISELED_QUARTZ_BLOCK: 						g++;
 		case QUARTZ_BLOCK: 						g++;
@@ -399,8 +425,6 @@ public class ItemStack_SortV implements Comparable {
 		case TERRACOTTA: 						g++;
 		case COAL_BLOCK: 						g++;
 		case PACKED_ICE: 						g++;
-		case ACACIA_STAIRS: 						g++;
-		case DARK_OAK_STAIRS: 						g++;
 		case WHITE_STAINED_GLASS: 						g++;
 		case ORANGE_STAINED_GLASS: 						g++;
 		case MAGENTA_STAINED_GLASS: 						g++;
@@ -430,6 +454,7 @@ public class ItemStack_SortV implements Comparable {
 		case RED_SANDSTONE_STAIRS: 						g++;
 		case MAGMA_BLOCK: 						g++;
 		case NETHER_WART_BLOCK: 						g++;
+		case WARPED_WART_BLOCK: 						g++;
 		case RED_NETHER_BRICKS: 						g++;
 		case BONE_BLOCK: 						g++;
 		case WHITE_CONCRETE: 						g++;
@@ -505,6 +530,22 @@ public class ItemStack_SortV implements Comparable {
 		case DIORITE_SLAB: 						g++;
 		
 		case DRIED_KELP_BLOCK: 						g++;
+		case NETHERITE_BLOCK: 						g++;
+		case ANCIENT_DEBRIS: 						g++;
+		case CRYING_OBSIDIAN: 						g++;
+		case BLACKSTONE: 						g++;
+		case BLACKSTONE_SLAB: 						g++;
+		case BLACKSTONE_STAIRS: 						g++;
+		case GILDED_BLACKSTONE: 						g++;
+		case POLISHED_BLACKSTONE: 						g++;
+		case POLISHED_BLACKSTONE_SLAB: 						g++;
+		case POLISHED_BLACKSTONE_STAIRS: 						g++;
+		case CHISELED_POLISHED_BLACKSTONE: 						g++;
+		case POLISHED_BLACKSTONE_BRICKS: 						g++;
+		case POLISHED_BLACKSTONE_BRICK_SLAB: 						g++;
+		case POLISHED_BLACKSTONE_BRICK_STAIRS: 						g++;
+		case CRACKED_POLISHED_BLACKSTONE_BRICKS: 						g++;
+		
 		// DECORATION BLOCKS
 		case OAK_SAPLING: 						g++;
 		case SPRUCE_SAPLING: 						g++;
@@ -539,6 +580,16 @@ public class ItemStack_SortV implements Comparable {
 		case WITHER_ROSE: 						g++;
 		case BROWN_MUSHROOM: 						g++;
 		case RED_MUSHROOM: 						g++;
+		case CRIMSON_FUNGUS: 						g++;
+		case WARPED_FUNGUS: 						g++;
+		case CRIMSON_ROOTS: 						g++;
+		case WARPED_ROOTS: 						g++;
+		case NETHER_SPROUTS: 						g++;
+		case WEEPING_VINES: 						g++;
+		case TWISTING_VINES: 						g++;
+		case SUGAR_CANE: 						g++;
+		case KELP: 						g++;
+		case BAMBOO: 						g++;
 		case TORCH: 						g++;
 		case END_ROD: 						g++;
 		case CHORUS_PLANT: 						g++;
@@ -557,6 +608,9 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_FENCE: 						g++;
 		case ACACIA_FENCE: 						g++;
 		case DARK_OAK_FENCE: 						g++;
+		case CRIMSON_FENCE: 						g++;
+		case WARPED_FENCE: 						g++;
+		case SOUL_TORCH: 						g++;
 		case INFESTED_STONE: 						g++;
 		case INFESTED_COBBLESTONE: 						g++;
 		case INFESTED_STONE_BRICKS: 						g++;
@@ -567,6 +621,7 @@ public class ItemStack_SortV implements Comparable {
 		case RED_MUSHROOM_BLOCK: 						g++;
 		case MUSHROOM_STEM: 						g++;
 		case IRON_BARS: 						g++;
+		case CHAIN: 						g++;
 		case GLASS_PANE: 						g++;
 		case VINE: 						g++;
 		case LILY_PAD: 						g++;
@@ -588,6 +643,9 @@ public class ItemStack_SortV implements Comparable {
 		case SANDSTONE_WALL: 						g++;
 		case END_STONE_BRICK_WALL: 						g++;
 		case DIORITE_WALL: 						g++;
+		case BLACKSTONE_WALL: 						g++;
+		case POLISHED_BLACKSTONE_WALL: 						g++;
+		case POLISHED_BLACKSTONE_BRICK_WALL: 						g++;
 		case ANVIL: 						g++;
 		case CHIPPED_ANVIL: 						g++;
 		case DAMAGED_ANVIL: 						g++;
@@ -681,6 +739,8 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_SIGN: 						g++;
 		case ACACIA_SIGN: 						g++;
 		case DARK_OAK_SIGN: 						g++;
+		case CRIMSON_SIGN: 						g++;
+		case WARPED_SIGN: 						g++;
 		case WHITE_BED: 						g++;
 		case ORANGE_BED: 						g++;
 		case MAGENTA_BED: 						g++;
@@ -734,11 +794,17 @@ public class ItemStack_SortV implements Comparable {
 		case STONECUTTER:  						g++;
 		case BELL:  						g++;
 		case LANTERN:  						g++;
+		case SOUL_LANTERN:  						g++;
 		case CAMPFIRE:  						g++;
+		case SOUL_CAMPFIRE:  						g++;
+		case SHROOMLIGHT:  						g++;
 		case BEE_NEST:  						g++;
 		case BEEHIVE:  						g++;
 		case HONEY_BLOCK:  						g++;
 		case HONEYCOMB_BLOCK:  						g++;
+		case LODESTONE:  						g++;
+		case RESPAWN_ANCHOR:  						g++;
+		
 		// REDSTONE
 		case DISPENSER: 						g++;
 		case NOTE_BLOCK: 						g++;
@@ -753,6 +819,9 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_PRESSURE_PLATE: 						g++;
 		case ACACIA_PRESSURE_PLATE: 						g++;
 		case DARK_OAK_PRESSURE_PLATE: 						g++;
+		case CRIMSON_PRESSURE_PLATE: 						g++;
+		case WARPED_PRESSURE_PLATE: 						g++;
+		case POLISHED_BLACKSTONE_PRESSURE_PLATE: 						g++;
 		case REDSTONE_TORCH: 						g++;
 		case STONE_BUTTON: 						g++;
 		case OAK_TRAPDOOR: 						g++;
@@ -761,12 +830,16 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_TRAPDOOR: 						g++;
 		case ACACIA_TRAPDOOR: 						g++;
 		case DARK_OAK_TRAPDOOR: 						g++;
+		case CRIMSON_TRAPDOOR: 						g++;
+		case WARPED_TRAPDOOR: 						g++;
 		case OAK_FENCE_GATE: 						g++;
 		case SPRUCE_FENCE_GATE: 						g++;
 		case BIRCH_FENCE_GATE: 						g++;
 		case JUNGLE_FENCE_GATE: 						g++;
 		case ACACIA_FENCE_GATE: 						g++;
 		case DARK_OAK_FENCE_GATE: 						g++;
+		case CRIMSON_FENCE_GATE: 						g++;
+		case WARPED_FENCE_GATE: 						g++;
 		case REDSTONE_LAMP: 						g++;
 		case TRIPWIRE: 						g++;
 		case OAK_BUTTON: 						g++;
@@ -775,6 +848,9 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_BUTTON: 						g++;
 		case ACACIA_BUTTON: 						g++;
 		case DARK_OAK_BUTTON: 						g++;
+		case CRIMSON_BUTTON: 						g++;
+		case WARPED_BUTTON: 						g++;
+		case POLISHED_BLACKSTONE_BUTTON: 						g++;
 		case TRAPPED_CHEST: 						g++;
 		case LIGHT_WEIGHTED_PRESSURE_PLATE: 						g++;
 		case HEAVY_WEIGHTED_PRESSURE_PLATE: 						g++;
@@ -791,10 +867,13 @@ public class ItemStack_SortV implements Comparable {
 		case JUNGLE_DOOR: 						g++;
 		case ACACIA_DOOR: 						g++;
 		case DARK_OAK_DOOR: 						g++;
+		case CRIMSON_DOOR: 						g++;
+		case WARPED_DOOR: 						g++;
 		case REPEATER: 						g++;
 		case COMPARATOR: 						g++;
 		case REDSTONE: 						g++;
 		case LECTERN: 						g++;
+		case TARGET: 						g++;
 		// TRANSPORTATION
 		case POWERED_RAIL: 						g++;
 		case DETECTOR_RAIL: 						g++;
@@ -806,6 +885,7 @@ public class ItemStack_SortV implements Comparable {
 		case CHEST_MINECART: 						g++;
 		case FURNACE_MINECART: 						g++;
 		case CARROT_ON_A_STICK: 						g++;
+		case WARPED_FUNGUS_ON_A_STICK: 						g++;
 		case TNT_MINECART: 						g++;
 		case HOPPER_MINECART: 						g++;
 		case ELYTRA: 						g++;
@@ -825,6 +905,8 @@ public class ItemStack_SortV implements Comparable {
 		case DIAMOND: 						g++;
 		case IRON_INGOT: 						g++;
 		case GOLD_INGOT: 						g++;
+		case NETHERITE_INGOT: 						g++;
+		case NETHERITE_SCRAP: 						g++;
 		case STICK: 						g++;
 		case BOWL: 						g++;
 		case STRING: 						g++;
@@ -845,9 +927,6 @@ public class ItemStack_SortV implements Comparable {
 		case TROPICAL_FISH_BUCKET: 						g++;
 		case BRICK: 						g++;
 		case CLAY_BALL: 						g++;
-		case SUGAR_CANE: 						g++;
-		case KELP: 						g++;
-		case BAMBOO: 						g++;
 		case PAPER: 						g++;
 		case BOOK: 						g++;
 		case SLIME_BALL: 						g++;
@@ -882,6 +961,9 @@ public class ItemStack_SortV implements Comparable {
 		case GOLD_NUGGET: 						g++;
 		case NETHER_WART: 						g++;
 		case ENDER_EYE: 						g++;
+		
+		// TODO rework
+		/*
 		case BAT_SPAWN_EGG: 						g++;
 		case BLAZE_SPAWN_EGG: 						g++;
 		case CAT_SPAWN_EGG: 						g++;
@@ -938,8 +1020,8 @@ public class ItemStack_SortV implements Comparable {
 		case WOLF_SPAWN_EGG: 						g++;
 		case ZOMBIE_SPAWN_EGG: 						g++;
 		case ZOMBIE_HORSE_SPAWN_EGG: 						g++;
-		case ZOMBIE_PIGMAN_SPAWN_EGG: 						g++;
 		case ZOMBIE_VILLAGER_SPAWN_EGG: 						g++;
+		*/
 		case EXPERIENCE_BOTTLE: 						g++;
 		case FIRE_CHARGE: 						g++;
 		case WRITABLE_BOOK: 						g++;
@@ -974,6 +1056,7 @@ public class ItemStack_SortV implements Comparable {
 		case MUSIC_DISC_WARD: 						g++;
 		case MUSIC_DISC_11: 						g++;
 		case MUSIC_DISC_WAIT: 						g++;
+		case MUSIC_DISC_PIGSTEP: 						g++;
 		case NAUTILUS_SHELL: 						g++;
 		case HEART_OF_THE_SEA: 						g++;
 		case FLOWER_BANNER_PATTERN: 						g++;
@@ -981,6 +1064,7 @@ public class ItemStack_SortV implements Comparable {
 		case SKULL_BANNER_PATTERN: 						g++;
 		case MOJANG_BANNER_PATTERN: 						g++;
 		case GLOBE_BANNER_PATTERN: 						g++;
+		case PIGLIN_BANNER_PATTERN: 						g++;
 		case HONEYCOMB:  						g++;
 		// FOODSTUFFS
 		case APPLE: 						g++;
@@ -1019,7 +1103,7 @@ public class ItemStack_SortV implements Comparable {
 		case BEETROOT: 						g++;
 		case BEETROOT_SOUP: 						g++;
 		case SWEET_BERRIES: 						g++;
-		case HONEY_BOTTLE:
+		case HONEY_BOTTLE: 						g++;
 		// TOOLS
 		case IRON_SHOVEL: 						g++;
 		case IRON_PICKAXE: 						g++;
@@ -1037,11 +1121,15 @@ public class ItemStack_SortV implements Comparable {
 		case GOLDEN_SHOVEL: 						g++;
 		case GOLDEN_PICKAXE: 						g++;
 		case GOLDEN_AXE: 						g++;
+		case NETHERITE_SHOVEL: 						g++;
+		case NETHERITE_PICKAXE: 						g++;
+		case NETHERITE_AXE: 						g++;
 		case WOODEN_HOE: 						g++;
 		case STONE_HOE: 						g++;
 		case IRON_HOE: 						g++;
 		case DIAMOND_HOE: 						g++;
 		case GOLDEN_HOE: 						g++;
+		case NETHERITE_HOE: 						g++;
 		case COMPASS: 						g++;
 		case FISHING_ROD: 						g++;
 		case CLOCK: 						g++;
@@ -1058,6 +1146,7 @@ public class ItemStack_SortV implements Comparable {
 		case STONE_SWORD: 						g++;
 		case DIAMOND_SWORD: 						g++;
 		case GOLDEN_SWORD: 						g++;
+		case NETHERITE_SWORD: 						g++;
 		case LEATHER_HELMET: 						g++;
 		case LEATHER_CHESTPLATE: 						g++;
 		case LEATHER_LEGGINGS: 						g++;
@@ -1078,6 +1167,10 @@ public class ItemStack_SortV implements Comparable {
 		case GOLDEN_CHESTPLATE: 						g++;
 		case GOLDEN_LEGGINGS: 						g++;
 		case GOLDEN_BOOTS: 						g++;
+		case NETHERITE_HELMET: 						g++;
+		case NETHERITE_CHESTPLATE: 						g++;
+		case NETHERITE_LEGGINGS: 						g++;
+		case NETHERITE_BOOTS: 						g++;
 							g++; // combat enchantments
 		case SPECTRAL_ARROW: 						g++;
 		case TIPPED_ARROW: 						g++;

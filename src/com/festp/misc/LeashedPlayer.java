@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLeash;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LeashHitch;
@@ -122,7 +122,7 @@ public class LeashedPlayer {
 					cooldown_remove = 0;
 				cooldown_remove--;
 				// transition to vanilla lead
-				if (cooldown_remove <= 0 && leashed instanceof LivingEntity && LeashManager.canLeashEntity(leashed)) 
+				if (cooldown_remove <= 0 && leashed instanceof LivingEntity && LeashManager.isLeashable(leashed)) 
 				{
 					((LivingEntity)leashed).setLeashHolder(workaround.getLeashHolder());
 					removeWorkaround();

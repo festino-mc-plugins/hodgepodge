@@ -3,11 +3,16 @@ package com.festp.utils;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
+import org.bukkit.block.data.type.BubbleColumn;
 
 public class UtilsType {
 
 	
+	public static boolean isNetherBiome(Biome b) {
+		return b == Biome.NETHER_WASTES || b == Biome.SOUL_SAND_VALLEY || b == Biome.CRIMSON_FOREST || b == Biome.WARPED_FOREST || b == Biome.BASALT_DELTAS;
+	}
 	public static boolean isEndBiome(Biome b) {
 		return b == Biome.THE_END || b == Biome.END_BARRENS || b == Biome.END_HIGHLANDS || b == Biome.END_MIDLANDS || b == Biome.SMALL_END_ISLANDS;
 	}
@@ -37,6 +42,8 @@ public class UtilsType {
 		case JUNGLE_TRAPDOOR: return true;
 		case OAK_TRAPDOOR: return true;
 		case SPRUCE_TRAPDOOR: return true;
+		case CRIMSON_TRAPDOOR: return true;
+		case WARPED_TRAPDOOR: return true;
 		}
 		return false;
 	}
@@ -67,6 +74,8 @@ public class UtilsType {
 		case JUNGLE_SIGN: return true;
 		case OAK_SIGN: return true;
 		case SPRUCE_SIGN: return true;
+		case CRIMSON_SIGN: return true;
+		case WARPED_SIGN: return true;
 		}
 		return false;
 	}
@@ -79,6 +88,8 @@ public class UtilsType {
 		case JUNGLE_WALL_SIGN: return true;
 		case OAK_WALL_SIGN: return true;
 		case SPRUCE_WALL_SIGN: return true;
+		case CRIMSON_WALL_SIGN: return true;
+		case WARPED_WALL_SIGN: return true;
 		}
 		return false;
 	}
@@ -91,6 +102,8 @@ public class UtilsType {
 		case JUNGLE_DOOR: return true;
 		case OAK_DOOR: return true;
 		case SPRUCE_DOOR: return true;
+		case CRIMSON_DOOR: return true;
+		case WARPED_DOOR: return true;
 		}
 		return false;
 	}
@@ -109,6 +122,8 @@ public class UtilsType {
 		case JUNGLE_PRESSURE_PLATE: return true;
 		case OAK_PRESSURE_PLATE: return true;
 		case SPRUCE_PRESSURE_PLATE: return true;
+		case CRIMSON_PRESSURE_PLATE: return true;
+		case WARPED_PRESSURE_PLATE: return true;
 		}
 		return false;
 	}
@@ -127,6 +142,8 @@ public class UtilsType {
 		case JUNGLE_BUTTON: return true;
 		case OAK_BUTTON: return true;
 		case SPRUCE_BUTTON: return true;
+		case CRIMSON_BUTTON: return true;
+		case WARPED_BUTTON: return true;
 		}
 		return false;
 	}
@@ -142,6 +159,8 @@ public class UtilsType {
 		case JUNGLE_FENCE: return true;
 		case OAK_FENCE: return true;
 		case SPRUCE_FENCE: return true;
+		case CRIMSON_FENCE: return true;
+		case WARPED_FENCE: return true;
 		}
 		return false;
 	}
@@ -156,6 +175,8 @@ public class UtilsType {
 		case JUNGLE_FENCE_GATE: return true;
 		case OAK_FENCE_GATE: return true;
 		case SPRUCE_FENCE_GATE: return true;
+		case CRIMSON_FENCE_GATE: return true;
+		case WARPED_FENCE_GATE: return true;
 		}
 		return false;
 	}
@@ -168,6 +189,8 @@ public class UtilsType {
 		case JUNGLE_SAPLING: return true;
 		case OAK_SAPLING: return true;
 		case SPRUCE_SAPLING: return true;
+		case CRIMSON_FUNGUS: return true;
+		case WARPED_FUNGUS: return true;
 		}
 		return false;
 	}
@@ -176,6 +199,8 @@ public class UtilsType {
 		switch(m) {
 		case BROWN_MUSHROOM: return true;
 		case RED_MUSHROOM: return true;
+		case CRIMSON_FUNGUS: return true;
+		case WARPED_FUNGUS: return true;
 		}
 		return false;
 	}
@@ -192,12 +217,19 @@ public class UtilsType {
 	}
 	
 	public static boolean isStationaryLiquid(Block b) {
-		if(b != null && b.isLiquid())
+		if (b == null)
+			return false;
+		if (b != null && b.isLiquid())
 		{
-			Levelled liquid = (Levelled) b.getState().getBlockData();
-			//if(liquid.getLevel() == liquid.getMaximumLevel())
-			if(liquid.getLevel() == 0)
+			BlockData data = b.getBlockData();
+			if (data instanceof BubbleColumn) {
 				return true;
+			}
+			if (data instanceof Levelled) {
+				Levelled liquid = (Levelled) data;
+				if (liquid.getLevel() == 0)
+					return true;
+			}
 		}
 		return false;
 	}
@@ -233,7 +265,8 @@ public class UtilsType {
 				|| m == Material.ANVIL || m == Material.CHIPPED_ANVIL || m == Material.DAMAGED_ANVIL
 				|| m == Material.HOPPER || m == Material.REPEATER || m == Material.COMPARATOR || m == Material.LEVER
 				|| m == Material.LOOM || m == Material.CARTOGRAPHY_TABLE || m == Material.GRINDSTONE || m == Material.STONECUTTER || m == Material.BELL
-				//|| m == Material.FLETCHING_TABLE || m == Material.SMITHING_TABLE
+				//|| m == Material.FLETCHING_TABLE
+				|| m == Material.SMITHING_TABLE || m == Material.CAMPFIRE || m == Material.SOUL_CAMPFIRE
 				|| m == Material.BARREL || m == Material.LECTERN || m == Material.SMOKER || m == Material.BLAST_FURNACE
 				|| m == Material.COMMAND_BLOCK || m == Material.CHAIN_COMMAND_BLOCK || m == Material.REPEATING_COMMAND_BLOCK;
 	}
@@ -590,6 +623,9 @@ public class UtilsType {
 		case HEAVY_WEIGHTED_PRESSURE_PLATE:
 		case LIGHT_WEIGHTED_PRESSURE_PLATE:
 		case STONE_PRESSURE_PLATE:
+		case CRIMSON_PRESSURE_PLATE:
+		case WARPED_PRESSURE_PLATE:
+		case POLISHED_BLACKSTONE_PRESSURE_PLATE:
 			return true;
 		default:
 			return false;
@@ -620,6 +656,7 @@ public class UtilsType {
 		case CHAINMAIL_BOOTS: return true;
 		case IRON_BOOTS: return true;
 		case DIAMOND_BOOTS: return true;
+		case NETHERITE_BOOTS: return true;
 		default: return false; }
 	}
 	public static boolean isLeggings(Material m) {
@@ -629,6 +666,7 @@ public class UtilsType {
 		case CHAINMAIL_LEGGINGS: return true;
 		case IRON_LEGGINGS: return true;
 		case DIAMOND_LEGGINGS: return true;
+		case NETHERITE_LEGGINGS: return true;
 		default: return false; }
 	}
 	public static boolean isChestplate(Material m) {
@@ -638,6 +676,7 @@ public class UtilsType {
 		case CHAINMAIL_CHESTPLATE: return true;
 		case IRON_CHESTPLATE: return true;
 		case DIAMOND_CHESTPLATE: return true;
+		case NETHERITE_CHESTPLATE: return true;
 		default: return false; }
 	}
 	public static boolean isHelmet(Material m) {
@@ -648,6 +687,7 @@ public class UtilsType {
 		case CHAINMAIL_HELMET: return true;
 		case IRON_HELMET: return true;
 		case DIAMOND_HELMET: return true;
+		case NETHERITE_HELMET: return true;
 		default: return false; }
 	}
 
@@ -662,6 +702,7 @@ public class UtilsType {
 		case GOLDEN_PICKAXE: return true;
 		case IRON_PICKAXE: return true;
 		case DIAMOND_PICKAXE: return true;
+		case NETHERITE_PICKAXE: return true;
 		default: return false; }
 	}
 	public static boolean isShovel(Material m) {
@@ -671,6 +712,7 @@ public class UtilsType {
 		case GOLDEN_SHOVEL: return true;
 		case IRON_SHOVEL: return true;
 		case DIAMOND_SHOVEL: return true;
+		case NETHERITE_SHOVEL: return true;
 		default: return false; }
 	}
 	public static boolean isAxe(Material m) {
@@ -680,6 +722,7 @@ public class UtilsType {
 		case GOLDEN_AXE: return true;
 		case IRON_AXE: return true;
 		case DIAMOND_AXE: return true;
+		case NETHERITE_AXE: return true;
 		default: return false; }
 	}
 	public static boolean isHoe(Material m) {
@@ -689,6 +732,7 @@ public class UtilsType {
 		case GOLDEN_HOE: return true;
 		case IRON_HOE: return true;
 		case DIAMOND_HOE: return true;
+		case NETHERITE_HOE: return true;
 		default: return false; }
 	}
 
@@ -703,6 +747,7 @@ public class UtilsType {
 		case GOLDEN_SWORD: return true;
 		case IRON_SWORD: return true;
 		case DIAMOND_SWORD: return true;
+		case NETHERITE_SWORD: return true;
 		default: return false; }
 	}
 }

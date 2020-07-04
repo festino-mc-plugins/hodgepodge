@@ -43,16 +43,25 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 
 	public ItemCommand() {
 		item_names_en = Arrays.asList(new String[] {
+				"netherite_pickaxe", "netherite_axe", "netherite_shovel", "netherite_hoe", "netherite_sword",
+				"netherite_boots", "netherite_leggings", "netherite_chestplate", "netherite_helmet",
 				"diamond_pickaxe", "diamond_axe", "diamond_shovel", "diamond_hoe", "diamond_sword",
-				"diamond_boots", "diamond_leggings", "diamond_chestplate", "diamond_helmet", "elytra", "turtle_shell", //turtle_shell - name, turtle_helmet - id ?!
+				"diamond_boots", "diamond_leggings", "diamond_chestplate", "diamond_helmet",
+				"elytra", "turtle_shell", //turtle_shell - name, turtle_helmet - id ?!
 				"bow", "shield", "trident", "crossbow", "fishing_rod", "shears", "flint_n_steel" });
 		item_names_ru = Arrays.asList(new String[] {
+				"незерит_кирка", "незерит_топор", "незерит_лопата", "незерит_мотыга", "незерит_меч",
+				"незерит_ботинки", "незерит_штаны", "незерит_нагрудник", "незерит_шлем",
 				"алмазная_кирка", "алмазный_топор", "алмазная_лопата", "алмазная_мотыга", "алмазный_меч",
-				"алмазные_ботинки", "алмазные_штаны", "алмазный_нагрудник", "алмазный_шлем", "элитра", "черепаший_панцирь",
+				"алмазные_ботинки", "алмазные_штаны", "алмазный_нагрудник", "алмазный_шлем",
+				"элитра", "черепаший_панцирь",
 				"лук", "щит", "трезубец", "арбалет", "удочка", "ножницы", "зажигалка" });
 		item_materials = Arrays.asList(new Material[] {
+				Material.NETHERITE_PICKAXE, Material.NETHERITE_AXE, Material.NETHERITE_SHOVEL, Material.NETHERITE_HOE, Material.NETHERITE_SWORD,
+				Material.NETHERITE_BOOTS, Material.NETHERITE_LEGGINGS, Material.NETHERITE_CHESTPLATE, Material.NETHERITE_HELMET,
 				Material.DIAMOND_PICKAXE, Material.DIAMOND_AXE, Material.DIAMOND_SHOVEL, Material.DIAMOND_HOE, Material.DIAMOND_SWORD,
-				Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET, Material.ELYTRA, Material.TURTLE_HELMET,
+				Material.DIAMOND_BOOTS, Material.DIAMOND_LEGGINGS, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_HELMET,
+				Material.ELYTRA, Material.TURTLE_HELMET,
 				Material.BOW, Material.SHIELD, Material.TRIDENT, Material.CROSSBOW, Material.FISHING_ROD, Material.SHEARS, Material.FLINT_AND_STEEL });
 		
 		spigot_string_ids = new ArrayList<>();
@@ -68,7 +77,7 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 				"efficiency", "fortune", "silk_touch",
 				"protection", "blast_protection", "fire_protection", "projectile_protection", "respiration", "aqua_affinity",
 				"luck_of_the_sea", "lure",
-				"depth_strider", "frost_walker", "feather_falling" });
+				"depth_strider", "frost_walker", "soul_speed", "feather_falling" });
 		ench_names_ru = Arrays.asList(new String[] {
 				"сила", "огненные_стрелы", "бесконечность", "откидывание",
 				"проклятье_несъёмности", "проклятие_утраты", "прочность", "починка", "шипы",
@@ -78,7 +87,7 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 				"эффективность", "удача", "шёлковое_касание",
 				"защита", "взрывоустойчивость", "огнеупорность", "защита_от_снарядов", "подводное_дыхание", "подводник",
 				"везучий_рыбак", "приманка",
-				"подводная_ходьба", "ледоход", "невесомость" });
+				"подводная_ходьба", "ледоход", "скорость_души", "невесомость" });
 		enchantments = Arrays.asList(new Enchantment[] {
 				Enchantment.ARROW_DAMAGE, Enchantment.ARROW_FIRE, Enchantment.ARROW_INFINITE, Enchantment.ARROW_KNOCKBACK,
 				Enchantment.BINDING_CURSE, Enchantment.VANISHING_CURSE, Enchantment.DURABILITY, Enchantment.MENDING, Enchantment.THORNS,
@@ -88,7 +97,7 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 				Enchantment.DIG_SPEED, Enchantment.LOOT_BONUS_BLOCKS, Enchantment.SILK_TOUCH,
 				Enchantment.PROTECTION_ENVIRONMENTAL, Enchantment.PROTECTION_EXPLOSIONS, Enchantment.PROTECTION_FIRE, Enchantment.PROTECTION_PROJECTILE, Enchantment.OXYGEN, Enchantment.WATER_WORKER,
 				Enchantment.LUCK, Enchantment.LURE,
-				Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER, Enchantment.PROTECTION_FALL });
+				Enchantment.DEPTH_STRIDER, Enchantment.FROST_WALKER, Enchantment.SOUL_SPEED, Enchantment.PROTECTION_FALL });
 	}
 
 
@@ -131,6 +140,8 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 				item = TomeItemHandler.getTome(TomeType.CUSTOM_HORSE);
 			} else if (item_id.equalsIgnoreCase("all_tome") || item_id.equalsIgnoreCase("том_всего")) {
 				item = TomeItemHandler.getTome(TomeType.ALL);
+			} else if (item_id.equalsIgnoreCase("custom_all_tome") || item_id.equalsIgnoreCase("том_любого_всего")) {
+				item = TomeItemHandler.getTome(TomeType.CUSTOM_ALL);
 			} else {
 				item_material = getMaterial(item_id);
 				if (item_material == null) {

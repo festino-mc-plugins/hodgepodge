@@ -177,7 +177,7 @@ public class Sleeping implements Listener {
 	}
 	
 	public boolean canSleep(Biome b) {
-		return !(b == Biome.NETHER || UtilsType.isEndBiome(b));
+		return !(UtilsType.isNetherBiome(b) || UtilsType.isEndBiome(b));
 	}
 	
 	public void skipWeather() {

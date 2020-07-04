@@ -9,8 +9,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_15_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LeashHitch;
@@ -25,13 +25,13 @@ import org.bukkit.util.Vector;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
 
-import net.minecraft.server.v1_15_R1.BlockPosition;
-import net.minecraft.server.v1_15_R1.EntityLeash;
-import net.minecraft.server.v1_15_R1.EnumDirection;
-import net.minecraft.server.v1_15_R1.WorldServer;
+import net.minecraft.server.v1_16_R1.BlockPosition;
+import net.minecraft.server.v1_16_R1.EntityLeash;
+import net.minecraft.server.v1_16_R1.EnumDirection;
+import net.minecraft.server.v1_16_R1.WorldServer;
 
 public class LeashManager {
-	JavaPlugin plugin;
+	private JavaPlugin plugin;
 	
 	public static final String LENGTH_KEY = "lead_length";
 	public static final double DEFAULT_R = 8, DEFAULT_R_SQUARE = DEFAULT_R*DEFAULT_R,
@@ -41,7 +41,7 @@ public class LeashManager {
 	private static final double THROW_POWER = 6.5;
 	private List<LeashedPlayer> leashed_players = new ArrayList<>();
 	private List<LeashLasso> thrown_lasso = new ArrayList<>();
-	private static final Predicate<Entity> entity_filter = (e) -> canLeashEntity(e);
+	private static final Predicate<Entity> entity_filter = (e) -> isLeashable(e);
 	
 	public LeashManager(JavaPlugin plugin)
 	{
@@ -54,15 +54,17 @@ public class LeashManager {
 	
 	public void onDisable()
 	{
-		for(int i = 0; i < leashed_players.size(); i++) {
+		for (int i = 0; i < leashed_players.size(); i++) {
 			LeashedPlayer lp = leashed_players.get(i);
 			lp.removeWorkaround();
 		}
-		for(int i = 0; i < thrown_lasso.size(); i++) {
+		leashed_players.clear();
+		for (int i = 0; i < thrown_lasso.size(); i++) {
 			LeashLasso lasso = thrown_lasso.get(i);
 			lasso.dropLead();
 			lasso.despawnLasso();
 		}
+		thrown_lasso.clear();
 	}
 	
 	public void tick()
@@ -79,6 +81,34 @@ public class LeashManager {
 				thrown_lasso.remove(i);
 			}
 		}
+	}
+	
+	public boolean click(Entity rightclicked, Player clicking, ItemStack hand)
+	{
+		for (int i = leashed_players.size()-1; i >= 0; i--) {
+			LeashedPlayer lp = leashed_players.get(i);
+			if (lp.leashed == rightclicked || lp.workaround == rightclicked) {
+				if (lp.isCooldownless()) {
+					lp.workaround.remove();
+					Utils.giveOrDrop(clicking, new ItemStack(Material.LEAD, 1));
+					leashed_players.remove(i);
+				}
+				return true;
+			}
+		}
+		
+		if (hand != null && canLeash(rightclicked))
+		{
+			if (hand.getType() == Material.LEAD && rightclicked instanceof Player) {
+				ItemStack drop = hand.clone();
+				drop.setAmount(1);
+	    		addLeashed(clicking, rightclicked, drop);
+	        	if (clicking.getGameMode() != GameMode.CREATIVE)
+	        		hand.setAmount(hand.getAmount() - 1);
+	        	return true;
+	    	}
+		}
+		return false;
 	}
 	
 	public LeashedPlayer addLeashed(Entity holder, Entity leashed, ItemStack drops)
@@ -126,7 +156,7 @@ public class LeashManager {
 			throwLasso(holder, lead_drops);
 	}
 	
-	public static boolean canLeashEntity(Entity e)
+	public static boolean isLeashable(Entity e)
 	{
 		EntityType et = e.getType();
 		switch (et) {
@@ -157,44 +187,25 @@ public class LeashManager {
 		}
 	}
 	
-	public boolean click(Entity rightclicked, Player clicking, ItemStack hand)
+	public boolean canLeash(Entity e) {
+		if (e instanceof LivingEntity && ((LivingEntity)e).isLeashed())
+			return false;
+		
+		for (LeashedPlayer le : leashed_players)
+			if (le.leashed == e)
+				return false;
+		
+		return isLeashable(e);
+	}
+	
+	public boolean isWorkaround(Entity e)
 	{
-		for (int i = leashed_players.size()-1; i >= 0; i--) {
-			LeashedPlayer lp = leashed_players.get(i);
-			if (lp.leashed == rightclicked || lp.workaround == rightclicked) {
-				if (lp.isCooldownless()) {
-					lp.workaround.remove();
-					Utils.giveOrDrop(clicking, new ItemStack(Material.LEAD, 1));
-					leashed_players.remove(i);
-				}
+		for(LeashedPlayer lp : leashed_players) {
+			if(lp.workaround == e) {
 				return true;
 			}
 		}
-		
-		if (hand != null)
-		{
-			if (hand.getType() == Material.LEAD && rightclicked instanceof Player) {
-				ItemStack drop = hand.clone();
-				drop.setAmount(1);
-	    		addLeashed(clicking, rightclicked, drop);
-	        	if (clicking.getGameMode() != GameMode.CREATIVE)
-	        		hand.setAmount(hand.getAmount()-1);
-	        	return true;
-	    	}
-		}
 		return false;
-	}
-	
-	public boolean isWorkaroundActive(Entity e)
-	{
-		boolean found = false;
-		for(LeashedPlayer lp : leashed_players) {
-			if(lp.workaround == e) {
-				found = true;
-				break;
-			}
-		}
-		return found;
 	}
 	
 	public void removeByLeashHolder(Player p)

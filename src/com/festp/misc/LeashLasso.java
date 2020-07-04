@@ -140,7 +140,7 @@ public class LeashLasso {
 		}
 		
 		for (Entity e : projectile.getNearbyEntities(MOB_LEASH_R, MOB_LEASH_R, MOB_LEASH_R))
-			if (e instanceof LivingEntity && LeashManager.canLeashEntity(e))
+			if (e instanceof LivingEntity && manager.canLeash(e))
 			{
 				leashEntity((LivingEntity)e);
 				despawnLasso();
@@ -164,7 +164,6 @@ public class LeashLasso {
 	
 	private void leashEntity(LivingEntity e)
 	{
-		//e.setLeashHolder(holder);
 		manager.addLeashed(holder, e, lead_drops, REMOVE_COOLDOWN);
 	}
 	

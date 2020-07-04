@@ -1,17 +1,15 @@
 package com.festp.inventory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_15_R1.potion.CraftPotionBrewer;
+import org.bukkit.craftbukkit.v1_16_R1.potion.CraftPotionBrewer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -28,7 +26,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -39,7 +36,6 @@ import com.festp.utils.UtilsType;
 import com.festp.utils.UtilsWorld;
 
 public class InventoryHandler implements Listener {
-	private enum EquipAction { NO_ACTION, SWAP, EQUIP };
 	private enum ArmorSlot { BOOTS, LEGGINGS, CHESTPLATE, HELMET };
 	private List<ClosedInventory> closed_invs = new ArrayList<>();
 	private List<DroppedItem> dropped_items = new ArrayList<>();
@@ -389,6 +385,8 @@ public class InventoryHandler implements Listener {
 			return 0;
 		
 		String mat = is.getType().toString();
+		if (mat.contains("NETHERITE"))
+			return 6;
 		if (mat.contains("DIAMOND"))
 			return 5;
 		if (mat.contains("IRON"))

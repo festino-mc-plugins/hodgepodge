@@ -7,8 +7,8 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAnimals;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftAgeable;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftAnimals;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -18,8 +18,8 @@ import org.bukkit.inventory.ItemStack;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsRandom;
 
-import net.minecraft.server.v1_15_R1.EntityAgeable;
-import net.minecraft.server.v1_15_R1.EntityAnimal;
+import net.minecraft.server.v1_16_R1.EntityAgeable;
+import net.minecraft.server.v1_16_R1.EntityAnimal;
 
 public class DispenserFeeder {
 	public static final int LOVE_TICKS = 600;
@@ -68,6 +68,12 @@ public class DispenserFeeder {
 		case PUMPKIN_SEEDS:
 		case BEETROOT_SEEDS:
 			feedable = new EntityType[] { EntityType.CHICKEN };
+			break;
+		case CRIMSON_FUNGUS:
+			feedable = new EntityType[] { EntityType.HOGLIN };
+			break;
+		case WARPED_FUNGUS:
+			feedable = new EntityType[] { EntityType.STRIDER };
 			break;
 		default:
 			break;

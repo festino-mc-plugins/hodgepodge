@@ -17,7 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -41,14 +41,15 @@ import com.festp.Main;
 import com.festp.storages.Storage;
 import com.festp.storages.StorageMultitype;
 
-import net.minecraft.server.v1_15_R1.EntityAgeable;
-import net.minecraft.server.v1_15_R1.EntityAnimal;
-import net.minecraft.server.v1_15_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R1.EntityAgeable;
+import net.minecraft.server.v1_16_R1.EntityAnimal;
+import net.minecraft.server.v1_16_R1.NBTTagCompound;
 
 public class Utils {
 	private static Main plugin;
 	private static UnsafeValues legacy;
 	private static Team team_no_collide;
+	private static final String BUKKIT_PACKAGE = "org.bukkit.craftbukkit.";
 	public static final double EPSILON = 0.0001;
 	
 	public static void setPlugin(Main pl) {
@@ -137,7 +138,7 @@ public class Utils {
 	public static ItemStack setData(ItemStack i, String field, Object data) {
         if (data == null || field == null || i == null)
             return i;
-		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -158,7 +159,7 @@ public class Utils {
 	public static String getString(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null || !compound.hasKey(field))
             return null;
@@ -168,7 +169,7 @@ public class Utils {
 	public static Integer getInt(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null || !compound.hasKey(field))
             return null;
@@ -178,7 +179,7 @@ public class Utils {
 	public static boolean hasDataField(ItemStack i, String field) {
         if (field == null || i == null)
             return false;
-		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound != null && compound.hasKey(field))
         	return true;
@@ -188,7 +189,7 @@ public class Utils {
 	public static boolean hasData(ItemStack i, String field, String data) {
         if (data == null || field == null || i == null)
             return false;
-		net.minecraft.server.v1_15_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
         	return true;
@@ -204,6 +205,28 @@ public class Utils {
 		meta.setDisplayName(headName);
 		stack.setItemMeta(meta);
 		return stack;
+	}
+	
+	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_16_R1.entity.CraftHorse" */
+	public static Class<?> getBukkitClass(String name) {
+		if (!name.startsWith(BUKKIT_PACKAGE)) {
+			String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
+		    name = BUKKIT_PACKAGE + version + "." + name;
+		}
+		
+		try {
+			return Class.forName(name);
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+	}
+	public static String getShortBukkitClass(Class<?> clazz) {
+		String fullName = clazz.getName();
+		if (!fullName.startsWith(BUKKIT_PACKAGE)) {
+			return fullName;
+		}
+		String name = fullName.substring(BUKKIT_PACKAGE.length());
+		return name.substring(name.indexOf(".") + 1);
 	}
 	
 	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity_type, String beacon_id, boolean gravity) {

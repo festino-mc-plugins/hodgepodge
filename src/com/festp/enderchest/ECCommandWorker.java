@@ -30,6 +30,7 @@ public class ECCommandWorker implements CommandExecutor {
 		this.pl = pl;
 	}
 	
+	// TODO fix acreate autocomplete and usage (no op)
 	//ec info without ecgroup, multigroup creating and joining, delete files with groups, load files, help on commands, ec info invited by name
 	@Override
 	public boolean onCommand(final CommandSender sender, final Command command, final String cmdlabel, final String[] args) {

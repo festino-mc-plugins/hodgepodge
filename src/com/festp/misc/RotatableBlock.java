@@ -4,7 +4,6 @@ import org.bukkit.Axis;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.Bisected.Half;
 import org.bukkit.block.data.BlockData;
@@ -21,9 +20,6 @@ import org.bukkit.block.data.type.Gate;
 import org.bukkit.block.data.type.Piston;
 import org.bukkit.block.data.type.Repeater;
 import org.bukkit.block.data.type.Slab;
-import org.bukkit.block.data.type.Stairs;
-import org.bukkit.block.data.type.TrapDoor;
-import org.bukkit.material.Pumpkin;
 
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
@@ -60,7 +56,7 @@ public class RotatableBlock {
 			return true;
 		}
 		if(UtilsType.is_glazed_terracotta(block) || block == Material.PUMPKIN || block == Material.CARVED_PUMPKIN || block == Material.JACK_O_LANTERN
-				|| block == Material.CAMPFIRE || block == Material.BEEHIVE || block == Material.BEE_NEST) { // || data instanceof Pumpkin) {
+				|| block == Material.CAMPFIRE || block == Material.SOUL_CAMPFIRE || block == Material.BEEHIVE || block == Material.BEE_NEST) { // || data instanceof Pumpkin) {
 			rotate_directional_4(b);
 			return true;
 		}

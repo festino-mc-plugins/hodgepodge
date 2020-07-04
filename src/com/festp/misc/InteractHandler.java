@@ -14,9 +14,12 @@ import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.Rotatable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Bed.Part;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLeash;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
@@ -51,6 +54,7 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;
 import com.festp.utils.UtilsType;
+import com.festp.utils.UtilsWorld;
 
 public class InteractHandler implements Listener {
 
@@ -58,7 +62,7 @@ public class InteractHandler implements Listener {
 	public static final Class<? extends LivingEntity> BEACON_SADDLE_CLASS = Turtle.class;
 	
 	//cauldrons to wash items
-	List<BlockState> cauls = new ArrayList<>();
+	List<BlockData> cauls = new ArrayList<>();
 	List<Integer> caulticks = new ArrayList<>();
 	List<Item> world_items = new ArrayList<>();
 	List<LivingEntity> world_beacons = new ArrayList<>();
@@ -87,7 +91,7 @@ public class InteractHandler implements Listener {
 	
 	public void onTick()
 	{
-		for (int i = left_rotate_cooldown.size()-1; i >= 0; i--) {
+		for (int i = left_rotate_cooldown.size() - 1; i >= 0; i--) {
 			CooldownPlayer cp = left_rotate_cooldown.get(i);
 			if(!cp.tick()) {
 				left_rotate_cooldown.remove(i);
@@ -103,20 +107,21 @@ public class InteractHandler implements Listener {
 			}
 		}
 
-		List<Item> removed_items = new ArrayList<>();
-		for (Item item : world_items)
+		for (int i = world_items.size() - 1; i >= 0; i--)
 		{
+			Item item = world_items.get(i);
+			
 			if (!item.isValid()) {
-				removed_items.add(item);
+				world_items.remove(i);
 				continue;
 			}
 			World w = item.getWorld();
 			Block b = item.getLocation().getBlock();
 			if(b.getType() == Material.CAULDRON) {
-				BlockState cauldron = b.getState(); //TO DO: use Levelled BlockData
-				if(cauldron.getData().getData() > 0) {
-					int i = cauls.indexOf(cauldron);
-					if(i >= 0) {
+				BlockData cauldron = b.getBlockData();
+				if (UtilsWorld.getCauldronLevel(cauldron) > 0) {
+					int j = cauls.indexOf(cauldron);
+					if(j >= 0) {
 						continue;
 					}
 					Material m = item.getItemStack().getType();
@@ -126,11 +131,7 @@ public class InteractHandler implements Listener {
 					else if (UtilsType.is_colored_terracotta(m))
 						drop = new ItemStack(Material.TERRACOTTA);
 					else if (UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
-						 if (UtilsType.is_glazed_terracotta(m)) 
-							 drop = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-						 else if (UtilsType.is_concrete(m)) 
-							 drop = new ItemStack(Material.WHITE_CONCRETE, 1);
-						 else if (UtilsType.is_wool(m)) 
+						 if (UtilsType.is_wool(m)) 
 							 drop = new ItemStack(Material.WHITE_WOOL, 1);
 						 else if (UtilsType.is_carpet(m)) 
 							 drop = new ItemStack(Material.WHITE_CARPET, 1);
@@ -147,14 +148,11 @@ public class InteractHandler implements Listener {
 		                caulticks.add(0);
 		                
 						if (item.getItemStack().getAmount() <= 0)
-							world_items.remove(item);
+							world_items.remove(i);
 					}
 				}
 			}
 		}
-		
-		for (Item beacon : removed_items)
-			world_items.remove(beacon);
 		
 		List<LivingEntity> removed_beacons = new ArrayList<>();
 		for (LivingEntity beacon : world_beacons)
@@ -180,7 +178,7 @@ public class InteractHandler implements Listener {
 			}
 			// leashed players
 			else if (isLeashBeacon(beacon)) {
-				if (!leash_manager.isWorkaroundActive(beacon) || !beacon.isLeashed()) {
+				if (!leash_manager.isWorkaround(beacon) || !beacon.isLeashed()) {
 					System.out.print("remove leash beacon");
 					beacon.getWorld().dropItem(beacon.getLocation(), new ItemStack(Material.LEAD, 1));
 					beacon.remove();
@@ -302,8 +300,8 @@ public class InteractHandler implements Listener {
 	@EventHandler//(ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
-		if(event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
-		if(event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
+		if (event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
+		if (event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
 			return;
 		if (event.hasBlock() && event.getItem() != null) {
 			if (!event.getPlayer().isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
@@ -348,21 +346,44 @@ public class InteractHandler implements Listener {
 			
 			if (UtilsType.is_dye(event.getItem().getType()) ) 
 			{
-				if ( UtilsType.is_banner(event.getClickedBlock().getType()) || UtilsType.is_wall_banner(event.getClickedBlock().getType()) && event.getItem().getAmount()>5 )
+				DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+				DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
+				Material block_material = event.getClickedBlock().getType();
+				boolean is_wall_banner = UtilsType.is_wall_banner(block_material);
+				boolean is_banner = UtilsType.is_banner(block_material);
+				if ( (is_banner || is_wall_banner)
+						&& event.getItem().getAmount() > 5 )
 				{
-					if ( ((Banner)event.getClickedBlock().getState()).getBaseColor() != ((Dye)event.getItem().getData()).getColor() ) {
-						Block banner = event.getClickedBlock();
-						Banner b = (Banner)banner.getState();
-						b.setBaseColor( ((Dye)event.getItem().getData()).getColor() );
-						b.update();
-						event.getItem().setAmount(event.getItem().getAmount()-6);
+					Block banner_block = event.getClickedBlock();
+					Banner banner = (Banner) banner_block.getState();
+					BlockData old_banner_data = banner_block.getBlockData();
+					
+					if (banner.getBaseColor() != clicking_dye_color) {
+
+						if (is_wall_banner)
+							banner.setType(UtilsColor.fromColor_wall_banner(clicking_dye_color));
+						if (is_banner)
+							banner.setType(UtilsColor.fromColor_banner(clicking_dye_color));
+						//b.setBaseColor(clicking_dye_color);
+						banner.update(true);
+						
+						if (is_wall_banner) {
+							Directional banner_data = (Directional) banner_block.getBlockData();
+							banner_data.setFacing( ((Directional) old_banner_data).getFacing() );
+							banner_block.setBlockData(banner_data);
+						}
+						if (is_banner) {
+							Rotatable banner_data = (Rotatable) banner_block.getBlockData();
+							banner_data.setRotation( ((Rotatable) old_banner_data).getRotation() );
+							banner_block.setBlockData(banner_data);
+						}
+						
+						event.getItem().setAmount(event.getItem().getAmount() - 6);
 					}
 					return;
 					
 				}
 				
-				DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
-				DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
 				if (clicked_block_color == clicking_dye_color)
 					return;
 				if (UtilsType.is_terracotta(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
@@ -376,11 +397,7 @@ public class InteractHandler implements Listener {
 			}
 			
 			Material handMaterial = event.getItem().getType();
-			if (handMaterial.equals(Material.WOODEN_HOE) ||
-				handMaterial.equals(Material.STONE_HOE) ||
-				handMaterial.equals(Material.IRON_HOE) ||
-				handMaterial.equals(Material.GOLDEN_HOE) ||
-				handMaterial.equals(Material.DIAMOND_HOE) )
+			if (UtilsType.isHoe(handMaterial))
 			{
 				//ROTATE BLOCKS
 				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())
@@ -442,35 +459,35 @@ public class InteractHandler implements Listener {
 
 		// TODO: cancel if clicked on leashed entity
 		// jump rope and lasso
-		if(event.getItem() != null && event.getItem().getType() == Material.LEAD) {
+		if (event.getItem() != null && event.getItem().getType() == Material.LEAD) {
 			ItemStack hand = event.getItem();
 			Player player = event.getPlayer();
 			ItemStack lead_drops = hand.clone();
 			lead_drops.setAmount(1);
-			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && UtilsType.isFence(event.getClickedBlock().getType())) {
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && UtilsType.isFence(event.getClickedBlock().getType())) {
 				
 				List <Entity> entities = event.getPlayer().getNearbyEntities(15, 15, 15);
-				for(Entity e : entities)
-					if(e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
+				for (Entity e : entities)
+					if (e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
 						return;
 				
 				event.setCancelled(true);
 				Location hitch_loc = event.getClickedBlock().getLocation();
 				LeashHitch hitch = LeashManager.spawnHitch(hitch_loc);
 				leash_manager.addLeashed(hitch, event.getPlayer(), lead_drops);
-		    	if(player.getGameMode() != GameMode.CREATIVE)
+		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
-			else if(event.getAction() == Action.RIGHT_CLICK_AIR
+			else if (event.getAction() == Action.RIGHT_CLICK_AIR
 					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !UtilsType.isInteractable(event.getClickedBlock().getType())) {
 				leash_manager.throwLasso(event.getPlayer(), lead_drops);
-		    	if(player.getGameMode() != GameMode.CREATIVE)
+		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
-			else if(event.getAction() == Action.LEFT_CLICK_AIR)
+			else if (event.getAction() == Action.LEFT_CLICK_AIR)
 			{
 				leash_manager.throwTargetLasso(event.getPlayer(), lead_drops);
-		    	if(player.getGameMode() != GameMode.CREATIVE)
+		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 		}

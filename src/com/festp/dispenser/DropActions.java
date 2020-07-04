@@ -11,8 +11,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_15_R1.entity.CraftAnimals;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftAgeable;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftAnimals;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -29,8 +29,8 @@ import com.festp.utils.Vector3i;
 import com.festp.dispenser.PumpManager.PumpState;
 import com.festp.dispenser.PumpManager.PumpType;
 
-import net.minecraft.server.v1_15_R1.EntityAgeable;
-import net.minecraft.server.v1_15_R1.EntityAnimal;
+import net.minecraft.server.v1_16_R1.EntityAgeable;
+import net.minecraft.server.v1_16_R1.EntityAnimal;
 
 public class DropActions implements Listener {
 	Main pl;
@@ -633,6 +633,10 @@ public class DropActions implements Listener {
 	static Material pump(Block b)
 	{
 		Material material = b.getType();
+		if (material == Material.BUBBLE_COLUMN) {
+			material = Material.WATER;
+		}
+		
 		if (material == Material.LAVA || material == Material.WATER)
 		{
 			b.setType(Material.AIR);

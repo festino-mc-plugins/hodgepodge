@@ -226,12 +226,11 @@ public class SmallRenderer extends MapRenderer {
 		Material material = b.getType();
 		
 		BlockData block_data = b.getBlockData();
-		if (UtilsType.is_banner(material))
+		if (UtilsType.is_banner(material) || UtilsType.is_wall_banner(material)) {
 			material = WOOD;
-		else if (UtilsType.is_flower(material))
+		} else if (UtilsType.is_flower(material)) {
 			material = FOLIAGE;
-		else if (UtilsType.is_bed(material))
-		{
+		} else if (UtilsType.is_bed(material)) {
 			Bed bed = (Bed)block_data;
 			Part part = bed.getPart();
 			if (part == Part.HEAD) {
@@ -241,36 +240,32 @@ public class SmallRenderer extends MapRenderer {
 				DyeColor bed_color = UtilsColor.colorFromMaterial(material);
 				material = getMaterial(bed_color);
 			}
-		}
-		else if (UtilsType.isLog(material))
-		{
+		} else if (UtilsType.is_shulker_box(material)) {
+			DyeColor color = UtilsColor.colorFromMaterial(material);
+			material = getMaterial(color);
+		} else if (UtilsType.isLog(material)) {
 			Orientable log = (Orientable)block_data;
-			if (log.getAxis() != Axis.Y)
-			{
+			if (log.getAxis() != Axis.Y) {
 				if (material == Material.ACACIA_LOG)
 					material = STONE;
 				else if (material == Material.BIRCH_LOG)
 					material = QUARTZ;
-				else if (material == Material.DARK_OAK_LOG && material == Material.SPRUCE_LOG)
+				else if (material == Material.DARK_OAK_LOG || material == Material.SPRUCE_LOG)
 					material = BROWN;
 				else if (material == Material.OAK_LOG || material == Material.JUNGLE_LOG)
 					material = SPRUCE_BROWN;
 			}
-		}
-		else if (material == Material.MUSHROOM_STEM || material == Material.BROWN_MUSHROOM_BLOCK || material == Material.RED_MUSHROOM_BLOCK)
-		{
+		} else if (material == Material.MUSHROOM_STEM
+				|| material == Material.BROWN_MUSHROOM_BLOCK || material == Material.RED_MUSHROOM_BLOCK) {
 			MultipleFacing mushroom = (MultipleFacing)block_data;
 			if (!mushroom.hasFace(BlockFace.UP))
 				material = SAND;
-		}
-		else if (material == Material.MUSHROOM_STEM || material == Material.BROWN_MUSHROOM_BLOCK || material == Material.RED_MUSHROOM_BLOCK)
-		{
+		} else if (material == Material.MUSHROOM_STEM
+				|| material == Material.BROWN_MUSHROOM_BLOCK || material == Material.RED_MUSHROOM_BLOCK) {
 			MultipleFacing mushroom = (MultipleFacing)block_data;
 			if (!mushroom.hasFace(BlockFace.UP))
 				material = SAND;
-		}
-		else if (block_data instanceof Waterlogged)
-		{
+		} else if (block_data instanceof Waterlogged) {
 			material = afterWaterRender(material, block_data);
 		}
 		
@@ -310,7 +305,7 @@ public class SmallRenderer extends MapRenderer {
 	
 	public static byte getColor(Material material)
 	{
-		int max_color = 208;
+		int max_color = (58+1) * 4;
 		int color = max_color;
 		switch (material)
 		{
@@ -328,7 +323,7 @@ public class SmallRenderer extends MapRenderer {
 		case BIRCH_DOOR: case BIRCH_FENCE_GATE: case BIRCH_FENCE:
 		case BIRCH_TRAPDOOR: case BIRCH_WALL_SIGN: case BIRCH_SIGN: case BIRCH_PRESSURE_PLATE:
 		case END_STONE: case END_STONE_BRICKS: case END_STONE_BRICK_SLAB: case END_STONE_BRICK_STAIRS: case END_STONE_BRICK_WALL:
-		case SCAFFOLDING:
+		case TURTLE_EGG: case SCAFFOLDING:
 			color -= 4;
 		// CLOTH
 		case MUSHROOM_STEM: /*stem facing up*/ case COBWEB: /*bed head*/
@@ -341,7 +336,8 @@ public class SmallRenderer extends MapRenderer {
 			color -= 4;
 		// IRON
 		case IRON_BLOCK: case IRON_DOOR: case IRON_TRAPDOOR: case HEAVY_WEIGHTED_PRESSURE_PLATE:
-		case ANVIL: case CHIPPED_ANVIL: case DAMAGED_ANVIL: case BREWING_STAND: case LANTERN:
+		case ANVIL: case CHIPPED_ANVIL: case DAMAGED_ANVIL: case BREWING_STAND: 
+		case GRINDSTONE: case LODESTONE: case LANTERN: case SOUL_LANTERN:
 			color -= 4;
 		// FOLIAGE
 		case ACACIA_LEAVES: case BIRCH_LEAVES: case DARK_OAK_LEAVES: case JUNGLE_LEAVES: case OAK_LEAVES: case SPRUCE_LEAVES:
@@ -349,7 +345,7 @@ public class SmallRenderer extends MapRenderer {
 		case BAMBOO: case GRASS: case TALL_GRASS: /*flowers*/ case FERN: case LARGE_FERN:
 		case LILY_PAD: case WHEAT: case CARROTS: case POTATOES: case BEETROOTS: case SUGAR_CANE:
 		case PUMPKIN_STEM: case MELON_STEM: case ATTACHED_PUMPKIN_STEM: case ATTACHED_MELON_STEM:
-		case CACTUS: case VINE: case COCOA: case RED_MUSHROOM: case BROWN_MUSHROOM:
+		case CACTUS: case VINE: case COCOA: case SWEET_BERRY_BUSH:
 			color -= 4;
 		// SNOW
 		case WHITE_WOOL: case WHITE_CARPET: case SNOW_BLOCK: case SNOW: case WHITE_STAINED_GLASS: case WHITE_STAINED_GLASS_PANE:
@@ -379,7 +375,7 @@ public class SmallRenderer extends MapRenderer {
 		case FURNACE: case DISPENSER: case DROPPER: case HOPPER: case OBSERVER: case SMOKER: case STONECUTTER: case BLAST_FURNACE:
 			color -= 4;
 		// WATER
-		case WATER: case SEAGRASS: case TALL_SEAGRASS: case KELP:
+		case WATER: case SEAGRASS: case TALL_SEAGRASS: case KELP: case BUBBLE_COLUMN:
 			color -= 4;
 		// WOOD
 		case OAK_LOG: /*vertical*/ case STRIPPED_OAK_LOG: case STRIPPED_OAK_WOOD: case OAK_PLANKS: case OAK_STAIRS: case OAK_SLAB:
@@ -389,11 +385,11 @@ public class SmallRenderer extends MapRenderer {
 		case NOTE_BLOCK: case CRAFTING_TABLE: case BOOKSHELF: case CHEST: case TRAPPED_CHEST: case DAYLIGHT_DETECTOR: case LADDER:
 		case BAMBOO_SAPLING: case DEAD_BUSH:
 		case LECTERN: case COMPOSTER: case LOOM: case BARREL: case SMITHING_TABLE: case FLETCHING_TABLE: case CARTOGRAPHY_TABLE:
-		case BEEHIVE: case BEE_NEST:
+		case BEEHIVE:
 			color -= 4;
 		// QUARTZ
-		/*horizontal birch*/ case BIRCH_WOOD: case SEA_LANTERN: case QUARTZ_BLOCK: case QUARTZ_PILLAR: case QUARTZ_SLAB: case QUARTZ_STAIRS: case CHISELED_QUARTZ_BLOCK:
-		case SMOOTH_QUARTZ: case SMOOTH_QUARTZ_SLAB: case SMOOTH_QUARTZ_STAIRS:
+		/*horizontal birch*/ case BIRCH_WOOD: case QUARTZ_BLOCK: case QUARTZ_PILLAR: case QUARTZ_SLAB: case QUARTZ_STAIRS: case CHISELED_QUARTZ_BLOCK: case QUARTZ_BRICKS:
+		case SMOOTH_QUARTZ: case SMOOTH_QUARTZ_SLAB: case SMOOTH_QUARTZ_STAIRS: case SEA_LANTERN: case TARGET:
 		case DIORITE: case DIORITE_SLAB: case DIORITE_STAIRS: case DIORITE_WALL: case POLISHED_DIORITE: case POLISHED_DIORITE_SLAB: case POLISHED_DIORITE_STAIRS:
 			color -= 4;
 		// ORANGE
@@ -413,14 +409,14 @@ public class SmallRenderer extends MapRenderer {
 		case MAGENTA_GLAZED_TERRACOTTA: case MAGENTA_CONCRETE: case MAGENTA_CONCRETE_POWDER: case MAGENTA_STAINED_GLASS: case MAGENTA_STAINED_GLASS_PANE:
 			color -= 4;
 		// LIGHT_BLUE
-		case LIGHT_BLUE_WOOL: case LIGHT_BLUE_CARPET:
+		case SOUL_FIRE: case LIGHT_BLUE_WOOL: case LIGHT_BLUE_CARPET:
 		case LIGHT_BLUE_GLAZED_TERRACOTTA: case LIGHT_BLUE_CONCRETE: case LIGHT_BLUE_CONCRETE_POWDER: case LIGHT_BLUE_STAINED_GLASS: case LIGHT_BLUE_STAINED_GLASS_PANE:
 			color -= 4;
 		// YELLOW
-		case HAY_BLOCK: case SPONGE: case WET_SPONGE:
+		case HAY_BLOCK: case SPONGE: case WET_SPONGE: case BEE_NEST:
 		case YELLOW_WOOL: case YELLOW_CARPET:
 		case YELLOW_GLAZED_TERRACOTTA: case YELLOW_CONCRETE: case YELLOW_CONCRETE_POWDER: case YELLOW_STAINED_GLASS: case YELLOW_STAINED_GLASS_PANE:
-		case HORN_CORAL_BLOCK:
+		case HORN_CORAL_BLOCK: case HORN_CORAL: case HORN_CORAL_WALL_FAN: case HORN_CORAL_FAN:
 			color -= 4;
 		// LIME
 		case MELON:
@@ -430,7 +426,7 @@ public class SmallRenderer extends MapRenderer {
 		// PINK (20)
 		case PINK_WOOL: case PINK_CARPET:
 		case PINK_GLAZED_TERRACOTTA: case PINK_CONCRETE: case PINK_CONCRETE_POWDER: case PINK_STAINED_GLASS: case PINK_STAINED_GLASS_PANE:
-		case BRAIN_CORAL_BLOCK:
+		case BRAIN_CORAL_BLOCK: case BRAIN_CORAL: case BRAIN_CORAL_WALL_FAN: case BRAIN_CORAL_FAN:
 			color -= 4;
 		// GRAY
 		case GRAY_WOOL: case GRAY_CARPET:
@@ -438,12 +434,12 @@ public class SmallRenderer extends MapRenderer {
 		case DEAD_BRAIN_CORAL_BLOCK: case DEAD_BUBBLE_CORAL_BLOCK: case DEAD_FIRE_CORAL_BLOCK: case DEAD_HORN_CORAL_BLOCK: case DEAD_TUBE_CORAL_BLOCK:
 		case DEAD_BRAIN_CORAL: case DEAD_BUBBLE_CORAL: case DEAD_FIRE_CORAL: case DEAD_HORN_CORAL: case DEAD_TUBE_CORAL:
 		case DEAD_BRAIN_CORAL_FAN: case DEAD_BUBBLE_CORAL_FAN: case DEAD_FIRE_CORAL_FAN: case DEAD_HORN_CORAL_FAN: case DEAD_TUBE_CORAL_FAN:
+		case DEAD_BRAIN_CORAL_WALL_FAN: case DEAD_BUBBLE_CORAL_WALL_FAN: case DEAD_FIRE_CORAL_WALL_FAN: case DEAD_HORN_CORAL_WALL_FAN: case DEAD_TUBE_CORAL_WALL_FAN:
 			color -= 4;
-		// SILVER
-		case STRUCTURE_BLOCK:
+		// LIGHT GRAY
+		case STRUCTURE_BLOCK: case JIGSAW:
 		case LIGHT_GRAY_WOOL: case LIGHT_GRAY_CARPET:
 		case LIGHT_GRAY_GLAZED_TERRACOTTA: case LIGHT_GRAY_CONCRETE: case LIGHT_GRAY_CONCRETE_POWDER: case LIGHT_GRAY_STAINED_GLASS: case LIGHT_GRAY_STAINED_GLASS_PANE:
-		case GRINDSTONE:
 			color -= 4;
 		// CYAN
 		case PRISMARINE: case PRISMARINE_SLAB: case PRISMARINE_STAIRS: case PRISMARINE_WALL:
@@ -454,19 +450,20 @@ public class SmallRenderer extends MapRenderer {
 		case REPEATING_COMMAND_BLOCK: case MYCELIUM: case CHORUS_FLOWER: case CHORUS_PLANT: 
 		case PURPLE_WOOL: case PURPLE_CARPET:
 		case PURPLE_GLAZED_TERRACOTTA: case PURPLE_CONCRETE: case PURPLE_CONCRETE_POWDER: case PURPLE_STAINED_GLASS: case PURPLE_STAINED_GLASS_PANE:
-		case BUBBLE_CORAL_BLOCK:
+		case BUBBLE_CORAL_BLOCK: case BUBBLE_CORAL: case BUBBLE_CORAL_FAN: case BUBBLE_CORAL_WALL_FAN:
 			color -= 4;
 		// BLUE
 		case BLUE_WOOL: case BLUE_CARPET:
 		case BLUE_GLAZED_TERRACOTTA: case BLUE_CONCRETE: case BLUE_CONCRETE_POWDER: case BLUE_STAINED_GLASS: case BLUE_STAINED_GLASS_PANE:
-		case TUBE_CORAL_BLOCK:
+		case TUBE_CORAL_BLOCK: case TUBE_CORAL: case TUBE_CORAL_FAN: case TUBE_CORAL_WALL_FAN:
 			color -= 4;
 		// BROWN
+		case BROWN_MUSHROOM:
 		case DARK_OAK_LOG: /*both vertical and horizontal*/ case DARK_OAK_WOOD: case STRIPPED_DARK_OAK_LOG: case STRIPPED_DARK_OAK_WOOD:
 		case DARK_OAK_PLANKS: case DARK_OAK_STAIRS: case DARK_OAK_SLAB:
 		case DARK_OAK_DOOR: case DARK_OAK_FENCE_GATE: case DARK_OAK_FENCE:
 		case DARK_OAK_TRAPDOOR: case DARK_OAK_WALL_SIGN: case DARK_OAK_SIGN: case DARK_OAK_PRESSURE_PLATE:
-		/*horizontal spruce*/ case SPRUCE_WOOD: case COMMAND_BLOCK: case SOUL_SAND:
+		/*horizontal spruce*/ case SPRUCE_WOOD: case COMMAND_BLOCK: case SOUL_SAND: case SOUL_SOIL:
 		case BROWN_WOOL: case BROWN_CARPET:
 		case BROWN_GLAZED_TERRACOTTA: case BROWN_CONCRETE: case BROWN_CONCRETE_POWDER: case BROWN_STAINED_GLASS: case BROWN_STAINED_GLASS_PANE:
 			color -= 4;
@@ -477,14 +474,19 @@ public class SmallRenderer extends MapRenderer {
 		case SEA_PICKLE:
 			color -= 4;
 		// RED
-		case RED_MUSHROOM_BLOCK: case NETHER_WART_BLOCK: case NETHER_WART: case ENCHANTING_TABLE:
-		case RED_WOOL: case RED_CARPET:
+		case RED_MUSHROOM: case RED_MUSHROOM_BLOCK: case NETHER_WART_BLOCK: case NETHER_WART: case SHROOMLIGHT:
+		case RED_WOOL: case RED_CARPET: case ENCHANTING_TABLE:
 		case BRICKS: case BRICK_SLAB: case BRICK_STAIRS: case BRICK_WALL:
 		case RED_GLAZED_TERRACOTTA: case RED_CONCRETE: case RED_CONCRETE_POWDER: case RED_STAINED_GLASS: case RED_STAINED_GLASS_PANE:
-		case FIRE_CORAL_BLOCK:
+		case FIRE_CORAL_BLOCK: case FIRE_CORAL: case FIRE_CORAL_FAN: case FIRE_CORAL_WALL_FAN:
 			color -= 4;
 		// BLACK
-		case COAL_BLOCK: case OBSIDIAN: case DRAGON_EGG: case END_GATEWAY: case END_PORTAL:
+		case COAL_BLOCK: case BASALT: case POLISHED_BASALT: case ANCIENT_DEBRIS: case NETHERITE_BLOCK:
+		case OBSIDIAN: case CRYING_OBSIDIAN: case RESPAWN_ANCHOR: case DRAGON_EGG: case END_GATEWAY: case END_PORTAL:
+		case BLACKSTONE: case BLACKSTONE_SLAB: case BLACKSTONE_STAIRS: case BLACKSTONE_WALL:
+		case POLISHED_BLACKSTONE: case POLISHED_BLACKSTONE_SLAB: case POLISHED_BLACKSTONE_STAIRS: case POLISHED_BLACKSTONE_WALL:
+		case POLISHED_BLACKSTONE_BRICKS: case POLISHED_BLACKSTONE_BRICK_SLAB: case POLISHED_BLACKSTONE_BRICK_STAIRS: case POLISHED_BLACKSTONE_BRICK_WALL:
+		case POLISHED_BLACKSTONE_PRESSURE_PLATE: case CRACKED_POLISHED_BLACKSTONE_BRICKS: case GILDED_BLACKSTONE: case CHISELED_POLISHED_BLACKSTONE:
 		case BLACK_WOOL: case BLACK_CARPET:
 		case BLACK_GLAZED_TERRACOTTA: case BLACK_CONCRETE: case BLACK_CONCRETE_POWDER: case BLACK_STAINED_GLASS: case BLACK_STAINED_GLASS_PANE:
 			color -= 4;
@@ -502,16 +504,18 @@ public class SmallRenderer extends MapRenderer {
 		// EMERALD
 		case EMERALD_BLOCK:
 			color -= 4;
-		// SPRUCE BROWN
-		case SPRUCE_LOG: /*vertical*/ case STRIPPED_SPRUCE_LOG: case STRIPPED_SPRUCE_WOOD: case SPRUCE_PLANKS: case SPRUCE_STAIRS: case SPRUCE_SLAB:
+		// PODZOL (SPRUCE BROWN)
+		case SPRUCE_LOG: /*vertical*/ case STRIPPED_SPRUCE_LOG: case STRIPPED_SPRUCE_WOOD:
+		case SPRUCE_PLANKS: case SPRUCE_STAIRS: case SPRUCE_SLAB:
 		case SPRUCE_DOOR: case SPRUCE_FENCE_GATE: case SPRUCE_FENCE:
 		case SPRUCE_TRAPDOOR: case SPRUCE_SIGN: case SPRUCE_WALL_SIGN: case SPRUCE_PRESSURE_PLATE:
-		case CAMPFIRE:
+		case CAMPFIRE: case SOUL_CAMPFIRE:
 		/* horizontal oak and jungle*/ case OAK_WOOD: case JUNGLE_WOOD: case PODZOL:
 			color -= 4;
 		// NETHERRACK
-		case NETHERRACK: case NETHER_QUARTZ_ORE: case MAGMA_BLOCK:
+		case NETHERRACK: case NETHER_QUARTZ_ORE: case NETHER_GOLD_ORE: case MAGMA_BLOCK: case CRIMSON_ROOTS:
 		case NETHER_BRICKS: case NETHER_BRICK_SLAB: case NETHER_BRICK_STAIRS: case NETHER_BRICK_WALL: case NETHER_BRICK_FENCE:
+		case CHISELED_NETHER_BRICKS: case CRACKED_NETHER_BRICKS:
 		case RED_NETHER_BRICKS: case RED_NETHER_BRICK_SLAB: case RED_NETHER_BRICK_STAIRS: case RED_NETHER_BRICK_WALL:
 			color -= 4;
 		case WHITE_TERRACOTTA:
@@ -545,6 +549,30 @@ public class SmallRenderer extends MapRenderer {
 		case RED_TERRACOTTA:
 			color -= 4;
 		case BLACK_TERRACOTTA:
+			color -= 4;
+		// CRIMSON_NYLIUM:
+		case CRIMSON_NYLIUM:
+			color -= 4;
+		// CRIMSON_STEM:
+		case CRIMSON_STEM: case STRIPPED_CRIMSON_STEM:
+		case CRIMSON_PLANKS: case CRIMSON_SLAB: case CRIMSON_STAIRS: case CRIMSON_DOOR: case CRIMSON_TRAPDOOR: case CRIMSON_PRESSURE_PLATE:
+		case CRIMSON_SIGN: case CRIMSON_WALL_SIGN: case CRIMSON_FENCE: case CRIMSON_FENCE_GATE:
+			color -= 4;
+		// CRIMSON_HYPHAE:
+		case CRIMSON_HYPHAE: case STRIPPED_CRIMSON_HYPHAE:
+			color -= 4;
+		// WARPED_NYLIUM:
+		case WARPED_NYLIUM:
+			color -= 4;
+		// WARPED_STEM:
+		case WARPED_STEM: case STRIPPED_WARPED_STEM:
+		case WARPED_PLANKS: case WARPED_SLAB: case WARPED_STAIRS: case WARPED_DOOR: case WARPED_TRAPDOOR: case WARPED_PRESSURE_PLATE:
+		case WARPED_SIGN: case WARPED_WALL_SIGN: case WARPED_FENCE: case WARPED_FENCE_GATE:
+			color -= 4;
+		// WARPED_HYPHAE:
+		case WARPED_HYPHAE: case STRIPPED_WARPED_HYPHAE:
+			color -= 4;
+		case WARPED_WART_BLOCK:
 			color -= 4;
 		// TRANSPARENT
 		default:
