@@ -82,8 +82,7 @@ public class Main extends JavaPlugin implements Listener
 	}
 	
 	long t1;
-	public void onEnable()
-	{
+	public void onEnable() {
 		pluginname = getName();
 		PATH = "plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator");
     	PluginManager pm = getServer().getPluginManager();
@@ -95,12 +94,13 @@ public class Main extends JavaPlugin implements Listener
 		getServer().getPluginManager().registerEvents(this, this);
 		
 		//would better getting main world from server config
-		for(World temp_world : getServer().getWorlds())
-			if(temp_world.getWorldType() == WorldType.NORMAL && temp_world.getEnvironment() == Environment.NORMAL) {
+		for (World temp_world : getServer().getWorlds())
+			if (temp_world.getEnvironment() == Environment.NORMAL) {
 				mainworld = temp_world;
 				break;
 			}
-		if(mainworld == null) mainworld = getServer().getWorlds().get(0);
+		if (mainworld == null)
+			mainworld = getServer().getWorlds().get(0);
 		
 		conf = new Config(this);
 		Config.loadConfig();
@@ -113,8 +113,8 @@ public class Main extends JavaPlugin implements Listener
 		ecstorage = new EnderFileStorage(this);	
 		
 		int maxID = 0;
-		for(Integer ID : StoragesFileManager.getIDList())
-			if(ID > maxID)
+		for (Integer ID : StoragesFileManager.getIDList())
+			if (ID > maxID)
 				maxID = ID;
 		StoragesFileManager.nextID = maxID+1;
 		getLogger().info("New storages will start from ID " + StoragesFileManager.nextID + ".");
@@ -171,6 +171,9 @@ public class Main extends JavaPlugin implements Listener
     	
     	SmallMapManager minimaps = new SmallMapManager();
     	pm.registerEvents(minimaps, this);
+
+    	GlassItemFrameHandler glassItemFrames = new GlassItemFrameHandler();
+    	pm.registerEvents(glassItemFrames, this);
 
     	AmethystManager amethyst_manager = new AmethystManager();
     	pm.registerEvents(amethyst_manager, this);

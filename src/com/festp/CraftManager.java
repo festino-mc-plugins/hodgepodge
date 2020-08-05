@@ -91,6 +91,7 @@ public class CraftManager implements Listener {
 		return true;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void addSomeCrafts() {
 		String name___torch_1 = "torch_from_fireball";
 		String name___redsand = "redsand_from_sand_and_redstone";
@@ -110,6 +111,7 @@ public class CraftManager implements Listener {
 		String name___smooth_sandstone_1 = "smooth_ss_from_ss";
 		String name___smooth_redsandstone_1 = "smooth_redss_from_redss";
 		String name___lead_3x = "lead_3x";
+		String name___glass_item_frame = "glass_item_frame";
 
 		NamespacedKey key___torch = new NamespacedKey(plugin, name___torch_1);
     	NamespacedKey key___redsand = new NamespacedKey(plugin, name___redsand);
@@ -129,6 +131,7 @@ public class CraftManager implements Listener {
     	NamespacedKey key___smooth_sandstone = new NamespacedKey(plugin, name___smooth_sandstone_1);
     	NamespacedKey key___smooth_redsandstone = new NamespacedKey(plugin, name___smooth_redsandstone_1);
     	NamespacedKey key___lead_3x = new NamespacedKey(plugin, name___lead_3x);
+    	NamespacedKey key___glass_item_frame = new NamespacedKey(plugin, name___glass_item_frame);
 		recipe_keys.add(key___torch);
 		recipe_keys.add(key___redsand);
 		recipe_keys.add(key___clay_1);
@@ -147,55 +150,56 @@ public class CraftManager implements Listener {
 		recipe_keys.add(key___smooth_sandstone);
 		recipe_keys.add(key___smooth_redsandstone);
 		recipe_keys.add(key___lead_3x); // TO DO: add recipes(keys and etc by name) in loop, pairs "name:Recipe"
+		recipe_keys.add(key___glass_item_frame);
 		
-    	ShapelessRecipe torch_from_fireball = new ShapelessRecipe(key___torch, new ItemStack(Material.TORCH,16) );
+    	ShapelessRecipe torch_from_fireball = new ShapelessRecipe(key___torch, new ItemStack(Material.TORCH, 16) );
     	torch_from_fireball.addIngredient(1, Material.FIRE_CHARGE);
     	torch_from_fireball.addIngredient(1, Material.STICK);
 		server.addRecipe(torch_from_fireball);
 		
-    	ShapedRecipe redsand_from_sand_and_redstone = new ShapedRecipe(key___redsand, new ItemStack(Material.RED_SAND,8) );
+    	ShapedRecipe redsand_from_sand_and_redstone = new ShapedRecipe(key___redsand, new ItemStack(Material.RED_SAND, 8) );
     	redsand_from_sand_and_redstone.shape(new String[]{"SSS", "SRS", "SSS"});
     	redsand_from_sand_and_redstone.setIngredient('S', Material.SAND);
     	redsand_from_sand_and_redstone.setIngredient('R', Material.REDSTONE);
     	server.addRecipe(redsand_from_sand_and_redstone);
     	
-    	ShapelessRecipe clay1 = new ShapelessRecipe(key___clay_1, new ItemStack(Material.CLAY_BALL,8) );
+    	ShapelessRecipe clay1 = new ShapelessRecipe(key___clay_1, new ItemStack(Material.CLAY_BALL, 8) );
     	clay1.addIngredient(1, Material.IRON_NUGGET);
     	clay1.addIngredient(4, Material.SAND);
     	clay1.addIngredient(4, Material.FLINT);
 		server.addRecipe(clay1);
     	
-    	ShapelessRecipe clay2 = new ShapelessRecipe(key___clay_2, new ItemStack(Material.CLAY_BALL,8) );
+    	ShapelessRecipe clay2 = new ShapelessRecipe(key___clay_2, new ItemStack(Material.CLAY_BALL, 8) );
     	clay2.addIngredient(1, Material.IRON_NUGGET);
     	clay2.addIngredient(4, Material.SAND);
     	clay2.addIngredient(4, Material.GRAVEL);
 		server.addRecipe(clay2);
 
-    	ShapelessRecipe sand_from_sandstone = new ShapelessRecipe(key___sand_1, new ItemStack(Material.SAND,4,(short)0) );
+    	ShapelessRecipe sand_from_sandstone = new ShapelessRecipe(key___sand_1, new ItemStack(Material.SAND, 4, (short)0) );
     	sand_from_sandstone.addIngredient(1, Material.SANDSTONE);
 		server.addRecipe(sand_from_sandstone);
 
-    	ShapelessRecipe redsand_from_redsandstone = new ShapelessRecipe(key___redsand_1, new ItemStack(Material.SAND,4,(short)1) );
+    	ShapelessRecipe redsand_from_redsandstone = new ShapelessRecipe(key___redsand_1, new ItemStack(Material.SAND, 4,(short)1) );
     	redsand_from_redsandstone.addIngredient(1, Material.RED_SANDSTONE);
 		server.addRecipe(redsand_from_redsandstone);
 
-    	ShapedRecipe dragon_egg_from_dragon_egg = new ShapedRecipe(key___dragonegg, new ItemStack(Material.DRAGON_EGG,2) );
+    	ShapedRecipe dragon_egg_from_dragon_egg = new ShapedRecipe(key___dragonegg, new ItemStack(Material.DRAGON_EGG, 2) );
     	dragon_egg_from_dragon_egg.shape(new String[]{"OOO", "ODO", "OOO"});
     	dragon_egg_from_dragon_egg.setIngredient('O', Material.OBSIDIAN);
     	dragon_egg_from_dragon_egg.setIngredient('D', Material.DRAGON_EGG);
     	server.addRecipe(dragon_egg_from_dragon_egg);
 
-    	ShapelessRecipe grass_from_dirt = new ShapelessRecipe(key___grass, new ItemStack(Material.GRASS_BLOCK,1) );
+    	ShapelessRecipe grass_from_dirt = new ShapelessRecipe(key___grass, new ItemStack(Material.GRASS_BLOCK, 1) );
     	grass_from_dirt.addIngredient(1, Material.DIRT);
     	grass_from_dirt.addIngredient(1, Material.BONE_MEAL);
     	server.addRecipe(grass_from_dirt);
 
-    	ShapelessRecipe mycel_from_dirt1 = new ShapelessRecipe(key___mycel_1, new ItemStack(Material.MYCELIUM,1) );
+    	ShapelessRecipe mycel_from_dirt1 = new ShapelessRecipe(key___mycel_1, new ItemStack(Material.MYCELIUM, 1) );
     	mycel_from_dirt1.addIngredient(1, Material.DIRT);
     	mycel_from_dirt1.addIngredient(1, Material.BROWN_MUSHROOM);
     	server.addRecipe(mycel_from_dirt1);
 
-    	ShapelessRecipe mycel_from_dirt2 = new ShapelessRecipe(key___mycel_2, new ItemStack(Material.MYCELIUM,1) );
+    	ShapelessRecipe mycel_from_dirt2 = new ShapelessRecipe(key___mycel_2, new ItemStack(Material.MYCELIUM, 1) );
     	mycel_from_dirt2.addIngredient(1, Material.DIRT);
     	mycel_from_dirt2.addIngredient(1, Material.RED_MUSHROOM);
     	server.addRecipe(mycel_from_dirt2);
@@ -203,7 +207,7 @@ public class CraftManager implements Listener {
     	
     	
     	// long lead
-    	ItemStack lead_3 = new ItemStack(Material.LEAD);
+    	ItemStack lead_3 = new ItemStack(Material.LEAD, 1);
     	lead_3 = Utils.setData(lead_3, LeashManager.LENGTH_KEY, 30+""); // magic value
     	ItemMeta lead_3_meta = lead_3.getItemMeta();
     	lead_3_meta.setDisplayName("Long lead");
@@ -244,26 +248,32 @@ public class CraftManager implements Listener {
     	advanced_pump.setIngredient('S', Material.NETHER_STAR);
     	server.addRecipe(advanced_pump);
 
-    	ShapelessRecipe pocket_borsch = new ShapelessRecipe(key___borsch, new ItemStack(Material.BEETROOT_SOUP,1) );
+    	ShapelessRecipe pocket_borsch = new ShapelessRecipe(key___borsch, new ItemStack(Material.BEETROOT_SOUP, 1) );
     	pocket_borsch.addIngredient(1, Material.BEETROOT);
     	pocket_borsch.addIngredient(1, Material.BOWL);
     	server.addRecipe(pocket_borsch);
 
-    	ShapelessRecipe chorus_from_flower = new ShapelessRecipe(key___chorus, new ItemStack(Material.CHORUS_FRUIT,10) );
+    	ShapelessRecipe chorus_from_flower = new ShapelessRecipe(key___chorus, new ItemStack(Material.CHORUS_FRUIT, 10) );
     	chorus_from_flower.addIngredient(1, Material.CHORUS_FLOWER);
     	server.addRecipe(chorus_from_flower);
 
-    	ShapelessRecipe stick_from_arrows = new ShapelessRecipe(key___stick_1, new ItemStack(Material.STICK,1) );
+    	ShapelessRecipe stick_from_arrows = new ShapelessRecipe(key___stick_1, new ItemStack(Material.STICK, 1) );
     	stick_from_arrows.addIngredient(4, Material.ARROW);
     	server.addRecipe(stick_from_arrows);
 
-    	ShapelessRecipe smooth_sandstone_from_andstone = new ShapelessRecipe(key___smooth_sandstone, new ItemStack(Material.SMOOTH_SANDSTONE,4) );
+    	ShapelessRecipe smooth_sandstone_from_andstone = new ShapelessRecipe(key___smooth_sandstone, new ItemStack(Material.SMOOTH_SANDSTONE, 4) );
     	smooth_sandstone_from_andstone.addIngredient(4, Material.CUT_SANDSTONE);
     	server.addRecipe(smooth_sandstone_from_andstone);
 
-    	ShapelessRecipe smooth_redsandstone_from_andstone = new ShapelessRecipe(key___smooth_redsandstone, new ItemStack(Material.SMOOTH_RED_SANDSTONE,4) );
+    	ShapelessRecipe smooth_redsandstone_from_andstone = new ShapelessRecipe(key___smooth_redsandstone, new ItemStack(Material.SMOOTH_RED_SANDSTONE, 4) );
     	smooth_redsandstone_from_andstone.addIngredient(4, Material.CUT_RED_SANDSTONE);
     	server.addRecipe(smooth_redsandstone_from_andstone);
+    	
+    	ShapedRecipe glass_item_frame = new ShapedRecipe(key___glass_item_frame, getInvisibleItemFrame());
+    	glass_item_frame.shape(new String[]{"SSS", "SGS", "SSS"});
+    	glass_item_frame.setIngredient('S', Material.STRING);
+    	glass_item_frame.setIngredient('G', Material.GLASS_PANE);
+    	server.addRecipe(glass_item_frame);
 	}
 	
 	public static ItemStack applyTag(ItemStack item, CraftTag tag)
@@ -621,6 +631,17 @@ public class CraftManager implements Listener {
         	temp_recipe.addIngredient(6, slabs_to_blocks[i]);
     		server.addRecipe(temp_recipe);
     	}
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static ItemStack getInvisibleItemFrame() { // TODO add function to get any special plugin item
+    	ItemStack glassItemFrame = new ItemStack(Material.ITEM_FRAME, 1);
+    	ItemMeta meta = glassItemFrame.getItemMeta();
+    	//meta.setDisplayName("Glass Item Frame");
+    	meta.setLocalizedName("Стеклянная рамка");
+    	glassItemFrame.setItemMeta(meta);
+    	Bukkit.getUnsafe().modifyItemStack(glassItemFrame, "{EntityTag:{Invisible:1b}}");
+    	return glassItemFrame;
 	}
 	
 	private String gen_key_from_material(Material m) {
