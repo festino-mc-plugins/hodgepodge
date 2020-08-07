@@ -28,6 +28,8 @@ import org.bukkit.map.MapPalette;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
+import com.festp.DelayedTask;
+import com.festp.TaskList;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;
 import com.festp.utils.UtilsType;
@@ -70,6 +72,7 @@ public class SmallRenderer extends MapRenderer {
 	boolean init;
 	SmallMap map;
 	BufferedImage image;
+	DelayedTask saveTask = null;
 	
 	public SmallRenderer(SmallMap map) {
 		this.map = map;
@@ -125,7 +128,6 @@ public class SmallRenderer extends MapRenderer {
 				// brighter block, darker under block
 				int last_y = last_color_block.getY();
 				byte color = getColor(view.getWorld(), real_x, real_z);
-				// TODO: unique blocks(i.e. water: depth, brightest(1), dark(3-5) darkest(6+))
 				if (color == getColor(WATER))
 				{
 					// count water blocks
@@ -158,27 +160,42 @@ public class SmallRenderer extends MapRenderer {
 			}
 		}
 		
+		// TODO new save system
 		save_ticks++;
 		if (save_ticks >= SAVE_TICKS)
 		{
 			save_ticks = 0;
-			BufferedImage image = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+			save(canvas);
 			
-			for (int x = 0; x < 128; x++)
-				for (int z = 0; z < 128; z++)
-				{
-					byte map_color = canvas.getPixel(x, z);
-					Color color = DEFAULT_SAVE_COLOR;
-					try {
-						color = MapPalette.getColor(map_color);
-					} catch (Exception e) {
-						Utils.printError("Map saving color error: color " + map_color);
-					}
-					image.setRGB(x, z, color.getRGB());
+			if (saveTask != null) {
+				saveTask.terminate();
+			}
+			saveTask = new DelayedTask(SAVE_TICKS * 2, new Runnable() {
+				@Override public void run() {
+					save(canvas);
 				}
-			
-			SmallMapFileManager.saveImage(map.getId(), image);
+			});
+			TaskList.add(saveTask);
 		}
+	}
+	
+	public void save(MapCanvas canvas) {
+		BufferedImage image = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+		
+		for (int x = 0; x < 128; x++)
+			for (int z = 0; z < 128; z++)
+			{
+				byte map_color = canvas.getPixel(x, z);
+				Color color = DEFAULT_SAVE_COLOR;
+				try {
+					color = MapPalette.getColor(map_color);
+				} catch (Exception e) {
+					Utils.printError("Map saving color error: color " + map_color);
+				}
+				image.setRGB(x, z, color.getRGB());
+			}
+		
+		SmallMapFileManager.saveImage(map.getId(), image);
 	}
 	
 	public Integer getId(ItemStack map)
