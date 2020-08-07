@@ -225,7 +225,7 @@ public class SmallMapManager implements Listener {
 			if (event.getAction() == InventoryAction.DROP_ALL_SLOT || event.getAction() == InventoryAction.DROP_ONE_SLOT)
 				UtilsWorld.drop(event.getWhoClicked().getEyeLocation(), map_item, 1);
 			else if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF
-				|| event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME)
+					|| event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME)
 				event.setCursor(map_item);
 			else if (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
 				event.getWhoClicked().getInventory().setItem(event.getHotbarButton(), map_item);
