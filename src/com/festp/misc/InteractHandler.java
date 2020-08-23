@@ -7,7 +7,9 @@ import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Server;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Banner;
@@ -19,12 +21,9 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Bed.Part;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftLeash;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
@@ -34,8 +33,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.entity.EntityUnleashEvent;
-import org.bukkit.event.entity.EntityUnleashEvent.UnleashReason;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -45,8 +42,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Dye;
 import org.bukkit.material.MaterialData;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
 import com.festp.CooldownPlayer;
@@ -300,11 +295,12 @@ public class InteractHandler implements Listener {
 	@EventHandler//(ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
+		Player player = event.getPlayer();
 		if (event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
-		if (event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(event.getPlayer()))
+		if (event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(player))
 			return;
 		if (event.hasBlock() && event.getItem() != null) {
-			if (!event.getPlayer().isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
+			if (!player.isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
 			{
 	                BlockState d = event.getClickedBlock().getState();
 					if (d.getData().getData() == 0)
@@ -331,7 +327,7 @@ public class InteractHandler implements Listener {
 					} else return;
 					event.setCancelled(true);
 					event.getItem().setAmount(event.getItem().getAmount()-1);
-					event.getPlayer().getInventory().addItem(washed); //TO DO: replace all of "Inventory.addItem()" with working function #thx1.13 
+					player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 
 					Utils.lower_cauldron_water(d.getBlock().getState());
 			}
 			
@@ -400,59 +396,67 @@ public class InteractHandler implements Listener {
 			if (UtilsType.isHoe(handMaterial))
 			{
 				//ROTATE BLOCKS
-				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())
-						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(event.getClickedBlock(), event.getPlayer().isSneaking())) {
+				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), player.isSneaking())
+						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(event.getClickedBlock(), player.isSneaking())) {
 					if (event.getAction() == Action.LEFT_CLICK_BLOCK)
-						left_rotate_cooldown.add(new CooldownPlayer(event.getPlayer(), Config.LEFT_ROTATE_COOLDOWN));
+						left_rotate_cooldown.add(new CooldownPlayer(player, Config.LEFT_ROTATE_COOLDOWN));
 					int dur_lvl = event.getItem().getEnchantmentLevel(Enchantment.DURABILITY);
 					byte dur = (byte) ((Math.random()*(dur_lvl + 1)) > 1 ? 0 : 1);
 					event.getItem().setDurability((short) (event.getItem().getDurability()+dur));
-					if (event.getItem().getDurability() > event.getItem().getType().getMaxDurability())
+					if (event.getItem().getDurability() > event.getItem().getType().getMaxDurability()) {
 						if (event.getHand() == EquipmentSlot.HAND)
-							event.getPlayer().getInventory().setItemInMainHand(null);
+							player.getInventory().setItemInMainHand(null);
 						else
-							event.getPlayer().getInventory().setItemInOffHand(null);
+							player.getInventory().setItemInOffHand(null);
+					}
 				}
 			}
 			
 			//change bed linen
-			if(event.getAction() == Action.RIGHT_CLICK_BLOCK && !event.getPlayer().isSneaking() && 
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !player.isSneaking() && 
 					UtilsType.is_carpet(handMaterial) && UtilsType.is_bed(event.getClickedBlock().getType())) {
-				DyeColor c_carpet = UtilsColor.colorFromMaterial(handMaterial);
-				DyeColor c_bed = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
-				if(c_bed != c_carpet) {
-					Block blockfoot = event.getClickedBlock();
-					Bed bedfoot = (Bed)blockfoot.getBlockData();
-					BlockFace face = bedfoot.getFacing();
-					Block blockhead;
-					Bed bedhead;
-					if(bedfoot.getPart() == Part.FOOT) {
-						blockhead = blockfoot.getRelative(face);
-						bedhead = (Bed)blockhead.getBlockData();
+				DyeColor newColor = UtilsColor.colorFromMaterial(handMaterial);
+				DyeColor oldColor = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+				if (oldColor != newColor) {
+					Material newBedMaterial = UtilsColor.fromColor_bed(newColor); // TODO BlockType.BED - explicit (enum) argument
+					Material newCarpetMaterial = UtilsColor.fromColor_carpet(oldColor);
+					Material particleMaterial = UtilsColor.fromColor_wool(oldColor);
+					Block blockFoot = event.getClickedBlock();
+					Bed bedFoot = (Bed) blockFoot.getBlockData();
+					BlockFace face = bedFoot.getFacing();
+					Block blockHead;
+					Bed bedHead;
+					if (bedFoot.getPart() == Part.FOOT) {
+						blockHead = blockFoot.getRelative(face);
+					} else {
+						bedHead = bedFoot;
+						blockHead = blockFoot;
+						blockFoot = blockHead.getRelative(face.getOppositeFace());
 					}
-					else {
-						bedhead = bedfoot;
-						blockhead = blockfoot;
-						blockfoot = blockhead.getRelative(face.getOppositeFace());
-						bedfoot = (Bed)blockfoot.getBlockData();
-					}
-					blockhead.setType(UtilsColor.fromColor_bed(c_carpet));
-					blockfoot.setType(UtilsColor.fromColor_bed(c_carpet));
-					bedfoot = (Bed)blockfoot.getBlockData();
-					bedfoot.setFacing(face);
-					bedhead = (Bed)blockhead.getBlockData();
-					bedhead.setPart(Part.HEAD);
-					bedhead.setFacing(face);
-					blockfoot.setBlockData(bedfoot);
-					blockhead.setBlockData(bedhead);
+
+					Location blockCenter = blockFoot.getLocation().add(0.5, 0.5, 0.5);
+					blockFoot.setType(particleMaterial, false);
+					player.getWorld().spawnParticle(Particle.BLOCK_CRACK, blockCenter, 20, 0.2f, 0.0f, 0.2f, blockFoot.getBlockData());
+					player.getWorld().playSound(blockCenter, Sound.BLOCK_WOOL_BREAK, 1.0f, 0.8f);
 					
+					blockHead.setType(newBedMaterial, false);
+					blockFoot.setType(newBedMaterial, false);
+					bedFoot = (Bed) blockFoot.getBlockData();
+					bedFoot.setFacing(face);
+					bedHead = (Bed) blockHead.getBlockData();
+					bedHead.setPart(Part.HEAD);
+					bedHead.setFacing(face);
+					blockHead.setBlockData(bedHead, false);
+					blockFoot.setBlockData(bedFoot, false);
 					
-					if(event.getItem().getAmount() == 1)
-						event.getItem().setType(UtilsColor.fromColor_carpet(c_bed));
-					else {
-						event.getItem().setAmount(event.getItem().getAmount()-1);
-						event.getPlayer().getInventory().addItem(new ItemStack(UtilsColor.fromColor_carpet(c_bed), 1));
+					if (event.getItem().getAmount() == 1) {
+						event.getItem().setType(newCarpetMaterial);
+					} else {
+						event.getItem().setAmount(event.getItem().getAmount() - 1);
+						ItemStack oldLinen = new ItemStack(newCarpetMaterial, 1);
+						Utils.giveOrDrop(player.getInventory(), oldLinen);
 					}
+					event.setCancelled(true);
 				}
 			}
 		} // has both block and item
@@ -461,12 +465,11 @@ public class InteractHandler implements Listener {
 		// jump rope and lasso
 		if (event.getItem() != null && event.getItem().getType() == Material.LEAD) {
 			ItemStack hand = event.getItem();
-			Player player = event.getPlayer();
 			ItemStack lead_drops = hand.clone();
 			lead_drops.setAmount(1);
 			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && UtilsType.isFence(event.getClickedBlock().getType())) {
 				
-				List <Entity> entities = event.getPlayer().getNearbyEntities(15, 15, 15);
+				List <Entity> entities = player.getNearbyEntities(15, 15, 15);
 				for (Entity e : entities)
 					if (e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
 						return;
@@ -474,19 +477,19 @@ public class InteractHandler implements Listener {
 				event.setCancelled(true);
 				Location hitch_loc = event.getClickedBlock().getLocation();
 				LeashHitch hitch = LeashManager.spawnHitch(hitch_loc);
-				leash_manager.addLeashed(hitch, event.getPlayer(), lead_drops);
+				leash_manager.addLeashed(hitch, player, lead_drops);
 		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if (event.getAction() == Action.RIGHT_CLICK_AIR
 					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !UtilsType.isInteractable(event.getClickedBlock().getType())) {
-				leash_manager.throwLasso(event.getPlayer(), lead_drops);
+				leash_manager.throwLasso(player, lead_drops);
 		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
 			else if (event.getAction() == Action.LEFT_CLICK_AIR)
 			{
-				leash_manager.throwTargetLasso(event.getPlayer(), lead_drops);
+				leash_manager.throwTargetLasso(player, lead_drops);
 		    	if (player.getGameMode() != GameMode.CREATIVE)
 		    		hand.setAmount(hand.getAmount()-1);
 			}
