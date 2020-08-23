@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.utils.UtilsWorld;
 
-import net.minecraft.server.v1_16_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R2.NBTTagCompound;
 
 public class SummonUtils {
 	
@@ -202,7 +202,7 @@ public class SummonUtils {
 		return getHasSummoned(tome) != null;
 	}
 	public static ItemStack setHasSummoned(ItemStack tome, UUID entity_uuid) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();
@@ -219,7 +219,7 @@ public class SummonUtils {
 	public static Entity getHasSummoned(ItemStack tome) {
 		if(tome == null)
 			return null;
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return null;

@@ -13,9 +13,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_16_R1.map.CraftMapCanvas;
-import org.bukkit.craftbukkit.v1_16_R1.map.CraftMapRenderer;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R2.map.CraftMapCanvas;
+import org.bukkit.craftbukkit.v1_16_R2.map.CraftMapRenderer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Result;
@@ -47,7 +47,7 @@ import com.festp.utils.UtilsWorld;
 import com.google.common.collect.Lists;
 
 import net.md_5.bungee.api.ChatColor;
-import net.minecraft.server.v1_16_R1.WorldMap;
+import net.minecraft.server.v1_16_R2.WorldMap;
 
 public class SmallMapManager implements Listener {
 	/** New scales (8:1, 4:1, 2:1)

@@ -7,7 +7,7 @@ import java.util.List;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_16_R1.potion.CraftPotionBrewer;
+import org.bukkit.craftbukkit.v1_16_R2.potion.CraftPotionBrewer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;

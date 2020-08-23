@@ -3,12 +3,12 @@ package com.festp.tome;
 
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.tome.TomeItemHandler.TomeType;
 
-import net.minecraft.server.v1_16_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R2.NBTTagCompound;
 
 public class TomeFormatter {
 	
@@ -31,7 +31,7 @@ public class TomeFormatter {
 	}
 
 	public static ItemStack set_boat_type(ItemStack tome, TreeSpecies type) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
             compound = new NBTTagCompound();
@@ -58,7 +58,7 @@ public class TomeFormatter {
 	}
 	
 	public static TreeSpecies get_boat_type(ItemStack tome) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound == null)
         	return null;
@@ -80,7 +80,7 @@ public class TomeFormatter {
 	
 	
 	public static HorseFormat get_horse_data(ItemStack tome) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
 	    NBTTagCompound compound = nmsStack.getTag();
 	    if (compound != null && compound.hasKey(TomeItemHandler.TOME_NBT_KEY)) {
 	    	String info = compound.getString(TomeItemHandler.TOME_NBT_KEY);
@@ -92,7 +92,7 @@ public class TomeFormatter {
 	}
 
 	public static ItemStack set_horse_data(ItemStack tome, HorseFormat data) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
         	compound = new NBTTagCompound();
@@ -124,7 +124,7 @@ public class TomeFormatter {
 	public static TomeType getTomeType(ItemStack item) {
 		if(item == null)
 			return null;
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound compound = nmsStack.getTag();
         if(compound == null)
         	return null;
@@ -152,7 +152,7 @@ public class TomeFormatter {
 		return null;
 	}
 	public static ItemStack setTome(ItemStack i, char data, String metadata) {
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
            compound = new NBTTagCompound();

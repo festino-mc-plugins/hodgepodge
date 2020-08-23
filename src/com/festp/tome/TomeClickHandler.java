@@ -6,7 +6,7 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.ChestedHorse;
@@ -29,7 +29,7 @@ import com.festp.tome.TomeItemHandler.TomeType;
 import com.festp.utils.UtilsType;
 import com.festp.utils.UtilsWorld;
 
-import net.minecraft.server.v1_16_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R2.NBTTagCompound;
 
 public class TomeClickHandler implements Listener {
 
@@ -243,7 +243,7 @@ public class TomeClickHandler implements Listener {
 	public static boolean isTome(ItemStack item) {
 		if(item == null)
 			return false;
-		net.minecraft.server.v1_16_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null)
         	return false;
