@@ -57,6 +57,7 @@ public class SmallMapManager implements Listener {
 	 *  Only cloning remains*/
 
 	static final String SCALE_FIELD = "map_scale";
+	static final String IS_DRAWING_FIELD = "is_drawing";
 	private static final boolean USE_SCALE_NAMES = false; // bad for frames, good for understanding
 	private SmallMapFileManager file_manager;
 	
@@ -70,21 +71,27 @@ public class SmallMapManager implements Listener {
 	public void onMapLoad(MapInitializeEvent event)
 	{
 		int id = event.getMap().getId();
-		SmallMap map = file_manager.load(id);
-		if (map != null)
-		{
-			SmallRenderer map_renderer = new SmallRenderer(map);
+		IMap map = file_manager.load(id);
+		if (map == null)
+			return;
+		
+		AbstractRenderer renderer = null;
+		if (map instanceof SmallMap) {
+			renderer = new SmallRenderer((SmallMap) map);
+		} else if (map instanceof DrawingMap) {
+			renderer = new DrawingRenderer((DrawingMap) map);
+		}
+		if (renderer != null) {
 			BufferedImage image = file_manager.loadImage(id);
-			setRenderer(event.getMap(), map_renderer);
+			setRenderer(event.getMap(), renderer);
 			if (image != null)
 			{
-				map_renderer.renderImage(image);
+				renderer.renderImage(image);
 			}
 		}
 	}
 
 	/** init new small map */
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerInitMap(PlayerInteractEvent event)
 	{
@@ -134,10 +141,14 @@ public class SmallMapManager implements Listener {
 		if (item0 == null || item1 == null)
 			return;
 		
+		int id = getMapId(item0);
+		IMap m = file_manager.load(id);
+		if (m == null && !(m instanceof SmallMap)) {
+			event.setCancelled(true);
+		}
 		if (!isSmallMap(item0))
 			return;
-		int id = getMapId(item0);
-		SmallMap map = file_manager.load(id);
+		SmallMap map = (SmallMap) m;
 		
 		// prepare craft: if 0 or 1 changed
 		Runnable pre_task = new Runnable() {
@@ -287,6 +298,27 @@ public class SmallMapManager implements Listener {
 
 	@EventHandler
 	public void onCraft(CraftItemEvent event) {
+		ItemStack res = event.getRecipe().getResult();
+		if (Utils.hasDataField(res, IS_DRAWING_FIELD)) {
+			Boolean isDrawing = Utils.getBoolean(res, IS_DRAWING_FIELD);
+			if (isDrawing != null && isDrawing) {
+				// TODO remove 224 99 -1039
+				MapView view = Bukkit.createMap(event.getWhoClicked().getWorld());
+				res = getMap(view.getId(),  USE_SCALE_NAMES);
+				event.getInventory().setResult(res);
+				view.setScale(Scale.CLOSEST);
+				DrawingMap new_map = new DrawingMap(view.getId(), new DrawingInfo(8, 224, 99, -1039, Position.DOWN_NORTH));
+				DrawingRenderer renderer = new DrawingRenderer(new_map);
+				setRenderer(view, renderer);
+				file_manager.addMap(new_map);
+				
+				
+			} else {
+				event.setCancelled(true);
+			}
+			return;
+		}
+		
 		ItemStack[] matrix = event.getInventory().getMatrix();
 		int paper = 0, empty_small_maps = 0, small_maps = 0;
 		ItemStack small_map = null;
@@ -306,7 +338,7 @@ public class SmallMapManager implements Listener {
 		if (small_maps == 1 && paper == 8)
 		{
 			int id = getMapId(small_map);
-			SmallMap map = file_manager.load(id);
+			SmallMap map = (SmallMap) file_manager.load(id);
 			ItemStack pre_map = extendMap(map);
 			
 			event.getInventory().setResult(pre_map);
@@ -374,7 +406,7 @@ public class SmallMapManager implements Listener {
 		{
 			ItemMeta meta = item.getItemMeta();
 			
-			SmallMap map = SmallMapFileManager.load(getMapId(item));
+			SmallMap map = (SmallMap) SmallMapFileManager.load(getMapId(item));
 			String[] lore = new String[] { "Scaling at " + map.getScale() + ":1" };
 			meta.setLore(Lists.asList("", lore));
 			if (scale_name)
@@ -386,7 +418,7 @@ public class SmallMapManager implements Listener {
 	}
 	public static ItemStack getPreExtendedMap(int id)
 	{
-		SmallMap map = SmallMapFileManager.load(id);
+		SmallMap map = (SmallMap) SmallMapFileManager.load(id);
 		ItemStack pre_map = getMap(id, true);
 		ItemMeta pre_map_meta = pre_map.getItemMeta();
 		int scale = map.getScale() / 2;
@@ -407,7 +439,7 @@ public class SmallMapManager implements Listener {
 	
 	public static boolean isSmallMap(int id)
 	{
-		SmallMap map = SmallMapFileManager.load(id);
+		SmallMap map = (SmallMap) SmallMapFileManager.load(id);
 		return map != null;
 	}
 	public static boolean isSmallMap(ItemStack item)
@@ -423,20 +455,33 @@ public class SmallMapManager implements Listener {
     	CraftManager cm = plugin.getCraftManager();
     	Server server = plugin.getServer();
     	
-		ItemStack result = new ItemStack(Material.MAP, 1);
-		ItemMeta meta = result.getItemMeta();
+		ItemStack result_8 = new ItemStack(Material.MAP, 1);
+		ItemMeta meta = result_8.getItemMeta();
 		meta.setDisplayName("Map (8:1)");
-		result.setItemMeta(meta);
-		result = Utils.setData(result, SCALE_FIELD, 8);
+		result_8.setItemMeta(meta);
+		result_8 = Utils.setData(result_8, SCALE_FIELD, 8);
 		
-		NamespacedKey key = new NamespacedKey(plugin, "map_8");
-    	ShapedRecipe map_8 = new ShapedRecipe(key, result);
+		NamespacedKey key_8 = new NamespacedKey(plugin, "map_8");
+    	ShapedRecipe map_8 = new ShapedRecipe(key_8, result_8);
     	
     	map_8.shape(new String[] {" P ", "PCP", " P "});
     	map_8.setIngredient('P', Material.PAPER);
     	map_8.setIngredient('C', Material.COMPASS);
     	
-    	cm.addCraftbookRecipe(key);
+    	cm.addCraftbookRecipe(key_8);
     	server.addRecipe(map_8);
+    	
+
+		ItemStack result_draw = new ItemStack(Material.FILLED_MAP, 1);
+		result_draw = Utils.setData(result_draw, IS_DRAWING_FIELD, 8);
+		
+		NamespacedKey key_draw = new NamespacedKey(plugin, "map_draw");
+    	ShapedRecipe map_draw = new ShapedRecipe(key_draw, result_draw);
+    	
+    	map_draw.shape(new String[] {"   ", " P ", "   "});
+    	map_draw.setIngredient('P', Material.PAPER);
+    	
+    	cm.addCraftbookRecipe(key_draw);
+    	server.addRecipe(map_draw);
 	}
 }

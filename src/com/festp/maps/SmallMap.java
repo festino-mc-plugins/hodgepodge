@@ -1,16 +1,16 @@
 package com.festp.maps;
 
-public class SmallMap {
+public class SmallMap implements IMap {
 	private int id;
 	private int scale;
-	private int start_x, start_z;
+	private int startX, startZ;
 	
 	public SmallMap(int id, int scale, int start_x, int start_z)
 	{
 		this.id = id;
 		this.scale = scale;
-		this.start_x = start_x;
-		this.start_z = start_z;
+		this.startX = start_x;
+		this.startZ = start_z;
 	}
 	
 	public int getId() {
@@ -22,10 +22,10 @@ public class SmallMap {
 	}
 	
 	public int getX() {
-		return start_x;
+		return startX;
 	}
 	
 	public int getZ() {
-		return start_z;
+		return startZ;
 	}
 }

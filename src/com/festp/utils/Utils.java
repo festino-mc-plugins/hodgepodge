@@ -166,32 +166,37 @@ public class Utils {
         return compound.getString(field);
 	}
 	
-	public static Integer getInt(ItemStack i, String field) {
+	private static NBTTagCompound get(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
 		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
+        return compound;
+	}
+	public static Integer getInt(ItemStack i, String field) {
+		NBTTagCompound compound = get(i, field);
         if (compound == null || !compound.hasKey(field))
             return null;
         return compound.getInt(field);
 	}
 	
+	public static Boolean getBoolean(ItemStack i, String field) {
+		NBTTagCompound compound = get(i, field);
+        if (compound == null || !compound.hasKey(field))
+            return null;
+        return compound.getBoolean(field);
+	}
+	
 	public static boolean hasDataField(ItemStack i, String field) {
-        if (field == null || i == null)
-            return false;
-		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
+		NBTTagCompound compound = get(i, field);
         if(compound != null && compound.hasKey(field))
         	return true;
         return false;
 	}
 	
 	public static boolean hasData(ItemStack i, String field, String data) {
-        if (data == null || field == null || i == null)
-            return false;
-		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
-        if(compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
+		NBTTagCompound compound = get(i, field);
+        if(data != null && compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
         	return true;
         return false;
 	}
