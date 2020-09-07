@@ -3,7 +3,6 @@ package com.festp;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.WorldType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
@@ -22,7 +21,8 @@ import com.festp.enderchest.EnderFileStorage;
 import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
-import com.festp.maps.SmallMapManager;
+import com.festp.maps.MapCraftHandler;
+import com.festp.maps.MapHandler;
 import com.festp.menu.InventoryMenu;
 import com.festp.misc.InteractHandler;
 import com.festp.misc.JukeboxHandler;
@@ -169,8 +169,10 @@ public class Main extends JavaPlugin implements Listener
     	SortHoppers sh = new SortHoppers();
     	pm.registerEvents(sh, this);
     	
-    	SmallMapManager minimaps = new SmallMapManager();
-    	pm.registerEvents(minimaps, this);
+    	MapCraftHandler mapCrafts = new MapCraftHandler();
+    	pm.registerEvents(mapCrafts, this);
+    	MapHandler mapHandler = new MapHandler();
+    	pm.registerEvents(mapHandler, this);
 
     	GlassItemFrameHandler glassItemFrames = new GlassItemFrameHandler();
     	pm.registerEvents(glassItemFrames, this);

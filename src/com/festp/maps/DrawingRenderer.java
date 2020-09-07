@@ -21,10 +21,10 @@ public class DrawingRenderer extends AbstractRenderer {
 
 	@Override
 	public void renderSpecific(MapView view, MapCanvas canvas, Player player) {
-		Integer main_id = SmallMapManager.getMapId(player.getInventory().getItemInMainHand());
+		Integer main_id = MapUtils.getMapId(player.getInventory().getItemInMainHand());
 		if (main_id == null || main_id != view.getId())
 		{
-			Integer off_id = SmallMapManager.getMapId(player.getInventory().getItemInOffHand());
+			Integer off_id = MapUtils.getMapId(player.getInventory().getItemInOffHand());
 			if (off_id == null || off_id != view.getId())
 				return;
 		}

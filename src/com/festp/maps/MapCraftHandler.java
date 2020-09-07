@@ -1,38 +1,25 @@
 package com.festp.maps;
 
-import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
-
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_16_R2.map.CraftMapCanvas;
-import org.bukkit.craftbukkit.v1_16_R2.map.CraftMapRenderer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.inventory.CartographyInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
@@ -49,83 +36,8 @@ import com.google.common.collect.Lists;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_16_R2.WorldMap;
 
-public class SmallMapManager implements Listener {
-	/** New scales (8:1, 4:1, 2:1)
-	 *  	craft: item tag
-	 *  MapInitializeEvent: cancel, create and store ID+data(scale, pos)
-	 *  MapRenderer
-	 *  Only cloning remains*/
-
-	static final String SCALE_FIELD = "map_scale";
-	static final String IS_DRAWING_FIELD = "is_drawing";
-	private static final boolean USE_SCALE_NAMES = false; // bad for frames, good for understanding
-	private SmallMapFileManager file_manager;
+public class MapCraftHandler implements Listener {
 	
-	public SmallMapManager()
-	{
-		file_manager = new SmallMapFileManager();
-	}
-
-	/** load last session map canvas */
-	@EventHandler
-	public void onMapLoad(MapInitializeEvent event)
-	{
-		int id = event.getMap().getId();
-		IMap map = file_manager.load(id);
-		if (map == null)
-			return;
-		
-		AbstractRenderer renderer = null;
-		if (map instanceof SmallMap) {
-			renderer = new SmallRenderer((SmallMap) map);
-		} else if (map instanceof DrawingMap) {
-			renderer = new DrawingRenderer((DrawingMap) map);
-		}
-		if (renderer != null) {
-			BufferedImage image = file_manager.loadImage(id);
-			setRenderer(event.getMap(), renderer);
-			if (image != null)
-			{
-				renderer.renderImage(image);
-			}
-		}
-	}
-
-	/** init new small map */
-	@EventHandler
-	public void onPlayerInitMap(PlayerInteractEvent event)
-	{
-		if (event.useInteractedBlock() == Result.DEFAULT)
-			return;
-		if (event.useItemInHand() == Result.DENY)
-			return;
-		
-		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)
-			return;
-
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock().getType().isInteractable())
-			return;
-
-		if (event.hasItem() && event.getItem().getType() == Material.MAP)
-		{
-			if (!Utils.hasDataField(event.getItem(), SCALE_FIELD))
-				return;
-			
-			int scale = Utils.getInt(event.getItem(), SCALE_FIELD);
-			
-			if (event.getPlayer().getGameMode() == GameMode.SURVIVAL || event.getPlayer().getGameMode() == GameMode.ADVENTURE)
-				event.getItem().setAmount(event.getItem().getAmount() - 1);
-			else
-				if (event.getPlayer().getInventory().firstEmpty() < 0)
-					return;
-			
-			event.setCancelled(true);
-			event.setUseInteractedBlock(Result.DENY);
-			SmallMap map = genSmallMap(event.getPlayer().getLocation(), scale);
-			ItemStack map_item = getMap(map.getId(), USE_SCALE_NAMES);
-			Utils.giveOrDrop(event.getPlayer(), map_item);
-		}
-	}
 
 	@EventHandler
 	public void onCartographyTable(InventoryClickEvent event)
@@ -141,12 +53,12 @@ public class SmallMapManager implements Listener {
 		if (item0 == null || item1 == null)
 			return;
 		
-		int id = getMapId(item0);
-		IMap m = file_manager.load(id);
+		int id = MapUtils.getMapId(item0);
+		IMap m = MapFileManager.load(id);
 		if (m == null && !(m instanceof SmallMap)) {
 			event.setCancelled(true);
 		}
-		if (!isSmallMap(item0))
+		if (!SmallMapUtils.isSmallMap(item0))
 			return;
 		SmallMap map = (SmallMap) m;
 		
@@ -154,9 +66,9 @@ public class SmallMapManager implements Listener {
 		Runnable pre_task = new Runnable() {
 			@Override
 			public void run() {
-				ItemStack pre_map = getMap(id, true);
+				ItemStack pre_map = MapUtils.getMap(id, true);
 				if (inv.contains(Material.PAPER) && map.getScale() / 2 > 1) {
-					pre_map = getPreExtendedMap(id);
+					pre_map = SmallMapUtils.getPreExtendedMap(id);
 				}
 				else if(inv.contains(Material.GLASS_PANE)) {
 					ItemMeta pre_map_meta = pre_map.getItemMeta();
@@ -185,25 +97,26 @@ public class SmallMapManager implements Listener {
 				|| event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME
 				|| (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
 					&& event.getView().getBottomInventory().getItem(event.getHotbarButton()) == null
-				|| event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY && getEmptySlot(event.getWhoClicked().getInventory()) >= 0) )
+				|| event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY
+					&& MapUtils.getEmptySlot(event.getWhoClicked().getInventory()) >= 0) )
 		{
 			ItemStack map_item = inv.getItem(2);
 			// extending
 			if (inv.contains(Material.PAPER))
 			{
-				map_item = extendMap(map);
+				map_item = SmallMapUtils.extendMap(map);
 			}
 			// locking
 			else if (inv.contains(Material.GLASS_PANE))
 			{
-				MapView view = genNewView(map);
+				MapView view = MapUtils.genNewView(map);
 
 				try {
 					Field field_image = view.getClass().getDeclaredField("worldMap");
 					field_image.setAccessible(true);
 					WorldMap map_image = (WorldMap)field_image.get(view);
 
-					MapView old_view = getView(map);
+					MapView old_view = MapUtils.getView(map);
 					Field field_canvases = old_view.getClass().getDeclaredField("canvases");
 					field_canvases.setAccessible(true);
 					Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>> canvases = (Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>>)field_canvases.get(old_view);
@@ -226,7 +139,7 @@ public class SmallMapManager implements Listener {
 				view.setCenterZ(0);
 				view.setScale(Scale.CLOSEST);
 				view.setLocked(true);
-				map_item = getMap(view.getId(), USE_SCALE_NAMES);
+				map_item = MapUtils.getMap(view.getId());
 			}
 
 			event.setCancelled(true);
@@ -241,28 +154,7 @@ public class SmallMapManager implements Listener {
 			else if (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
 				event.getWhoClicked().getInventory().setItem(event.getHotbarButton(), map_item);
 			else if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
-				event.getWhoClicked().getInventory().setItem(getEmptySlot(event.getWhoClicked().getInventory()), map_item);
-		}
-	}
-	
-	public ItemStack extendMap(SmallMap map)
-	{
-		if (map.getScale() / 2 > 1)
-		{
-			MapView view = getView(map);
-			Location loc = new Location(view.getWorld(), map.getX(), 0, map.getZ());
-			SmallMap new_map = genSmallMap(loc, map.getScale() / 2);
-			return getMap(new_map.getId(), false);
-		}
-		else
-		{
-			MapView view = genNewView(map);
-			int x = (int) Math.floor(map.getX() / 128.0) * 128;
-			int z = (int) Math.floor(map.getZ() / 128.0) * 128;
-			view.setCenterX(x + 64);
-			view.setCenterZ(z + 64);
-			view.setScale(Scale.CLOSEST); // 1:1
-			return getMap(view.getId(), USE_SCALE_NAMES);
+				event.getWhoClicked().getInventory().setItem(MapUtils.getEmptySlot(event.getWhoClicked().getInventory()), map_item);
 		}
 	}
 	
@@ -277,18 +169,18 @@ public class SmallMapManager implements Listener {
 				if (item.getType() == Material.PAPER)
 					paper++;
 				else if (item.getType() == Material.MAP) {
-					if (Utils.hasDataField(item, SCALE_FIELD))
+					if (Utils.hasDataField(item, MapUtils.SCALE_FIELD))
 						empty_small_maps++;
 				}
-				else if (isSmallMap(item)) {
+				else if (SmallMapUtils.isSmallMap(item)) {
 					small_maps++;
 					small_map = item;
 				}
 		
 		if (small_maps == 1 && paper == 8)
 		{
-			int id = getMapId(small_map);
-			ItemStack pre_map = getPreExtendedMap(id);
+			int id = MapUtils.getMapId(small_map);
+			ItemStack pre_map = SmallMapUtils.getPreExtendedMap(id);
 			
 			event.getInventory().setResult(pre_map);
 		}
@@ -299,18 +191,18 @@ public class SmallMapManager implements Listener {
 	@EventHandler
 	public void onCraft(CraftItemEvent event) {
 		ItemStack res = event.getRecipe().getResult();
-		if (Utils.hasDataField(res, IS_DRAWING_FIELD)) {
-			Boolean isDrawing = Utils.getBoolean(res, IS_DRAWING_FIELD);
+		if (Utils.hasDataField(res, MapUtils.IS_DRAWING_FIELD)) {
+			Boolean isDrawing = Utils.getBoolean(res, MapUtils.IS_DRAWING_FIELD);
 			if (isDrawing != null && isDrawing) {
 				// TODO remove 224 99 -1039
 				MapView view = Bukkit.createMap(event.getWhoClicked().getWorld());
-				res = getMap(view.getId(),  USE_SCALE_NAMES);
+				res = MapUtils.getMap(view.getId());
 				event.getInventory().setResult(res);
 				view.setScale(Scale.CLOSEST);
 				DrawingMap new_map = new DrawingMap(view.getId(), new DrawingInfo(8, 224, 99, -1039, Position.DOWN_NORTH));
 				DrawingRenderer renderer = new DrawingRenderer(new_map);
-				setRenderer(view, renderer);
-				file_manager.addMap(new_map);
+				MapUtils.setRenderer(view, renderer);
+				MapFileManager.addMap(new_map);
 				
 				
 			} else {
@@ -327,19 +219,19 @@ public class SmallMapManager implements Listener {
 				if (item.getType() == Material.PAPER)
 					paper++;
 				else if (item.getType() == Material.MAP) {
-					if (Utils.hasDataField(item, SCALE_FIELD))
+					if (Utils.hasDataField(item, MapUtils.SCALE_FIELD))
 						empty_small_maps++;
 				}
-				else if (isSmallMap(item)) {
+				else if (SmallMapUtils.isSmallMap(item)) {
 					small_maps++;
 					small_map = item;
 				}
 		
 		if (small_maps == 1 && paper == 8)
 		{
-			int id = getMapId(small_map);
-			SmallMap map = (SmallMap) file_manager.load(id);
-			ItemStack pre_map = extendMap(map);
+			int id = MapUtils.getMapId(small_map);
+			SmallMap map = (SmallMap) MapFileManager.load(id);
+			ItemStack pre_map = SmallMapUtils.extendMap(map);
 			
 			event.getInventory().setResult(pre_map);
 		}
@@ -348,108 +240,7 @@ public class SmallMapManager implements Listener {
 			event.getInventory().setResult(null);
 		}
 	}
-	
-	public int getEmptySlot(PlayerInventory inv)
-	{
-		ItemStack[] slots = inv.getStorageContents();
-		
-		for (int i = 8; i >= 0; i--)
-			if (slots[i] == null)
-				return i;
-		for (int i = 35; i >= 9; i--)
-			if (slots[i] == null)
-				return i;
-		return -1;
-	}
-	
-	/** create new map and attach renderer*/
-	public SmallMap genSmallMap(Location l, int scale)
-	{
-		MapView view = Bukkit.createMap(l.getWorld());
-		view.setScale(Scale.CLOSEST);
 
-		int ratio = 128 / scale;
-		int start_x = (int)Math.floor(l.getBlockX() / (float)ratio) * ratio;
-		int start_z = (int)Math.floor(l.getBlockZ() / (float)ratio) * ratio;
-		SmallMap new_map = new SmallMap(view.getId(), scale, start_x, start_z);
-		SmallRenderer renderer = new SmallRenderer(new_map);
-		setRenderer(view, renderer);
-		file_manager.addMap(new_map);
-		
-		return new_map;
-	}
-	
-	public MapView genNewView(SmallMap map)
-	{
-		MapView old_view = Bukkit.getMap(map.getId());
-		MapView view = Bukkit.createMap(old_view.getWorld());
-		return view;
-	}
-	
-	public MapView getView(SmallMap map)
-	{
-		MapView view = Bukkit.getMap(map.getId());
-		return view;
-	}
-	
-	public static void setRenderer(MapView view, MapRenderer map_renderer) {
-		for (MapRenderer m : view.getRenderers())
-			view.removeRenderer(m);
-		view.addRenderer(map_renderer);
-	}
-	
-	public static ItemStack getMap(int id, boolean scale_name)
-	{
-		ItemStack item = new ItemStack(Material.FILLED_MAP, 1);
-		item = Utils.setData(item, "map", id);
-		if (isSmallMap(item))
-		{
-			ItemMeta meta = item.getItemMeta();
-			
-			SmallMap map = (SmallMap) SmallMapFileManager.load(getMapId(item));
-			String[] lore = new String[] { "Scaling at " + map.getScale() + ":1" };
-			meta.setLore(Lists.asList("", lore));
-			if (scale_name)
-				meta.setDisplayName("Map (" + map.getScale() + ":1)");
-			
-			item.setItemMeta(meta);
-		}
-		return item;
-	}
-	public static ItemStack getPreExtendedMap(int id)
-	{
-		SmallMap map = (SmallMap) SmallMapFileManager.load(id);
-		ItemStack pre_map = getMap(id, true);
-		ItemMeta pre_map_meta = pre_map.getItemMeta();
-		int scale = map.getScale() / 2;
-		pre_map_meta.setDisplayName("Map (" + scale + ":1)");
-		String[] lore = new String[] { "Scaling at " + scale + ":1" };
-		pre_map_meta.setLore(Lists.asList("", lore));
-		pre_map.setItemMeta(pre_map_meta);
-		
-		return pre_map;
-	}
-	
-	public static Integer getMapId(ItemStack item)
-	{
-		if (item == null || item.getType() != Material.FILLED_MAP)
-			return null;
-		return Utils.getInt(item, "map");
-	}
-	
-	public static boolean isSmallMap(int id)
-	{
-		SmallMap map = (SmallMap) SmallMapFileManager.load(id);
-		return map != null;
-	}
-	public static boolean isSmallMap(ItemStack item)
-	{
-		Integer id = getMapId(item);
-		if (id == null)
-			return false;
-		return isSmallMap(id);
-	}
-	
 	public static void addCrafts(Main plugin)
 	{
     	CraftManager cm = plugin.getCraftManager();
@@ -459,7 +250,7 @@ public class SmallMapManager implements Listener {
 		ItemMeta meta = result_8.getItemMeta();
 		meta.setDisplayName("Map (8:1)");
 		result_8.setItemMeta(meta);
-		result_8 = Utils.setData(result_8, SCALE_FIELD, 8);
+		result_8 = Utils.setData(result_8, MapUtils.SCALE_FIELD, 8);
 		
 		NamespacedKey key_8 = new NamespacedKey(plugin, "map_8");
     	ShapedRecipe map_8 = new ShapedRecipe(key_8, result_8);
@@ -473,7 +264,7 @@ public class SmallMapManager implements Listener {
     	
 
 		ItemStack result_draw = new ItemStack(Material.FILLED_MAP, 1);
-		result_draw = Utils.setData(result_draw, IS_DRAWING_FIELD, 8);
+		result_draw = Utils.setData(result_draw, MapUtils.IS_DRAWING_FIELD, 8);
 		
 		NamespacedKey key_draw = new NamespacedKey(plugin, "map_draw");
     	ShapedRecipe map_draw = new ShapedRecipe(key_draw, result_draw);

@@ -32,7 +32,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.dispenser.PumpManager;
-import com.festp.maps.SmallMapManager;
+import com.festp.maps.MapCraftHandler;
 import com.festp.misc.LeashManager;
 import com.festp.misc.SoulStone;
 import com.festp.storages.Storage;
@@ -62,7 +62,7 @@ public class CraftManager implements Listener {
 		addStairsAndSlabsCrafts();
 		SoulStone.addSoulStoneCrafts(plugin);
 		TomeItemHandler.addTomeCrafts(plugin);
-		SmallMapManager.addCrafts(plugin);
+		MapCraftHandler.addCrafts(plugin);
 		plugin.stcraft.addStorageCrafts();
 	}
 	

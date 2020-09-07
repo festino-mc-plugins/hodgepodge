@@ -13,9 +13,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.festp.Main;
 import com.festp.utils.Utils;
-import com.festp.utils.Vector3i;
 
-public class SmallMapFileManager {
+public class MapFileManager {
 	private static final String DIR = Main.getPath() + Main.mapsdir + System.getProperty("file.separator");
 	private static final String IMG_FORMAT = "bmp";
 	

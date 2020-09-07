@@ -86,6 +86,6 @@ public abstract class AbstractRenderer extends MapRenderer {
 				image.setRGB(x, z, color.getRGB());
 			}
 		
-		SmallMapFileManager.saveImage(map.getId(), image);
+		MapFileManager.saveImage(map.getId(), image);
 	}
 }
