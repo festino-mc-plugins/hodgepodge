@@ -11,6 +11,15 @@ public class Vector3i {
 		this.z = z;
 	}
 	
+	public Vector3i add(int x, int y, int z) {
+		return new Vector3i(this.x + x, this.y + y, this.z + z);
+	}
+	
+	@Override
+	public String toString() {
+		return "Vector3i{" + x + ", " + y + ", " + z + "}";
+	}
+	
 	public int getX() {
 		return x;
 	}

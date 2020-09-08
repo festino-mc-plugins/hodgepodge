@@ -16,15 +16,19 @@ public enum Position {
 	public boolean isVertical() {
 		return this == VERTICAL_NORTH || this == VERTICAL_SOUTH || this == VERTICAL_WEST || this == VERTICAL_EAST;
 	}
+	/** West is directed to -x */
 	public boolean isWest() {
 		return this == VERTICAL_WEST || this == DOWN_WEST || this == UP_WEST;
 	}
+	/** West is directed to x */
 	public boolean isEast() {
 		return this == VERTICAL_EAST || this == DOWN_EAST || this == UP_EAST;
 	}
+	/** North is directed to -z */
 	public boolean isNorth() {
 		return this == VERTICAL_NORTH || this == DOWN_NORTH || this == UP_NORTH;
 	}
+	/** North is directed to z */
 	public boolean isSouth() {
 		return this == VERTICAL_SOUTH || this == DOWN_SOUTH || this == UP_SOUTH;
 	}
@@ -33,6 +37,7 @@ public enum Position {
 	// u/d = -90/90
 	public static Position get(Location loc) {
 		float yaw = loc.getYaw();
+		yaw -= 360 * Math.floor(yaw / 360);
 		float pitch = loc.getPitch();
 		// west
 		if (45 < yaw && yaw <= 135) {

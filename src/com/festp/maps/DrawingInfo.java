@@ -33,7 +33,6 @@ public class DrawingInfo {
 		Position state = Position.get(loc);
 		float yaw = loc.getYaw() - 45;
 		double yawFrom45 = yaw - 90 * Math.floor(yaw / 90);
-		System.out.print(yawFrom45);
 		int scale = 1;
 		if (yawFrom45 < 45 - 20) {
 			scale = 8;
