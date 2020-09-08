@@ -58,8 +58,7 @@ public class MapUtils {
 	{
 		ItemStack item = new ItemStack(Material.FILLED_MAP, 1);
 		item = Utils.setData(item, "map", id);
-		if (SmallMapUtils.isSmallMap(item))
-		{
+		if (SmallMapUtils.isSmallMap(item)) {
 			ItemMeta meta = item.getItemMeta();
 			
 			SmallMap map = (SmallMap) MapFileManager.load(getMapId(item));

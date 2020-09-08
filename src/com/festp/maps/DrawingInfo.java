@@ -1,5 +1,7 @@
 package com.festp.maps;
 
+import org.bukkit.Location;
+
 import com.festp.utils.Vector3i;
 
 public class DrawingInfo {
@@ -22,5 +24,24 @@ public class DrawingInfo {
 		this.yCenter = yCenter;
 		this.zCenter = zCenter;
 		this.state = state;
+	}
+	
+	public static DrawingInfo buildFrom(Location loc) {
+		int xCenter = loc.getBlockX(),
+			yCenter = loc.getBlockY(),
+			zCenter = loc.getBlockZ();
+		Position state = Position.get(loc);
+		float yaw = loc.getYaw() - 45;
+		double yawFrom45 = yaw - 90 * Math.floor(yaw / 90);
+		System.out.print(yawFrom45);
+		int scale = 1;
+		if (yawFrom45 < 45 - 20) {
+			scale = 8;
+		} else if (yawFrom45 < 45) {
+			scale = 4;
+		} else if (yawFrom45 < 45 + 20) {
+			scale = 2;
+		}
+		return new DrawingInfo(scale, xCenter, yCenter, zCenter, state);
 	}
 }

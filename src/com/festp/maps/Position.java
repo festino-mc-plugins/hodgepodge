@@ -33,7 +33,6 @@ public enum Position {
 	// u/d = -90/90
 	public static Position get(Location loc) {
 		float yaw = loc.getYaw();
-		System.out.println("Yaw: " + yaw);
 		float pitch = loc.getPitch();
 		// west
 		if (45 < yaw && yaw <= 135) {

@@ -64,7 +64,7 @@ public class MapFileManager {
 					maps.add(map);
 				}
 			} catch (Exception e) {
-				System.out.println("[WARN] Couldn't load map #" + id + "!");
+				Utils.printError("[WARN] Couldn't load map #" + id + "!");
 			}
 		}
 		
@@ -94,7 +94,7 @@ public class MapFileManager {
 				ymlFormat.save(file);
 			}
 		} catch (IOException e) {
-			System.err.println("Error while creating map file '" + map.getId() + ".dat'.");
+			Utils.printError("Error while creating map file '" + map.getId() + ".dat'.");
 			e.printStackTrace();
 		}
 	}
