@@ -3,7 +3,6 @@ package com.festp.maps;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
@@ -38,85 +37,71 @@ import net.minecraft.server.v1_16_R2.WorldMap;
 
 public class MapCraftHandler implements Listener {
 
+	protected static class CraftMapInfo {
+		int paperCount = 0;
+		int smallCount = 0;
+		int emptySmallCount = 0;
+		int drawingCount = 0;
+		int emptyDrawingCount = 0;
+		ItemStack smallMap = null;
+		ItemStack drawingMap = null;
+		
+		public static CraftMapInfo get(ItemStack[] matrix) {
+			CraftMapInfo info = new CraftMapInfo();
+			for (ItemStack item : matrix)
+				if (item != null)
+					if (item.getType() == Material.PAPER) {
+						info.paperCount++;
+					} else if (item.getType() == Material.MAP) {
+						if (Utils.hasDataField(item, MapUtils.SCALE_FIELD)) {
+							info.emptySmallCount++;
+						} else if (Utils.hasDataField(item, MapUtils.IS_DRAWING_FIELD)) {
+							info.emptyDrawingCount++;
+						}
+					} else if (SmallMapUtils.isSmallMap(item)) {
+						info.smallCount++;
+						info.smallMap = item;
+					} else if (DrawingMapUtils.isDrawingMap(item)) {
+						info.drawingCount++;
+						info.drawingMap = item;
+					}
+			return info;
+		}
+	}
 	
 	@EventHandler
 	public void onPrepareCraft(PrepareItemCraftEvent event)
 	{
 		ItemStack[] matrix = event.getInventory().getMatrix();
-		int paper = 0, small_maps = 0, empty_small_maps = 0;
-		ItemStack small_map = null;
-		for (ItemStack item : matrix)
-			if (item != null)
-				if (item.getType() == Material.PAPER)
-					paper++;
-				else if (item.getType() == Material.MAP) {
-					if (Utils.hasDataField(item, MapUtils.SCALE_FIELD))
-						empty_small_maps++;
-				}
-				else if (SmallMapUtils.isSmallMap(item)) {
-					small_maps++;
-					small_map = item;
-				}
+		CraftMapInfo info = CraftMapInfo.get(matrix);
 		
-		if (small_maps == 1 && paper == 8)
-		{
-			int id = MapUtils.getMapId(small_map);
-			ItemStack pre_map = SmallMapUtils.getPreExtendedMap(id);
-			
-			event.getInventory().setResult(pre_map);
-		}
-		else if (small_maps > 1 || empty_small_maps > 0)
+		if (info.smallCount == 1 && info.paperCount == 8) {
+			int id = MapUtils.getMapId(info.smallMap);
+			ItemStack preMap = SmallMapUtils.getPreExtendedMap(id);
+			event.getInventory().setResult(preMap);
+		} else if (info.smallCount > 1 || info.emptySmallCount > 0) {
 			event.getInventory().setResult(null);
+		}
+		if (info.emptyDrawingCount > 0 || info.drawingCount > 0) {
+			event.getInventory().setResult(null);
+		}
 	}
 
 	@EventHandler
 	public void onCraft(CraftItemEvent event) {
-		ItemStack res = event.getRecipe().getResult();
-		if (Utils.hasDataField(res, MapUtils.IS_DRAWING_FIELD)) {
-			Boolean isDrawing = Utils.getBoolean(res, MapUtils.IS_DRAWING_FIELD);
-			if (isDrawing != null && isDrawing) {
-				// TODO remove 224 99 -1039
-				MapView view = Bukkit.createMap(event.getWhoClicked().getWorld());
-				view.setScale(Scale.FARTHEST);
-				res = MapUtils.getMap(view.getId());
-				event.getInventory().setResult(res);
-				DrawingMap new_map = new DrawingMap(view.getId(), new DrawingInfo(8, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Position.DOWN_NORTH));
-				DrawingRenderer renderer = new DrawingRenderer(new_map);
-				MapUtils.setRenderer(view, renderer);
-				MapFileManager.addMap(new_map);
-				
-				
-			} else {
-				event.setCancelled(true);
-			}
-			return;
-		}
-		
 		ItemStack[] matrix = event.getInventory().getMatrix();
-		int paper = 0, empty_small_maps = 0, small_maps = 0;
-		ItemStack small_map = null;
-		for (ItemStack item : matrix)
-			if (item != null)
-				if (item.getType() == Material.PAPER)
-					paper++;
-				else if (item.getType() == Material.MAP) {
-					if (Utils.hasDataField(item, MapUtils.SCALE_FIELD))
-						empty_small_maps++;
-				}
-				else if (SmallMapUtils.isSmallMap(item)) {
-					small_maps++;
-					small_map = item;
-				}
-		
-		if (small_maps == 1 && paper == 8)
-		{
-			int id = MapUtils.getMapId(small_map);
+		CraftMapInfo info = CraftMapInfo.get(matrix);
+
+		if (info.smallCount == 1 && info.paperCount == 8) {
+			int id = MapUtils.getMapId(info.smallMap);
 			SmallMap map = (SmallMap) MapFileManager.load(id);
-			ItemStack pre_map = SmallMapUtils.extendMap(map);
-			
-			event.getInventory().setResult(pre_map);
+			ItemStack newMap = SmallMapUtils.extendMap(map);
+			event.getInventory().setResult(newMap);
+		} else if (info.smallCount > 1 || info.emptySmallCount > 0) {
+			event.setCancelled(true);
+			event.getInventory().setResult(null);
 		}
-		else if (small_maps > 1 || empty_small_maps > 0) {
+		if (info.emptyDrawingCount > 0 || info.drawingCount > 0) {
 			event.setCancelled(true);
 			event.getInventory().setResult(null);
 		}
@@ -138,8 +123,11 @@ public class MapCraftHandler implements Listener {
 		
 		int id = MapUtils.getMapId(item0);
 		IMap m = MapFileManager.load(id);
-		if (m == null && !(m instanceof SmallMap)) {
+		if (m != null && !(m instanceof SmallMap)) {
 			event.setCancelled(true);
+			inv.setItem(2, null);
+			((Player)event.getWhoClicked()).updateInventory();
+			return;
 		}
 		if (!SmallMapUtils.isSmallMap(item0))
 			return;
@@ -214,7 +202,7 @@ public class MapCraftHandler implements Listener {
 						}
 					map_image.colors = colors;
 				} catch (Exception e) {
-					System.out.print("Error while creating locked copy of map #" + map.getId());
+					Utils.printError("Error while creating locked copy of map #" + map.getId());
 					e.printStackTrace();
 				}
 				
@@ -263,7 +251,7 @@ public class MapCraftHandler implements Listener {
     	server.addRecipe(map_8);
     	
 
-		ItemStack result_draw = new ItemStack(Material.FILLED_MAP, 1);
+		ItemStack result_draw = new ItemStack(Material.MAP, 1);
 		result_draw = Utils.setData(result_draw, MapUtils.IS_DRAWING_FIELD, 8);
 		
 		NamespacedKey key_draw = new NamespacedKey(plugin, "map_draw");

@@ -27,10 +27,14 @@ public class DrawingInfo {
 	}
 	
 	public static DrawingInfo buildFrom(Location loc) {
-		int xCenter = loc.getBlockX(),
-			yCenter = loc.getBlockY(),
-			zCenter = loc.getBlockZ();
+		int xCenter = (int) Math.round(loc.getX()),
+			yCenter = (int) Math.round(loc.getY()),
+			zCenter = (int) Math.round(loc.getZ());
 		Position state = Position.get(loc);
+		if (state.isUp() || state.isVertical()) {
+			yCenter += 1;
+		}
+		
 		float yaw = loc.getYaw() - 45;
 		double yawFrom45 = yaw - 90 * Math.floor(yaw / 90);
 		int scale = 1;

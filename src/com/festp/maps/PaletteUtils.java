@@ -101,9 +101,11 @@ public class PaletteUtils {
 				DyeColor bed_color = UtilsColor.colorFromMaterial(material);
 				material = getMaterial(bed_color);
 			}
-		} else if (UtilsType.is_shulker_box(material)) {
+		} else if (UtilsType.is_colored_shulker_box(material)) {
 			DyeColor color = UtilsColor.colorFromMaterial(material);
 			material = getMaterial(color);
+		} else if (UtilsType.is_shulker_box(material)) {
+			material = Material.PURPLE_TERRACOTTA;
 		} else if (UtilsType.isLog(material)) {
 			Orientable log = (Orientable)block_data;
 			if (log.getAxis() != Axis.Y) {

@@ -2,6 +2,7 @@ package com.festp.maps;
 
 import java.awt.image.BufferedImage;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,6 +13,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.map.MapView;
+import org.bukkit.map.MapView.Scale;
 
 import com.festp.utils.Utils;
 
@@ -63,10 +66,30 @@ public class MapHandler implements Listener {
 		ItemStack item = event.getItem();
 		Player player = event.getPlayer();
 		if (item.getType() == Material.MAP) {
-			if (!Utils.hasDataField(item, MapUtils.SCALE_FIELD))
+			ItemStack mapItem;
+			if (Utils.hasDataField(item, MapUtils.SCALE_FIELD)) {
+				int scale = Utils.getInt(item, MapUtils.SCALE_FIELD);
+				SmallMap map = SmallMapUtils.genSmallMap(player.getLocation(), scale);
+				mapItem = MapUtils.getMap(map.getId());
+			} else if (Utils.hasDataField(item, MapUtils.IS_DRAWING_FIELD)) {
+				Boolean isDrawing = Utils.getBoolean(item, MapUtils.IS_DRAWING_FIELD);
+				if (isDrawing == null || !isDrawing) {
+					event.setCancelled(true);
+					return;
+				}
+				MapView view = Bukkit.createMap(event.getPlayer().getWorld());
+				view.setScale(Scale.FARTHEST);
+				mapItem = MapUtils.getMap(view.getId());
+				DrawingMap new_map = new DrawingMap(view.getId(), new DrawingInfo(8, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Position.DOWN_NORTH));
+				DrawingRenderer renderer = new DrawingRenderer(new_map);
+				MapUtils.setRenderer(view, renderer);
+				MapFileManager.addMap(new_map);
+			} else {
 				return;
-			
-			int scale = Utils.getInt(item, MapUtils.SCALE_FIELD);
+			}
+
+			event.setCancelled(true);
+			event.setUseInteractedBlock(Result.DENY);
 			
 			if (player.getGameMode() == GameMode.SURVIVAL || player.getGameMode() == GameMode.ADVENTURE)
 				item.setAmount(item.getAmount() - 1);
@@ -74,14 +97,10 @@ public class MapHandler implements Listener {
 				if (player.getInventory().firstEmpty() < 0)
 					return;
 			
-			event.setCancelled(true);
-			event.setUseInteractedBlock(Result.DENY);
-			SmallMap map = SmallMapUtils.genSmallMap(player.getLocation(), scale);
-			ItemStack map_item = MapUtils.getMap(map.getId());
-			Utils.giveOrDrop(player, map_item);
+			Utils.giveOrDrop(player, mapItem);
 		}
 		if (item.getType() == Material.FILLED_MAP) {
-			if (!isDrawingMap(item))
+			if (!DrawingMapUtils.isDrawingMap(item))
 				return;
 			
 			DrawingMap map = (DrawingMap) MapFileManager.load(MapUtils.getMapId(item));
@@ -92,18 +111,5 @@ public class MapHandler implements Listener {
 			map.setInfo(DrawingInfo.buildFrom(player.getLocation()));
 			MapFileManager.save(map);
 		}
-	}
-	
-	public static boolean isDrawingMap(int id)
-	{
-		DrawingMap map = (DrawingMap) MapFileManager.load(id);
-		return map != null;
-	}
-	public static boolean isDrawingMap(ItemStack item)
-	{
-		Integer id = MapUtils.getMapId(item);
-		if (id == null)
-			return false;
-		return isDrawingMap(id);
 	}
 }
