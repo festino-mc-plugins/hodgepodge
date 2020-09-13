@@ -6,6 +6,7 @@ public class DrawingMap implements IMap {
 	
 	private int id;
 	private DrawingInfo info;
+	public boolean needReset = false;
 	
 	public DrawingMap(int id, int scale, int xCenter, int yCenter, int zCenter, Position pos)
 	{

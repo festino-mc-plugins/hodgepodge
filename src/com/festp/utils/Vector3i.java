@@ -43,4 +43,28 @@ public class Vector3i {
 	public void setZ(int new_z) {
 		z = new_z;
 	}
+	
+	/** MODIFIES VECTOR */
+	public Vector3i add(Vector3i vec) {
+		x += vec.x;
+		y += vec.y;
+		z += vec.z;
+		return this;
+	}
+	
+	/** MODIFIES VECTOR */
+	public Vector3i subtract(Vector3i vec) {
+		x -= vec.x;
+		y -= vec.y;
+		z -= vec.z;
+		return this;
+	}
+	
+	/** MODIFIES VECTOR */
+	public Vector3i multiply(double mult) {
+		x *= mult;
+		y *= mult;
+		z *= mult;
+		return this;
+	}
 }

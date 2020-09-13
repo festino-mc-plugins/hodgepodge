@@ -12,6 +12,7 @@ import org.bukkit.event.Event.Result;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.server.MapInitializeEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.map.MapView;
 import org.bukkit.map.MapView.Scale;
@@ -102,6 +103,8 @@ public class MapHandler implements Listener {
 		if (item.getType() == Material.FILLED_MAP) {
 			if (!DrawingMapUtils.isDrawingMap(item))
 				return;
+			if (event.getHand() == EquipmentSlot.OFF_HAND)
+				return;
 			
 			DrawingMap map = (DrawingMap) MapFileManager.load(MapUtils.getMapId(item));
 			if (map == null)
@@ -109,6 +112,7 @@ public class MapHandler implements Listener {
 
 			event.setCancelled(true);
 			map.setInfo(DrawingInfo.buildFrom(player.getLocation()));
+			map.needReset = true;
 			MapFileManager.save(map);
 		}
 	}
