@@ -1,6 +1,6 @@
 package com.festp.utils;
 
-public class Vector3i {
+public class Vector3i implements Cloneable {
 	
 	protected int x, y, z;
 	
@@ -9,6 +9,10 @@ public class Vector3i {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+	}
+	
+	public Vector3i clone() {
+		return new Vector3i(x, y, z);
 	}
 	
 	public Vector3i add(int x, int y, int z) {
@@ -66,5 +70,13 @@ public class Vector3i {
 		y *= mult;
 		z *= mult;
 		return this;
+	}
+	
+	public Vector3i getCoordwiseMult(Vector3i v2) {
+		return new Vector3i(x * v2.x, y * v2.y, z * v2.z);
+	}
+	
+	public int getDotProduct(Vector3i v2) {
+		return x * v2.x + y * v2.y + z * v2.z;
 	}
 }

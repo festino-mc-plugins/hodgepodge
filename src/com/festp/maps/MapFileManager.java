@@ -55,12 +55,28 @@ public class MapFileManager {
 				}
 				Object objDrawing = ymlFormat.get("position");
 				if (objDrawing != null) {
+					Integer scale = (Integer) ymlFormat.get("scale");
 					Integer xCenter = (Integer) ymlFormat.get("x_center");
 					Integer yCenter = (Integer) ymlFormat.get("y_center");
 					Integer zCenter = (Integer) ymlFormat.get("z_center");
-					Integer scale = (Integer) ymlFormat.get("scale");
 					Position state = Position.valueOf((String) objDrawing);
-					map = new DrawingMap(id, new DrawingInfo(scale, xCenter, yCenter, zCenter, state));
+					DrawingInfo info = new DrawingInfo(scale, xCenter, yCenter, zCenter, state);
+					info.isFullDiscovered = ymlFormat.getBoolean("is_discovered");
+					if (!info.isFullDiscovered) {
+						String discoveredStr = ymlFormat.getString("discovered_array");
+						boolean[][] discovered = info.discovered;
+						int width = info.getWidth();
+						for (int x = 0; x < width; x++) {
+							for (int y = 0; y < width; y += 8) {
+								byte info8 = (byte) discoveredStr.charAt(width / 8 * x + y);
+								for (int b = 0; b < 8; b++) {
+									boolean data = (info8 & 0x1 << b) > 0;
+									discovered[x][y + b] = data;
+								}
+							}
+						}
+					}
+					map = new DrawingMap(id, info);
 					maps.add(map);
 				}
 			} catch (Exception e) {
@@ -91,6 +107,23 @@ public class MapFileManager {
 				ymlFormat.set("y_center", drawingMap.getY());
 				ymlFormat.set("z_center", drawingMap.getZ());
 				ymlFormat.set("position", drawingMap.getState().name());
+				ymlFormat.set("is_discovered", drawingMap.isFullDicovered());
+				if (!drawingMap.isFullDicovered()) {
+					String discoveredStr = "";
+					boolean[][] discovered = drawingMap.getDicovered();
+					int width = drawingMap.getWidth();
+					byte info8 = 0;
+					for (int x = 0; x < width; x++) {
+						for (int y = 0; y < width; y += 8) {
+							for (int b = 0; b < 8; b++) {
+								int data = discovered[x][y + b] ? 1 : 0;
+								info8 |= data << b;
+							}
+							discoveredStr += (char) info8;
+						}
+					}
+					ymlFormat.set("discovered_array", discoveredStr);
+				}
 				ymlFormat.save(file);
 			}
 		} catch (IOException e) {

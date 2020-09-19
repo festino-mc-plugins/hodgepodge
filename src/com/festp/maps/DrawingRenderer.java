@@ -1,12 +1,12 @@
 package com.festp.maps;
 
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
+import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapView;
-import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import com.festp.maps.PaletteUtils;
@@ -17,7 +17,6 @@ public class DrawingRenderer extends AbstractRenderer {
 	static final int RENDER_DISTANCE_SQUARED = 0 * 0;
 	static final int RAYS_DISTANCE_SQUARED = 100 * 100;
 	static final int SHADES_COUNT = PaletteUtils.SHADES_COUNT;
-	static final float ANGLE_WIDTH = 120f, ANGLE_HEIGHT = 70f;
 
 	final DrawingMap map;
 	
@@ -44,21 +43,127 @@ public class DrawingRenderer extends AbstractRenderer {
 		}
 
 		Location playerLoc = player.getLocation();
-		Location playerSight = player.getEyeLocation();
-		Vector vecSight = playerSight.toVector();
 		int playerX = playerLoc.getBlockX();
 		int playerY = playerLoc.getBlockY();
 		int playerZ = playerLoc.getBlockZ();
 		
-		int xCenter = map.getX();
-		int yCenter = map.getY();
-		int zCenter = map.getZ();
-		int scale = map.getScale();
-		int width = 128 / scale;
-		int halfWidth = width / 2;
+		final int xCenter = map.getX();
+		final int yCenter = map.getY();
+		final int zCenter = map.getZ();
+		final Vector3i center = new Vector3i(xCenter, yCenter, zCenter);
+		final int scale = map.getScale();
+		final int width = map.getWidth();
+		final int halfWidth = width / 2;
 		Position pos = map.getState();
+		World world = view.getWorld();
 		DrawingMapCoordinator coords = new DrawingMapCoordinator(pos, width);
-		// TODO update rework (rays? render fov?)
+
+		Vector3i renderDir = coords.getWorldCoord(0, 0, 1).subtract(coords.getWorldCoord(0, 0, 0));
+		Vector3i projection = new Vector3i(playerX, playerY, playerZ);
+		projection = projection.subtract(renderDir.getCoordwiseMult(projection));
+		projection.add(renderDir.getCoordwiseMult(center));
+		Vector3i mapPlayer = coords.getMapCoord(center, projection);
+
+		for (int i = 0; i < canvas.getCursors().size(); i++) {
+			MapCursor cursor = canvas.getCursors().getCursor(i);
+			if (cursor.getCaption() == player.getDisplayName()) {
+				canvas.getCursors().removeCursor(cursor);
+				break;
+			}
+		}
+		if (player.isSneaking()) {
+			int x = mapPlayer.getX();
+			int y = mapPlayer.getY();
+			if (-halfWidth <= x && x < halfWidth && -halfWidth <= y && y < halfWidth) {
+				x *= 2 * scale;
+				y *= 2 * scale;
+				float yaw = Location.normalizeYaw(playerLoc.getYaw());
+				byte dir = (byte) ((180 + yaw) / 360 * 16 - 12 - 1f/2); // -12 DOWN => east
+				if (dir < 0)
+					dir = (byte) (16 + dir);
+				canvas.getCursors().addCursor(new MapCursor((byte) x, (byte) y, dir, MapCursor.Type.WHITE_POINTER, true, player.getName()));
+			}
+		}
+		mapPlayer.add(new Vector3i(halfWidth, halfWidth, 0));
+
+		boolean[][] discovered = map.getDicovered();
+		if (!map.isFullDicovered()) {
+			// TODO raytrace to projection
+			for (int index = 0; index < 4; index++) {
+				for (int c = 0; c < width - 1; c++) {
+					// map edge point
+					int xOffset, yOffset;
+					if (index == 0) {
+						xOffset = c;
+						yOffset = 0;
+					} else if (index == 1) {
+						xOffset = 0;
+						yOffset = 1 + c;
+					} else if (index == 2) {
+						xOffset = c;
+						yOffset = width - 1;
+					} else {
+						xOffset = width - 1;
+						yOffset = 1 + c;
+					}
+
+					Vector p = new Vector(mapPlayer.getX(), mapPlayer.getY(), 0);
+					Vector dir = new Vector(xOffset, yOffset, 0).subtract(p);
+					p.add(new Vector(0.5, 0.5, 0));
+					if (dir.length() == 0) {
+						discovered[xOffset][yOffset] = true;
+						continue;
+					}
+					dir.normalize();
+					double dirX = dir.getX() == 0 ? 0 : dir.getX() > 0 ? 1 : -1;
+					double dirY = dir.getY() == 0 ? 0 : dir.getY() > 0 ? 1 : -1;
+					//System.out.print("FROM " + mapPlayer.getX() + "; " + mapPlayer.getY() + " TO " + xOffset + "; " + yOffset);
+					while (true) {
+						double dx = Math.floor(p.getX()) - p.getX();
+						if (dirX >= 0) {
+							dx = 1 + dx;
+						}
+						double dy = Math.floor(p.getY()) - p.getY();
+						if (dirY >= 0) {
+							dy = 1 + dy;
+						}
+						double tx = dx / dir.getX();
+						double ty = dy / dir.getY();
+						// fix vertexes
+						if (tx == 0)
+							tx = 1;
+						if (ty == 0)
+							ty = 1;
+						
+						double t = Math.min(tx, ty);
+						p = p.add(dir.clone().multiply(t));
+						//System.out.print("!!! " + dx + " " + dy + " - " + tx + " " + ty + " - " + t + " - " + dirX + " " + dirY + " - " + dir.getX() + " " + dir.getY());
+						
+						int x = (int) p.getX();
+						int y = (int) p.getY();
+						if (x < 0 || width <= x || y < 0 || width <= y)
+							break;
+						//System.out.print("??? " + x + " " + y + " <- " + p.getX() + " " + p.getY());
+						if (discovered[x][y])
+							continue;
+						// TODO break if dist
+						
+						Vector3i offsets = coords.getWorldCoord(x, y, 0);
+						int realX = xCenter + offsets.getX();
+						int realY = yCenter + offsets.getY();
+						int realZ = zCenter + offsets.getZ();
+						Block b = world.getBlockAt(realX, realY, realZ);
+						if (b.isPassable() || b.getType().isTransparent()) {
+							discovered[x][y] = true;
+						} else {
+							break;
+						}
+					}
+				}
+			}
+			map.checkDiscovering();
+		}
+
 		for (int x = 0; x < width; x++)
 		{
 			for (int z = 0; z < width; z++)
@@ -74,28 +179,8 @@ public class DrawingRenderer extends AbstractRenderer {
 				if (dist > RAYS_DISTANCE_SQUARED)
 					continue;
 				if (dist > RENDER_DISTANCE_SQUARED) {
-					/*Vector3i offsets = coords.getWorldCoord(x, z, 1);
-					int realX = xCenter + offsets.getX();
-					int realY = yCenter + offsets.getY();
-					int realZ = zCenter + offsets.getZ();
-					Block block = view.getWorld().getBlockAt(realX, realY, realZ);
-					// TODO update rework (rays? render fov?)
-					if (!inSight(playerSight, block, ANGLE_WIDTH, ANGLE_HEIGHT))
-						continue;*/
-					Vector3i offsets = coords.getWorldCoord(x, z, 1);
-					offsets = offsets.subtract(offsets0);
-					offsets = offsets.multiply(0.51);
-					offsets = offsets.add(offsets0);
-					int realX = xCenter + offsets.getX();
-					int realY = yCenter + offsets.getY();
-					int realZ = zCenter + offsets.getZ();
-					Location blockLoc = new Location(view.getWorld(), realX + 0.5, realY + 0.5, realZ + 0.5);
-					Vector dir = blockLoc.toVector().subtract(vecSight);
-					double length = dir.length();
-					if (length > 0) {
-						//RayTraceResult res = block.rayTrace(playerSight, dir, length, FluidCollisionMode.ALWAYS);
-						RayTraceResult res = view.getWorld().rayTraceBlocks(playerSight, dir, length, FluidCollisionMode.ALWAYS, true);
-						if (res != null && res.getHitBlock() != null && !res.getHitBlock().equals(blockLoc.getBlock())) {
+					if (!map.isFullDicovered()) {
+						if (!discovered[x][z]) {
 							continue;
 						}
 					}
@@ -108,7 +193,7 @@ public class DrawingRenderer extends AbstractRenderer {
 					int realX = xCenter + offsets.getX();
 					int realY = yCenter + offsets.getY();
 					int realZ = zCenter + offsets.getZ();
-					Block b = view.getWorld().getBlockAt(realX, realY, realZ);
+					Block b = world.getBlockAt(realX, realY, realZ);
 					color = PaletteUtils.getColor(b);
 					if (color >= SHADES_COUNT || color < 0) {
 						break;
@@ -129,67 +214,5 @@ public class DrawingRenderer extends AbstractRenderer {
 						canvas.setPixel(px_x + dx, px_z + dz, color);
 			}
 		}
-	}
-	
-	private static boolean inSight(Location from, Block block, float angleWidth, float angleHeight) {
-		// get nearest point
-		Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
-		Location diffs = blockCenter.clone().subtract(from);
-		diffs.setX(round(diffs.getX(), -0.5, 0.5));
-		diffs.setY(round(diffs.getY(), -0.5, 0.5));
-		diffs.setZ(round(diffs.getZ(), -0.5, 0.5));
-		Location to = blockCenter.subtract(diffs);
-		// ray trace
-		Vector direction = to.subtract(from).toVector();
-		double length = direction.length();
-		if (length == 0) {
-			return true;
-		}
-		/// TODO move to UtilsWorld
-		/*double yaw  = Math.atan2(from.getZ() - to.getZ(), from.getX() - to.getX()) + 45;
-		double pitch =  Math.asin((from.getY() - to.getY()) / to.distance(from));
-		float dYaw = (float) Math.abs(from.getYaw() - yaw);
-		float dPitch = (float) Math.abs(from.getPitch() - pitch);
-		if (dYaw > dYawMax || dPitch > dPitchMax) { // TODO RECTANGLE AREA???
-			return false;
-		}*/
-		Vector sight = from.getDirection();
-		//Vector horAxis = new Vector(-sight.getZ(), 0, sight.getX());
-		Vector horAxis = new Vector(-Math.cos(from.getYaw()), 0, -Math.sin(from.getYaw()));
-		//System.out.print("0=dir   " + direction);
-		//System.out.print("1=sig   " + sight + " " + from);
-		Vector top = sight.clone().rotateAroundAxis(horAxis, -angleHeight / 2);
-		Vector bottom = sight.clone().rotateAroundAxis(horAxis, angleHeight / 2);
-		System.out.print("vert plane   " + sight + " -> \n" + top + "\n " + bottom);
-		Vector leftTop =  top.clone().rotateAroundY(angleWidth / 2);
-		Vector rightTop = top.rotateAroundY(-angleWidth / 2);
-		Vector leftBottom =  bottom.clone().rotateAroundY(angleWidth / 2);
-		Vector rightBottom = bottom.rotateAroundY(-angleWidth / 2);
-		//System.out.print("4=corners   " + leftTop + "\n " + rightTop + "\n " + leftBottom + "\n " + rightBottom);
-		//System.out.print("5=extradots   " + leftBottom.clone().crossProduct(leftTop).dot(sight) + " " + leftTop.clone().crossProduct(rightTop).dot(sight)
-		//		+ " " + rightTop.clone().crossProduct(rightBottom).dot(sight) + " " + rightBottom.clone().crossProduct(leftBottom).dot(sight));
-		//System.out.print("6=corners   " + leftTop + "\n " + rightTop + "\n " + leftBottom + "\n " + rightBottom);
-		double dot1 = leftBottom.crossProduct(leftTop).dot(direction);
-		double dot2 = leftTop.crossProduct(rightTop).dot(direction);
-		double dot3 = rightTop.crossProduct(rightBottom).dot(direction);
-		double dot4 = rightBottom.crossProduct(leftBottom).dot(direction);
-		//System.out.print("3=d   " + dot1 + " " + dot2 + " " + dot3 + " " + dot4);
-		if (dot1 <= 0 || dot2 <= 0 || dot3 <= 0 || dot4 <= 0) {
-			return false;
-		}
-		RayTraceResult res = to.getWorld().rayTraceBlocks(from, direction, length, FluidCollisionMode.ALWAYS, true);
-		if (res == null || res.getHitBlock() == null || res.getHitBlock().equals(block)) {
-			return true;
-		}
-		return false;
-	}
-	
-	private static double round(double orig, double low, double high) {
-		if (orig < low)
-			return low;
-		else if (orig > high)
-			return high;
-		else
-			return orig;
 	}
 }

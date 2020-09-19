@@ -99,6 +99,32 @@ public class DrawingMapCoordinator {
 		return vec;
 	}
 	
+	public Vector3i getMapCoord(Vector3i center, Vector3i point) {
+		point = point.clone().subtract(center);
+		int hor = 0, vert = 0;
+		if (isX(horDir)) {
+			hor = point.getX();
+		} else if (isY(horDir)) {
+			hor = point.getY();
+		} else if (isZ(horDir)) {
+			hor = point.getZ();
+		}
+		if (isX(vertDir)) {
+			vert = point.getX();
+		} else if (isY(vertDir)) {
+			vert = point.getY();
+		} else if (isZ(vertDir)) {
+			vert = point.getZ();
+		}
+		if (isNeg(horDir)) {
+			hor *= -1;
+		}
+		if (isNeg(vertDir)) {
+			vert *= -1;
+		}
+		return new Vector3i(hor, vert, 0);
+	}
+	
 	private char invert(char dir) {
 		switch (dir) {
 		case 'x': return 'X';

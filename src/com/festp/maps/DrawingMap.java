@@ -47,4 +47,30 @@ public class DrawingMap implements IMap {
 	public Position getState() {
 		return info.state;
 	}
+	
+	public int getWidth() {
+		return info.getWidth();
+	}
+	
+	public boolean isFullDicovered() {
+		return info.isFullDiscovered;
+	}
+	
+	public boolean[][] getDicovered() {
+		return info.discovered;
+	}
+	
+	public void checkDiscovering() {
+		boolean isFullDiscovered = true;
+		int width = getWidth();
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < width; y++) {
+				if (!info.discovered[x][y]) {
+					isFullDiscovered = false;
+					break;
+				}
+			}
+		}
+		info.isFullDiscovered = isFullDiscovered;
+	}
 }
