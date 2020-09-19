@@ -1,5 +1,7 @@
 package com.festp.maps;
 
+import org.bukkit.util.Vector;
+
 import com.festp.utils.Vector3i;
 
 public class DrawingMapCoordinator {
@@ -123,6 +125,31 @@ public class DrawingMapCoordinator {
 			vert *= -1;
 		}
 		return new Vector3i(hor, vert, 0);
+	}
+	public Vector getMapCoord(Vector center, Vector point) {
+		point = point.clone().subtract(center);
+		double hor = 0, vert = 0;
+		if (isX(horDir)) {
+			hor = point.getX();
+		} else if (isY(horDir)) {
+			hor = point.getY();
+		} else if (isZ(horDir)) {
+			hor = point.getZ();
+		}
+		if (isX(vertDir)) {
+			vert = point.getX();
+		} else if (isY(vertDir)) {
+			vert = point.getY();
+		} else if (isZ(vertDir)) {
+			vert = point.getZ();
+		}
+		if (isNeg(horDir)) {
+			hor *= -1;
+		}
+		if (isNeg(vertDir)) {
+			vert *= -1;
+		}
+		return new Vector(hor, vert, 0);
 	}
 	
 	private char invert(char dir) {

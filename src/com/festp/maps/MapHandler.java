@@ -27,7 +27,6 @@ public class MapHandler implements Listener {
 	{
 		int id = event.getMap().getId();
 		IMap map = MapFileManager.load(id);
-		System.out.print("drawing map? " + map);
 		if (map == null)
 			return;
 		
@@ -37,11 +36,9 @@ public class MapHandler implements Listener {
 		} else if (map instanceof DrawingMap) {
 			renderer = new DrawingRenderer((DrawingMap) map);
 		}
-		if (map instanceof DrawingMap) System.out.print("drawing ren " + renderer);
 		if (renderer != null) {
 			MapUtils.setRenderer(event.getMap(), renderer);
 			BufferedImage image = MapFileManager.loadImage(id);
-			if (map instanceof DrawingMap) System.out.print("drawing img " + image);
 			if (image != null)
 			{
 				renderer.renderImage(image);
@@ -84,7 +81,7 @@ public class MapHandler implements Listener {
 				MapView view = Bukkit.createMap(event.getPlayer().getWorld());
 				view.setScale(Scale.FARTHEST);
 				mapItem = MapUtils.getMap(view.getId());
-				DrawingMap new_map = new DrawingMap(view.getId(), new DrawingInfo(8, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Integer.MAX_VALUE / 2, Position.DOWN_NORTH));
+				DrawingMap new_map = new DrawingMap(view.getId(), DrawingInfo.buildFrom(player.getLocation()));
 				DrawingRenderer renderer = new DrawingRenderer(new_map);
 				MapUtils.setRenderer(view, renderer);
 				MapFileManager.addMap(new_map);

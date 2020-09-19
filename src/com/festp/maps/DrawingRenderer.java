@@ -54,7 +54,7 @@ public class DrawingRenderer extends AbstractRenderer {
 		final int scale = map.getScale();
 		final int width = map.getWidth();
 		final int halfWidth = width / 2;
-		Position pos = map.getState();
+		Position pos = map.getDirection();
 		World world = view.getWorld();
 		DrawingMapCoordinator coords = new DrawingMapCoordinator(pos, width);
 
@@ -72,8 +72,11 @@ public class DrawingRenderer extends AbstractRenderer {
 			}
 		}
 		if (player.isSneaking()) {
-			int x = mapPlayer.getX();
-			int y = mapPlayer.getY();
+			Vector cursorPlayer = coords.getMapCoord(
+					new Vector(xCenter, yCenter, zCenter),
+					new Vector(projection.getX(), projection.getY(), projection.getZ()));
+			double x = cursorPlayer.getX();
+			double y = cursorPlayer.getY();
 			if (-halfWidth <= x && x < halfWidth && -halfWidth <= y && y < halfWidth) {
 				x *= 2 * scale;
 				y *= 2 * scale;
@@ -85,10 +88,13 @@ public class DrawingRenderer extends AbstractRenderer {
 			}
 		}
 		mapPlayer.add(new Vector3i(halfWidth, halfWidth, 0));
+		final int mapPlayerX = mapPlayer.getX();
+		final int mapPlayerY = mapPlayer.getY();
 
 		boolean[][] discovered = map.getDicovered();
 		if (!map.isFullDicovered()) {
 			// TODO raytrace to projection
+			boolean updated = false;
 			for (int index = 0; index < 4; index++) {
 				for (int c = 0; c < width - 1; c++) {
 					// map edge point
@@ -107,7 +113,7 @@ public class DrawingRenderer extends AbstractRenderer {
 						yOffset = 1 + c;
 					}
 
-					Vector p = new Vector(mapPlayer.getX(), mapPlayer.getY(), 0);
+					Vector p = new Vector(mapPlayerX, mapPlayerY, 0);
 					Vector dir = new Vector(xOffset, yOffset, 0).subtract(p);
 					p.add(new Vector(0.5, 0.5, 0));
 					if (dir.length() == 0) {
@@ -137,31 +143,38 @@ public class DrawingRenderer extends AbstractRenderer {
 						
 						double t = Math.min(tx, ty);
 						p = p.add(dir.clone().multiply(t));
-						//System.out.print("!!! " + dx + " " + dy + " - " + tx + " " + ty + " - " + t + " - " + dirX + " " + dirY + " - " + dir.getX() + " " + dir.getY());
 						
 						int x = (int) p.getX();
 						int y = (int) p.getY();
 						if (x < 0 || width <= x || y < 0 || width <= y)
 							break;
-						//System.out.print("??? " + x + " " + y + " <- " + p.getX() + " " + p.getY());
 						if (discovered[x][y])
 							continue;
-						// TODO break if dist
+						int mapDx = mapPlayerX - x;
+						int mapDy = mapPlayerY - y;
+						if (mapDx * mapDx + mapDy * mapDy > RAYS_DISTANCE_SQUARED)
+							break;
 						
 						Vector3i offsets = coords.getWorldCoord(x, y, 0);
 						int realX = xCenter + offsets.getX();
 						int realY = yCenter + offsets.getY();
 						int realZ = zCenter + offsets.getZ();
 						Block b = world.getBlockAt(realX, realY, realZ);
-						if (b.isPassable() || b.getType().isTransparent()) {
+						if (b.isPassable() || !b.getType().isOccluding() || b.getType().isTransparent()) {
 							discovered[x][y] = true;
+							if (!updated) {
+								updated = true;
+							}
 						} else {
 							break;
 						}
 					}
 				}
 			}
-			map.checkDiscovering();
+			if (updated) {
+				map.checkDiscovering();
+				MapFileManager.saveDiscovered(map);
+			}
 		}
 
 		for (int x = 0; x < width; x++)

@@ -20,6 +20,12 @@ public class DrawingMap implements IMap {
 		this.info = info;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + " #" + getId() + " {x=" + getX() + ", y=" + getY() + ", z=" + getZ()
+				+ ", scale=" + getScale() + ", pos=" + getDirection() + "}"; 
+	}
+	
 	public void setInfo(DrawingInfo info) {
 		this.info = info;
 	}
@@ -44,7 +50,7 @@ public class DrawingMap implements IMap {
 		return info.zCenter;
 	}
 	
-	public Position getState() {
+	public Position getDirection() {
 		return info.state;
 	}
 	
@@ -71,6 +77,10 @@ public class DrawingMap implements IMap {
 				}
 			}
 		}
-		info.isFullDiscovered = isFullDiscovered;
+		if (isFullDiscovered) {
+			info.discovered = null;
+			info.isFullDiscovered = true;
+			MapFileManager.save(this);
+		}
 	}
 }

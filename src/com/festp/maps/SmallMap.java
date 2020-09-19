@@ -13,6 +13,11 @@ public class SmallMap implements IMap {
 		this.startZ = start_z;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + " #" + getId() + " {x=" + getX() + ", z=" + getZ() + ", scale=" + getScale() + "}"; 
+	}
+	
 	public int getId() {
 		return id;
 	}

@@ -38,7 +38,7 @@ public abstract class AbstractRenderer extends MapRenderer {
 			canvas.drawImage(0, 0, image);
 			for (int x = 0; x < 128; x++)
 				for (int z = 0; z < 128; z++)
-					if (image.getRGB(0, 0) == 0)
+					if (image.getRGB(x, z) == 0)
 						canvas.setPixel(x, z, (byte) 0);
 			image = null;
 			init = false;

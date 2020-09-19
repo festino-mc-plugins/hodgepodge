@@ -3,6 +3,8 @@ package com.festp.maps;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,7 @@ public class MapFileManager {
 	private static final String DIR = Main.getPath() + Main.mapsdir + System.getProperty("file.separator");
 	private static final String IMG_OLD_FORMAT = "bmp";
 	private static final String IMG_FORMAT = "png";
+	private static final String BOOLEAN_ARRAY_FORMAT = "bitset";
 	private static final Color DEFAULT_SAVE_COLOR = Color.MAGENTA;
 	
 	private static List<IMap> maps = new ArrayList<>(); 
@@ -63,24 +66,32 @@ public class MapFileManager {
 					DrawingInfo info = new DrawingInfo(scale, xCenter, yCenter, zCenter, state);
 					info.isFullDiscovered = ymlFormat.getBoolean("is_discovered");
 					if (!info.isFullDiscovered) {
-						String discoveredStr = ymlFormat.getString("discovered_array");
-						boolean[][] discovered = info.discovered;
-						int width = info.getWidth();
-						for (int x = 0; x < width; x++) {
-							for (int y = 0; y < width; y += 8) {
-								byte info8 = (byte) discoveredStr.charAt(width / 8 * x + y);
-								for (int b = 0; b < 8; b++) {
-									boolean data = (info8 & 0x1 << b) > 0;
-									discovered[x][y + b] = data;
+						File discoveredFile = getDiscoveredFile(id);
+						if (discoveredFile.exists()) {
+							int width = info.getWidth();
+							byte[] discoveredBits = new byte[width * width / 8];
+							FileInputStream reader = new FileInputStream(discoveredFile);
+							reader.read(discoveredBits);
+							reader.close();
+							boolean[][] discovered = info.discovered;
+							for (int x = 0; x < width; x++) {
+								for (int y = 0; y < width; y += 8) {
+									byte info8 = discoveredBits[(x * width + y) / 8];
+									for (int b = 0; b < 8; b++) {
+										boolean data = (info8 & 0x1 << b) > 0;
+										discovered[x][y + b] = data;
+									}
 								}
 							}
 						}
+						// else info already created empty array
 					}
 					map = new DrawingMap(id, info);
 					maps.add(map);
 				}
 			} catch (Exception e) {
-				Utils.printError("[WARN] Couldn't load map #" + id + "!");
+				Utils.printError("[WARN] Couldn't load map #" + id + "! (" + e.getClass().getSimpleName() + " : " + e.getMessage() + ")");
+				Utils.printStackTracePeak(e, 3);
 			}
 		}
 		
@@ -106,30 +117,60 @@ public class MapFileManager {
 				ymlFormat.set("x_center", drawingMap.getX());
 				ymlFormat.set("y_center", drawingMap.getY());
 				ymlFormat.set("z_center", drawingMap.getZ());
-				ymlFormat.set("position", drawingMap.getState().name());
+				ymlFormat.set("position", drawingMap.getDirection().name());
 				ymlFormat.set("is_discovered", drawingMap.isFullDicovered());
-				if (!drawingMap.isFullDicovered()) {
-					String discoveredStr = "";
-					boolean[][] discovered = drawingMap.getDicovered();
-					int width = drawingMap.getWidth();
-					byte info8 = 0;
-					for (int x = 0; x < width; x++) {
-						for (int y = 0; y < width; y += 8) {
-							for (int b = 0; b < 8; b++) {
-								int data = discovered[x][y + b] ? 1 : 0;
-								info8 |= data << b;
-							}
-							discoveredStr += (char) info8;
-						}
-					}
-					ymlFormat.set("discovered_array", discoveredStr);
-				}
 				ymlFormat.save(file);
+
+				saveDiscovered(drawingMap);
 			}
 		} catch (IOException e) {
 			Utils.printError("Error while creating map file '" + map.getId() + ".dat'.");
 			e.printStackTrace();
 		}
+	}
+	
+	/** @return <b>false</b> if there was error */
+	public static boolean saveDiscovered(DrawingMap map) {
+		if (map.isFullDicovered()) {
+			File discoveredFile = getDiscoveredFile(map.getId());
+			if (discoveredFile.exists()) {
+				discoveredFile.delete();
+			}
+			return true;
+		} else {
+			return saveBitset(getDiscoveredFile(map.getId()), map.getDicovered());
+		}
+	}
+	
+	private static File getDiscoveredFile(int id) {
+		return new File(DIR + id + "." + BOOLEAN_ARRAY_FORMAT);
+	}
+	
+	private static boolean saveBitset(File file, boolean[][] bitMap) {
+		try {
+			int width = bitMap.length;
+			int height = bitMap[0].length;
+			byte discoveredBits[] = new byte[width / 8 * height];
+			int i = 0;
+			for (int x = 0; x < width; x++) {
+				for (int y = 0; y < height; y += 8) {
+					byte info8 = 0;
+					for (int b = 0; b < 8; b++) {
+						int data = bitMap[x][y + b] ? 1 : 0;
+						info8 |= data << b;
+					}
+					discoveredBits[i] = info8;
+					i++;
+				}
+			}
+			FileOutputStream writer = new FileOutputStream(file);
+			writer.write(discoveredBits);
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 	
 	public static BufferedImage loadImage(int id)

@@ -526,4 +526,13 @@ public class Utils {
     	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
     	return shulker.getInventory();
 	}
+
+	public static void printStackTracePeak(Exception e, int n) {
+		String error = "";
+		StackTraceElement[] elems = e.getStackTrace();
+		for (int i = 0; i < elems.length && i < n; i++) {
+			error += elems[i].toString() + "\n";
+		}
+		printError(error);
+	}
 }
