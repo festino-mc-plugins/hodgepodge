@@ -79,4 +79,19 @@ public class Vector3i implements Cloneable {
 	public int getDotProduct(Vector3i v2) {
 		return x * v2.x + y * v2.y + z * v2.z;
 	}
+	
+	public double length() {
+		return Math.sqrt(lengthSquared());
+	}
+	
+	public double lengthSquared() {
+		return (double) x * x + (double) y * y + (double) z * z;
+	}
+	
+	public void normalize() {
+		double length = length();
+		x /= length;
+		y /= length;
+		z /= length;
+	}
 }

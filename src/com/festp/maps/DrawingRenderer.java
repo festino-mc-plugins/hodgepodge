@@ -60,8 +60,25 @@ public class DrawingRenderer extends AbstractRenderer {
 
 		Vector3i renderDir = coords.getWorldCoord(0, 0, 1).subtract(coords.getWorldCoord(0, 0, 0));
 		Vector3i projection = new Vector3i(playerX, playerY, playerZ);
-		projection = projection.subtract(renderDir.getCoordwiseMult(projection));
-		projection.add(renderDir.getCoordwiseMult(center));
+		Vector3i renderCoord = renderDir.getCoordwiseMult(renderDir);
+		Vector3i dv = renderCoord.getCoordwiseMult(center.clone().subtract(projection));
+		boolean canRender = true;
+		if (dv.lengthSquared() != 0) {
+			//Block projectionBlock = world.getBlockAt(playerX + dv.getX(), playerY + dv.getY(), playerZ + dv.getZ());
+			int dist = (int) dv.length();
+			dv.normalize();
+			Block b;
+			for (int i = 0; i <= dist; i++) {
+				projection.add(dv);
+				b = world.getBlockAt(projection.getX(), projection.getY(), projection.getZ());
+				if (!canLookThrough(b)) {
+					canRender = false;
+					break;
+				}
+			}// while (!b.equals(projectionBlock));
+		}
+		
+
 		Vector3i mapPlayer = coords.getMapCoord(center, projection);
 
 		for (int i = 0; i < canvas.getCursors().size(); i++) {
@@ -90,10 +107,11 @@ public class DrawingRenderer extends AbstractRenderer {
 		mapPlayer.add(new Vector3i(halfWidth, halfWidth, 0));
 		final int mapPlayerX = mapPlayer.getX();
 		final int mapPlayerY = mapPlayer.getY();
-
+		
+		// TODO raytrace to projection
+		
 		boolean[][] discovered = map.getDicovered();
-		if (!map.isFullDicovered()) {
-			// TODO raytrace to projection
+		if (canRender && !map.isFullDicovered()) {
 			boolean updated = false;
 			for (int index = 0; index < 4; index++) {
 				for (int c = 0; c < width - 1; c++) {
@@ -160,7 +178,7 @@ public class DrawingRenderer extends AbstractRenderer {
 						int realY = yCenter + offsets.getY();
 						int realZ = zCenter + offsets.getZ();
 						Block b = world.getBlockAt(realX, realY, realZ);
-						if (b.isPassable() || !b.getType().isOccluding() || b.getType().isTransparent()) {
+						if (canLookThrough(b)) {
 							discovered[x][y] = true;
 							if (!updated) {
 								updated = true;
@@ -227,5 +245,9 @@ public class DrawingRenderer extends AbstractRenderer {
 						canvas.setPixel(px_x + dx, px_z + dz, color);
 			}
 		}
+	}
+	
+	private static boolean canLookThrough(Block b) {
+		return b.isPassable() || !b.getType().isOccluding() || b.getType().isTransparent();
 	}
 }
