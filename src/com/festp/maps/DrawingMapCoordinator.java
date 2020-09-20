@@ -12,6 +12,8 @@ public class DrawingMapCoordinator {
 	private final char renderDir;
 	private final char horDir;
 	private final char vertDir;
+	private final int horShift;
+	private final int vertShift;
 	
 	//   N=z 
 	//W=x   E=X
@@ -56,7 +58,14 @@ public class DrawingMapCoordinator {
 			}
 			vertDir = 'y';
 		}
-		
+		if (isNeg(horDir))
+			horShift = -1;
+		else
+			horShift = 0;
+		if (isNeg(vertDir))
+			vertShift = -1;
+		else
+			vertShift = 0;
 	}
 
 	// - get x, y, z directions and start/finish coords - finish = 5 => render
@@ -78,6 +87,8 @@ public class DrawingMapCoordinator {
 		if (isNeg(vertDir)) {
 			vert *= -1;
 		}
+		hor += horShift;
+		vert += vertShift;
 		Vector3i vec = new Vector3i(0, 0, 0);
 		if (isX(renderDir)) {
 			vec.setX(render);
