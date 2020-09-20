@@ -64,7 +64,6 @@ public class DrawingRenderer extends AbstractRenderer {
 		Vector3i dv = renderCoord.getCoordwiseMult(center.clone().subtract(projection));
 		boolean canRender = true;
 		if (dv.lengthSquared() != 0) {
-			//Block projectionBlock = world.getBlockAt(playerX + dv.getX(), playerY + dv.getY(), playerZ + dv.getZ());
 			int dist = (int) dv.length();
 			dv.normalize();
 			Block b;
@@ -75,7 +74,7 @@ public class DrawingRenderer extends AbstractRenderer {
 					canRender = false;
 					break;
 				}
-			}// while (!b.equals(projectionBlock));
+			}
 		}
 		
 
@@ -91,17 +90,15 @@ public class DrawingRenderer extends AbstractRenderer {
 		if (player.isSneaking()) {
 			Vector cursorPlayer = coords.getMapCoord(
 					new Vector(xCenter, yCenter, zCenter),
-					new Vector(projection.getX(), projection.getY(), projection.getZ()));
+					new Vector(projection.getX(), projection.getY(), projection.getZ())); // TODO floats
 			double x = cursorPlayer.getX();
 			double y = cursorPlayer.getY();
 			if (-halfWidth <= x && x < halfWidth && -halfWidth <= y && y < halfWidth) {
 				x *= 2 * scale;
 				y *= 2 * scale;
-				float yaw = Location.normalizeYaw(playerLoc.getYaw());
-				byte dir = (byte) ((180 + yaw) / 360 * 16 - 12 - 1f/2); // -12 DOWN => east
-				if (dir < 0)
-					dir = (byte) (16 + dir);
-				canvas.getCursors().addCursor(new MapCursor((byte) x, (byte) y, dir, MapCursor.Type.WHITE_POINTER, true, player.getName()));
+				MapCursor cursor = coords.getCursor3D((byte) x, (byte) y, playerLoc);
+				cursor.setCaption(player.getName());
+				canvas.getCursors().addCursor(cursor);
 			}
 		}
 		mapPlayer.add(new Vector3i(halfWidth, halfWidth, 0));

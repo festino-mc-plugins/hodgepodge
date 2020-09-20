@@ -1,5 +1,7 @@
 package com.festp.utils;
 
+import org.bukkit.util.Vector;
+
 public class Vector3i implements Cloneable {
 	
 	protected int x, y, z;
@@ -22,6 +24,10 @@ public class Vector3i implements Cloneable {
 	@Override
 	public String toString() {
 		return "Vector3i{" + x + ", " + y + ", " + z + "}";
+	}
+	
+	public Vector toVector() {
+		return new Vector(x, y, z);
 	}
 	
 	public int getX() {

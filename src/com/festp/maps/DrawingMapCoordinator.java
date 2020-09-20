@@ -1,5 +1,7 @@
 package com.festp.maps;
 
+import org.bukkit.Location;
+import org.bukkit.map.MapCursor;
 import org.bukkit.util.Vector;
 
 import com.festp.utils.Vector3i;
@@ -150,6 +152,35 @@ public class DrawingMapCoordinator {
 			vert *= -1;
 		}
 		return new Vector(hor, vert, 0);
+	}
+	
+	public MapCursor getCursor3D(byte x, byte y, Location eyeDir) {
+		Vector3i zeroOffset = getWorldCoord(0, 0, 0);
+		Vector renderDir = getWorldCoord(0, 0, 1).subtract(zeroOffset).toVector();
+		Vector horDir = getWorldCoord(1, 0, 0).subtract(zeroOffset).toVector();
+		Vector vertDir = getWorldCoord(0, 1, 0).subtract(zeroOffset).toVector();
+		Vector dir = eyeDir.getDirection();
+		double renderDot = dir.dot(renderDir);
+		double acos45 = Math.sqrt(2) / 2;
+		if (renderDot >= acos45) {
+			return new MapCursor(x, y, (byte) 0, MapCursor.Type.WHITE_CIRCLE, true);
+		} else if (renderDot <= -acos45) {
+			return new MapCursor(x, y, (byte) 0, MapCursor.Type.SMALL_WHITE_CIRCLE, true);
+		}
+
+		dir = dir.subtract(renderDir.multiply(renderDot));
+		// s/w/n/e = 0/90/180/270 = down/left/up/right (down = vert, left = -hor)
+		double pseudoyaw = Math.toDegrees(Math.atan2(-dir.dot(horDir), dir.dot(vertDir)));
+		// thanks for the yaw formula: https://gist.github.com/JorelAli/6e124cc4022d2d16cc373d486e6f254b
+		// instead of
+		/* byte dir = (byte) ((180 + yaw) / 360 * 16 - 12 - 1f/2); // -12 DOWN => east
+		 * if (dir < 0)
+		 *     dir = (byte) (16 + dir);*/
+		byte direction = (byte) (Math.floor((pseudoyaw / 22.5) + 0.5) % 16);
+		if (direction < 0) {
+			direction += 16;
+		}
+		return new MapCursor(x, y, direction, MapCursor.Type.WHITE_POINTER, true);
 	}
 	
 	private char invert(char dir) {
