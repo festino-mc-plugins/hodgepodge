@@ -90,12 +90,12 @@ public class DrawingRenderer extends AbstractRenderer {
 		if (player.isSneaking()) {
 			Vector cursorPlayer = coords.getMapCoord(
 					new Vector(xCenter, yCenter, zCenter),
-					new Vector(projection.getX(), projection.getY(), projection.getZ())); // TODO floats
+					playerLoc.toVector());
 			double x = cursorPlayer.getX();
 			double y = cursorPlayer.getY();
 			if (-halfWidth <= x && x < halfWidth && -halfWidth <= y && y < halfWidth) {
-				x *= 2 * scale;
-				y *= 2 * scale;
+				x = Math.round(x * 2 * scale);
+				y = Math.round(y * 2 * scale);
 				MapCursor cursor = coords.getCursor3D((byte) x, (byte) y, playerLoc);
 				cursor.setCaption(player.getName());
 				canvas.getCursors().addCursor(cursor);
@@ -104,8 +104,6 @@ public class DrawingRenderer extends AbstractRenderer {
 		mapPlayer.add(new Vector3i(halfWidth, halfWidth, 0));
 		final int mapPlayerX = mapPlayer.getX();
 		final int mapPlayerY = mapPlayer.getY();
-		
-		// TODO raytrace to projection
 		
 		boolean[][] discovered = map.getDicovered();
 		if (canRender && !map.isFullDicovered()) {
@@ -200,9 +198,9 @@ public class DrawingRenderer extends AbstractRenderer {
 				int d1 = offsets0.getX(),
 					d2 = offsets0.getY(),
 					d3 = offsets0.getZ();
-				int dist1 = playerX - xCenter + d1,
-					dist2 = playerY - yCenter + d2,
-					dist3 = playerZ - zCenter + d3;
+				int dist1 = playerX - (xCenter + d1),
+					dist2 = playerY - (yCenter + d2),
+					dist3 = playerZ - (zCenter + d3);
 				int dist = dist1 * dist1 + dist2 * dist2 + dist3 * dist3;
 				if (dist > RAYS_DISTANCE_SQUARED)
 					continue;
