@@ -13,12 +13,18 @@ import com.festp.maps.PaletteUtils;
 import com.festp.utils.Vector3i;
 
 public class DrawingRenderer extends AbstractRenderer {
-	
-	static final int RENDER_DISTANCE_SQUARED = 0 * 0;
-	static final int RAYS_DISTANCE_SQUARED = 100 * 100;
-	static final int SHADES_COUNT = PaletteUtils.SHADES_COUNT;
 
-	final DrawingMap map;
+	static final int RENDER_DISTANCE = 6;
+	static final int RENDER_DISTANCE_SQUARED = RENDER_DISTANCE * RENDER_DISTANCE;
+	static final int RAYS_DISTANCE_SQUARED = 100 * 100;
+	private static final int GRID_ROWS = 4;
+	private static final int GRID_SIZE = GRID_ROWS * GRID_ROWS;
+	private static final int MAX_ROW_PIXELS = 128;
+	private static final int MAX_PIXELS = MAX_ROW_PIXELS * MAX_ROW_PIXELS;
+	private static final int RENDER_QUOTA = (MAX_PIXELS / 20) * 9 / 10;
+
+	public final DrawingMap map;
+	private DrawingMapGrid grid = null;
 	
 	public DrawingRenderer(DrawingMap map) {
 		super(map);
@@ -28,10 +34,15 @@ public class DrawingRenderer extends AbstractRenderer {
 	@Override
 	public void renderSpecific(MapView view, MapCanvas canvas, Player player) {
 		if (map.needReset) {
+			grid = null;
+			byte initColor = PaletteUtils.getColor(PaletteUtils.TRANSPARENT);
 			for (int x = 0; x < 128; x++)
 				for (int y = 0; y < 128; y++)
-					canvas.setPixel(x, y, (byte) 0);
+					canvas.setPixel(x, y, initColor);
 			map.needReset = false;
+		}
+		if (grid == null) {
+			grid = new DrawingMapGrid(GRID_SIZE, map.getWidth(), System.currentTimeMillis());
 		}
 		
 		Integer main_id = MapUtils.getMapId(player.getInventory().getItemInMainHand());
@@ -76,7 +87,6 @@ public class DrawingRenderer extends AbstractRenderer {
 				}
 			}
 		}
-		
 
 		Vector3i mapPlayer = coords.getMapCoord(center, projection);
 
@@ -190,58 +200,69 @@ public class DrawingRenderer extends AbstractRenderer {
 			}
 		}
 
-		for (int x = 0; x < width; x++)
-		{
-			for (int z = 0; z < width; z++)
-			{
-				Vector3i offsets0 = coords.getWorldCoord(x, z, 0);
-				int d1 = offsets0.getX(),
-					d2 = offsets0.getY(),
-					d3 = offsets0.getZ();
-				int dist1 = playerX - (xCenter + d1),
-					dist2 = playerY - (yCenter + d2),
-					dist3 = playerZ - (zCenter + d3);
-				int dist = dist1 * dist1 + dist2 * dist2 + dist3 * dist3;
-				if (dist > RAYS_DISTANCE_SQUARED)
-					continue;
-				if (dist > RENDER_DISTANCE_SQUARED) {
-					if (!map.isFullDicovered()) {
-						if (!discovered[x][z]) {
-							continue;
-						}
+		DrawingMapPixelRenderer pixeler = new DrawingMapPixelRenderer(canvas, map, coords);
+		long time = System.currentTimeMillis();
+		int totalRendered = 0;
+		{ // in order to hide local variables
+			int minX = mapPlayerX - RENDER_DISTANCE, maxX = mapPlayerX + RENDER_DISTANCE;
+			int minY = mapPlayerY - RENDER_DISTANCE, maxY = mapPlayerY + RENDER_DISTANCE;
+			minX = Math.max(minX, 0);
+			minY = Math.max(minY, 0);
+			maxX = Math.min(maxX, width - 1);
+			maxY = Math.min(maxY, width - 1);
+			for (int x = minX; x < maxX; x++) {
+				for (int y = minY; y < maxY; y++) {
+					if (pixeler.tryRender(x, y)) {
+						totalRendered++;
 					}
 				}
-				
-				byte color = 2;
-				int yScale;
-				for (yScale = 1; yScale <= SHADES_COUNT; yScale++) {
-					Vector3i offsets = coords.getWorldCoord(x, z, yScale);
-					int realX = xCenter + offsets.getX();
-					int realY = yCenter + offsets.getY();
-					int realZ = zCenter + offsets.getZ();
-					Block b = world.getBlockAt(realX, realY, realZ);
-					color = PaletteUtils.getColor(b);
-					if (color >= SHADES_COUNT || color < 0) {
-						break;
+			}
+		}
+		grid.sort();
+		int minX = mapPlayerX - RAYS_DISTANCE_SQUARED, maxX = mapPlayerX + RAYS_DISTANCE_SQUARED;
+		int minY = mapPlayerY - RAYS_DISTANCE_SQUARED, maxY = mapPlayerY + RAYS_DISTANCE_SQUARED;
+		minX = Math.max(minX, 0);
+		minY = Math.max(minY, 0);
+		maxX = Math.min(maxX, width);
+		maxY = Math.min(maxY, width);
+		for (int i = 0; i < GRID_SIZE; i++) {
+			int n = grid.get(i);
+			int firstX = n % GRID_ROWS;
+			int firstY = (n * n) / GRID_ROWS % GRID_ROWS;
+			minX = minX - minX % GRID_ROWS + firstX;
+			minY = minY - minY % GRID_ROWS + firstY;
+			maxX = maxX - maxX % GRID_ROWS + firstX;
+			maxY = maxY - maxY % GRID_ROWS + firstY;
+			//System.out.print(minX + "->" + maxX + " and " + minY + "->" + maxY);
+			
+			int gridRendered = 0;
+			for (int x = minX; x < maxX; x += GRID_ROWS) {
+				for (int y = minY; y < maxY; y += GRID_ROWS) {
+					Vector3i offsets0 = coords.getWorldCoord(x, y, 0);
+					int d1 = offsets0.getX(),
+						d2 = offsets0.getY(),
+						d3 = offsets0.getZ();
+					int dist1 = playerX - (xCenter + d1),
+						dist2 = playerY - (yCenter + d2),
+						dist3 = playerZ - (zCenter + d3);
+					int dist = dist1 * dist1 + dist2 * dist2 + dist3 * dist3;
+					if (dist > RAYS_DISTANCE_SQUARED)
+						continue;
+					
+					if (pixeler.tryRender(x, y)) {
+						gridRendered++;
 					}
 				}
-				
-				// -1 dark / +1 brightest / +2 darkest
-				if (yScale < SHADES_COUNT) {
-					color += 2 - (byte) yScale; // 1 => 1, 2 => 0, 3 => -1
-				} else if (yScale == SHADES_COUNT) {
-					color += 2;
-				}
-				
-				int px_x = x * scale;
-				int px_z = z * scale;
-				for (int dx = 0; dx < scale; dx++)
-					for (int dz = 0; dz < scale; dz++)
-						canvas.setPixel(px_x + dx, px_z + dz, color);
+			}
+			grid.updateTime(i, time, gridRendered);
+			totalRendered += gridRendered;
+			if (totalRendered >= RENDER_QUOTA) {
+				break;
 			}
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private static boolean canLookThrough(Block b) {
 		return b.isPassable() || !b.getType().isOccluding() || b.getType().isTransparent();
 	}

@@ -26,7 +26,8 @@ public class PaletteUtils {
 	
 	public static final int SHADES_COUNT = 4;
 	// main color instances
-	public static final Material SAND = Material.SAND,
+	public static final Material TRANSPARENT = Material.AIR,
+			SAND = Material.SAND,
 			CLOTH = Material.COBWEB,
 			FOLIAGE = Material.VINE,
 			WHITE = Material.SNOW_BLOCK, //SNOW
