@@ -12,6 +12,7 @@ public class DrawingMapGrid {
 		for (int i = 0; i < size; i++) {
 			grids[i] = new Grid(i, initTime);
 		}
+		// TODO use Collections.shuffle(); or Random (from -1000 ms to 0)
 	}
 	
 	/** Sorts grids into last update time ascending order. */
@@ -26,8 +27,6 @@ public class DrawingMapGrid {
 	public void updateTime(int index, long curTime, int blocksRendered) {
 		double maxBlocks = width * width / grids.length;
 		grids[index].time += (curTime - grids[index].time) * (blocksRendered / maxBlocks);
-		//System.out.print(index + " " + grids[index].time + " " + ((curTime - grids[index].time) * (blocksRendered / maxBlocks)));
-		//System.out.print(grids[index].index + " " + grids[0].time + " " + grids[1].time + " " + grids[2].time);
 	}
 	
 	private class Grid implements Comparable<Grid> {

@@ -228,12 +228,11 @@ public class DrawingRenderer extends AbstractRenderer {
 		for (int i = 0; i < GRID_SIZE; i++) {
 			int n = grid.get(i);
 			int firstX = n % GRID_ROWS;
-			int firstY = (n * n) / GRID_ROWS % GRID_ROWS;
+			int firstY = n / GRID_ROWS;
 			minX = minX - minX % GRID_ROWS + firstX;
 			minY = minY - minY % GRID_ROWS + firstY;
 			maxX = maxX - maxX % GRID_ROWS + firstX;
 			maxY = maxY - maxY % GRID_ROWS + firstY;
-			//System.out.print(minX + "->" + maxX + " and " + minY + "->" + maxY);
 			
 			int gridRendered = 0;
 			for (int x = minX; x < maxX; x += GRID_ROWS) {
