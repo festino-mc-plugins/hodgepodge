@@ -1,6 +1,7 @@
 package com.festp.maps;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -14,6 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.map.MapView.Scale;
 
@@ -81,6 +83,9 @@ public class MapHandler implements Listener {
 				MapView view = Bukkit.createMap(event.getPlayer().getWorld());
 				view.setScale(Scale.FARTHEST);
 				mapItem = MapUtils.getMap(view.getId());
+				ItemMeta meta = mapItem.getItemMeta();
+				meta.setLore(Arrays.asList(new String[] { "Drawing" }));
+				mapItem.setItemMeta(meta);
 				DrawingMap new_map = new DrawingMap(view.getId(), DrawingInfo.buildFrom(player.getLocation()));
 				DrawingRenderer renderer = new DrawingRenderer(new_map);
 				MapUtils.setRenderer(view, renderer);
@@ -112,6 +117,7 @@ public class MapHandler implements Listener {
 
 			event.setCancelled(true);
 			map.setInfo(DrawingInfo.buildFrom(player.getLocation()));
+			MapUtils.getView(map).setWorld(player.getWorld());;
 			map.needReset = true;
 			MapFileManager.save(map);
 		}
