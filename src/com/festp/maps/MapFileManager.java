@@ -141,6 +141,27 @@ public class MapFileManager {
 			return saveBitset(getDiscoveredFile(map.getId()), map.getDicovered());
 		}
 	}
+
+	public static void delete(IMap map) {
+		File file = new File(DIR, map.getId() + ".dat");
+		try {
+			file.delete();
+			if (map instanceof DrawingMap) {
+				File discoveredFile = getDiscoveredFile(map.getId());
+				if (discoveredFile.exists()) {
+					discoveredFile.delete();
+				}
+				File imageFile = getImageFile(map.getId());
+				if (imageFile.exists()) {
+					imageFile.delete();
+				}
+			}
+			maps.remove(map);
+		} catch (Exception e) {
+			Utils.printError("Error while deleting map file '" + map.getId() + ".dat'.");
+			e.printStackTrace();
+		}
+	}
 	
 	private static File getDiscoveredFile(int id) {
 		return new File(DIR + id + "." + BOOLEAN_ARRAY_FORMAT);
@@ -173,11 +194,16 @@ public class MapFileManager {
 		return true;
 	}
 	
-	public static BufferedImage loadImage(int id)
-	{
+	private static File getImageFile(int id) {
 		File imageFile = new File(DIR + id + "." + IMG_OLD_FORMAT);
 		if (!imageFile.exists())
 			imageFile = new File(DIR + id + "." + IMG_FORMAT);
+		return imageFile;
+	}
+	
+	public static BufferedImage loadImage(int id)
+	{
+		File imageFile = getImageFile(id);
 		
 		if (!imageFile.exists())
 			return null;

@@ -30,9 +30,17 @@ public class MapUtils {
 		return -1;
 	}
 	
-	public static void setRenderer(MapView view, MapRenderer mapRenderer) {
-		for (MapRenderer m : view.getRenderers())
+	/** @return last removed renderer */
+	public static MapRenderer removeRenderers(MapView view) {
+		MapRenderer vanillaRenderer = null;
+		for (MapRenderer m : view.getRenderers()) {
 			view.removeRenderer(m);
+			vanillaRenderer = m;
+		}
+		return vanillaRenderer;
+	}
+	
+	public static void setRenderer(MapView view, MapRenderer mapRenderer) {
 		view.addRenderer(mapRenderer);
 	}
 	

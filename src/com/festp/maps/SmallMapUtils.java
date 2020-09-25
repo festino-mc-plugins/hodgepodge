@@ -69,8 +69,8 @@ public class SmallMapUtils {
 	
 	public static boolean isSmallMap(int id)
 	{
-		SmallMap map = (SmallMap) MapFileManager.load(id);
-		return map != null;
+		IMap map = MapFileManager.load(id);
+		return map != null && map instanceof SmallMap;
 	}
 	public static boolean isSmallMap(ItemStack item)
 	{

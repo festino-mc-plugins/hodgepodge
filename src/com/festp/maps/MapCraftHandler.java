@@ -120,16 +120,19 @@ public class MapCraftHandler implements Listener {
 		CartographyInventory inv = (CartographyInventory)event.getView().getTopInventory();
 		ItemStack item0 = inv.getItem(0);
 		ItemStack item1 = inv.getItem(1);
-		if (item0 == null || item1 == null)
+		if (item0 == null && item1 == null)
 			return;
 		
-		int id = MapUtils.getMapId(item0);
+		Integer id = MapUtils.getMapId(item0);
+		if (id == null) {
+			return;
+		}
 		IMap m = MapFileManager.load(id);
 		if (m != null) {
 			if (m instanceof SmallMap) {
 				onSmallCartography(event, (SmallMap) m);
 			} else if (m instanceof DrawingMap) {
-				
+				onDrawingCartography(event, (DrawingMap) m);
 			} else {
 				event.setCancelled(true);
 				inv.setItem(2, null);
@@ -137,6 +140,39 @@ public class MapCraftHandler implements Listener {
 				return;
 			}
 		}
+	}
+	
+	public boolean copyPixels(IMap mapFrom, MapView viewTo) {
+		try {
+			Field fieldImage = viewTo.getClass().getDeclaredField("worldMap");
+			fieldImage.setAccessible(true);
+			WorldMap mapImage = (WorldMap) fieldImage.get(viewTo);
+
+			MapView oldView = MapUtils.getView(mapFrom);
+			Field fieldCanvases = oldView.getClass().getDeclaredField("canvases");
+			fieldCanvases.setAccessible(true);
+			Object preCanvases = fieldCanvases.get(oldView);
+			if (!(preCanvases instanceof Map<?, ?>)) {
+				Utils.printError("MapCraftHandler couldn't get canvases on locking");
+				return false;
+			}
+			@SuppressWarnings("unchecked")
+			Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>> canvases = (Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>>) preCanvases;
+			byte[] colors = new byte[128*128];
+			for (Map<CraftPlayer, CraftMapCanvas> pair : canvases.values())
+				for (CraftMapCanvas canvas : pair.values())
+				{
+					for (int x = 0; x < 128; x++)
+						for (int z = 0; z < 128; z++)
+							colors[x + 128*z] = canvas.getPixel(x, z);
+					break;
+				}
+			mapImage.colors = colors;
+		} catch (Exception e) {
+			Utils.printError("Error while creating copy of map #" + mapFrom.getId());
+			e.printStackTrace();
+		}
+		return true;
 	}
 	
 	public void onSmallCartography(InventoryClickEvent event, SmallMap map) {
@@ -190,42 +226,11 @@ public class MapCraftHandler implements Listener {
 			{
 				map_item = SmallMapUtils.extendMap(map);
 			}
-			// locking
+			// new locked
 			else if (inv.contains(Material.GLASS_PANE))
 			{
 				MapView view = MapUtils.genNewView(map);
-
-				try {
-					Field field_image = view.getClass().getDeclaredField("worldMap");
-					field_image.setAccessible(true);
-					WorldMap map_image = (WorldMap) field_image.get(view);
-
-					MapView old_view = MapUtils.getView(map);
-					Field field_canvases = old_view.getClass().getDeclaredField("canvases");
-					field_canvases.setAccessible(true);
-					Object preCanvases = field_canvases.get(old_view);
-					if (!(preCanvases instanceof Map<?, ?>)) {
-						Utils.printError("MapCraftHandler couldn't get canvases on locking");
-						event.setCancelled(true);
-						return;
-					}
-					@SuppressWarnings("unchecked")
-					Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>> canvases = (Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>>) preCanvases;
-					byte[] colors = new byte[128*128];
-					for (Map<CraftPlayer, CraftMapCanvas> pair : canvases.values())
-						for (CraftMapCanvas canvas : pair.values())
-						{
-							for (int x = 0; x < 128; x++)
-								for (int z = 0; z < 128; z++)
-									colors[x + 128*z] = canvas.getPixel(x, z);
-							break;
-						}
-					map_image.colors = colors;
-				} catch (Exception e) {
-					Utils.printError("Error while creating locked copy of map #" + map.getId());
-					e.printStackTrace();
-				}
-				
+				copyPixels(map, view);
 				view.setCenterX(0);
 				view.setCenterZ(0);
 				view.setScale(Scale.CLOSEST);
@@ -246,6 +251,91 @@ public class MapCraftHandler implements Listener {
 				event.getWhoClicked().getInventory().setItem(event.getHotbarButton(), map_item);
 			else if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
 				event.getWhoClicked().getInventory().setItem(MapUtils.getEmptySlot(event.getWhoClicked().getInventory()), map_item);
+		}
+	}
+	
+	// TODO refactor to avoid code repeating
+	public void onDrawingCartography(InventoryClickEvent event, DrawingMap map) {
+		CartographyInventory inv = (CartographyInventory)event.getView().getTopInventory();
+		ItemStack item0 = inv.getItem(0);
+		ItemStack item1 = inv.getItem(1);
+		
+		int id = map.getId();
+
+		// prepare craft: if 0 or 1 changed
+		Runnable pre_task = new Runnable() {
+			@Override
+			public void run() {
+				ItemStack pre_map = MapUtils.getMap(id, false);
+				if (inv.contains(Material.PAPER)) {
+					pre_map = null;
+				} else if (inv.contains(Material.GLASS_PANE)) {
+					ItemMeta pre_map_meta = pre_map.getItemMeta();
+					pre_map_meta.setLore(Arrays.asList(new String[] {"", ChatColor.GRAY+"Finished"}));
+					pre_map.setItemMeta(pre_map_meta);
+				}
+				if (inv.contains(Material.PAPER) || inv.contains(Material.GLASS_PANE)) {
+					inv.setItem(2, pre_map);
+				}
+				Runnable update_task = new Runnable() { @Override
+					public void run() {
+						for (HumanEntity human : inv.getViewers())
+							((Player)human).updateInventory();
+					} };
+				DelayedTask task = new DelayedTask(1, update_task);
+				TaskList.add(task);
+			} };
+		DelayedTask task = new DelayedTask(1, pre_task);
+		TaskList.add(task);
+		
+		//craft: if 2 moved/dropped
+		if (inv == event.getClickedInventory() && event.getSlot() == 2 &&
+				(event.getAction() == InventoryAction.DROP_ALL_SLOT || event.getAction() == InventoryAction.DROP_ONE_SLOT
+				|| event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF
+				|| event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME
+				|| (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
+					&& event.getView().getBottomInventory().getItem(event.getHotbarButton()) == null
+				|| event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY
+					&& MapUtils.getEmptySlot(event.getWhoClicked().getInventory()) >= 0) )
+		{
+			ItemStack mapItem = inv.getItem(2);
+			if (inv.contains(Material.PAPER)) { // extending
+				mapItem = null;
+			} else if (inv.contains(Material.GLASS_PANE)) { // locking
+				MapView view = MapUtils.getView(map);
+				copyPixels(map, view);
+				view.setCenterX(0);
+				view.setCenterZ(0);
+				view.setScale(Scale.CLOSEST);
+				view.setLocked(true);
+				MapFileManager.delete(map);
+				for (int i = view.getRenderers().size() - 1; i >= 0; i--) {
+					MapRenderer renderer = view.getRenderers().get(i);
+					if (renderer instanceof DrawingRenderer) {
+						DrawingRenderer drawingRend = (DrawingRenderer) renderer;
+						if (drawingRend.saveTask != null) {
+							drawingRend.saveTask.terminate();
+						}
+						view.removeRenderer(drawingRend);
+						view.addRenderer(drawingRend.vanillaRenderer);
+					}
+				}
+				mapItem = MapUtils.getMap(view.getId());
+			}
+
+			event.setCancelled(true);
+			item0.setAmount(item0.getAmount() - 1);
+			item1.setAmount(item1.getAmount() - 1);
+			// TODO: try to stack
+			if (event.getAction() == InventoryAction.DROP_ALL_SLOT || event.getAction() == InventoryAction.DROP_ONE_SLOT)
+				UtilsWorld.drop(event.getWhoClicked().getEyeLocation(), mapItem, 1);
+			else if (event.getAction() == InventoryAction.PICKUP_ALL || event.getAction() == InventoryAction.PICKUP_HALF
+					|| event.getAction() == InventoryAction.PICKUP_ONE || event.getAction() == InventoryAction.PICKUP_SOME)
+				event.setCursor(mapItem);
+			else if (event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || event.getAction() == InventoryAction.HOTBAR_SWAP)
+				event.getWhoClicked().getInventory().setItem(event.getHotbarButton(), mapItem);
+			else if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
+				event.getWhoClicked().getInventory().setItem(MapUtils.getEmptySlot(event.getWhoClicked().getInventory()), mapItem);
 		}
 	}
 

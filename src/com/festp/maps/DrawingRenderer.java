@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
 import org.bukkit.map.MapCursor;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.util.Vector;
 
@@ -24,11 +25,13 @@ public class DrawingRenderer extends AbstractRenderer {
 	private static final int RENDER_QUOTA = (MAX_PIXELS / 20) * 9 / 10;
 
 	public final DrawingMap map;
+	public final MapRenderer vanillaRenderer;
 	private DrawingMapGrid grids = null;
 	
-	public DrawingRenderer(DrawingMap map) {
+	public DrawingRenderer(DrawingMap map, MapRenderer vanillaRenderer) {
 		super(map);
 		this.map = map;
+		this.vanillaRenderer = vanillaRenderer;
 	}
 
 	@Override

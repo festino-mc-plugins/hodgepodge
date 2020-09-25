@@ -16,6 +16,7 @@ import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.map.MapView.Scale;
 
@@ -31,12 +32,13 @@ public class MapHandler implements Listener {
 		IMap map = MapFileManager.load(id);
 		if (map == null)
 			return;
-		
+
+		MapRenderer vanillaRenderer = MapUtils.removeRenderers(event.getMap());
 		AbstractRenderer renderer = null;
 		if (map instanceof SmallMap) {
 			renderer = new SmallRenderer((SmallMap) map);
 		} else if (map instanceof DrawingMap) {
-			renderer = new DrawingRenderer((DrawingMap) map);
+			renderer = new DrawingRenderer((DrawingMap) map, vanillaRenderer);
 		}
 		if (renderer != null) {
 			MapUtils.setRenderer(event.getMap(), renderer);
@@ -87,7 +89,9 @@ public class MapHandler implements Listener {
 				meta.setLore(Arrays.asList(new String[] { "Drawing" }));
 				mapItem.setItemMeta(meta);
 				DrawingMap new_map = new DrawingMap(view.getId(), DrawingInfo.buildFrom(player.getLocation()));
-				DrawingRenderer renderer = new DrawingRenderer(new_map);
+				
+				MapRenderer vanillaRenderer = MapUtils.removeRenderers(view);
+				DrawingRenderer renderer = new DrawingRenderer(new_map, vanillaRenderer);
 				MapUtils.setRenderer(view, renderer);
 				MapFileManager.addMap(new_map);
 			} else {
