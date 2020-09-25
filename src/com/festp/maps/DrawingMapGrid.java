@@ -16,17 +16,11 @@ public class DrawingMapGrid {
 		for (int i = 0; i < size; i++) {
 			grids[i] = new Grid(i, initTime - getInitDelay());
 		}
-		// TODO use Collections.shuffle(); or Random (from -1000 ms to 0)
 	}
 	
 	/** Sorts grids into last update time ascending order. */
 	public void sort() {
 		Arrays.sort(grids);
-		/*String str = "{" + grids[0];
-		for (int i = 1; i < grids.length; i++)
-			str += ", " + grids[i];
-		str += "}";
-		System.out.print(str);*/
 	}
 
 	public int get(int index) {
@@ -35,9 +29,7 @@ public class DrawingMapGrid {
 	
 	public void updateTime(int index, long curTime, int blocksRendered) {
 		double maxBlocks = width * width;
-		//long before = grids[index].time;
 		grids[index].time += (curTime - grids[index].time) * (blocksRendered / maxBlocks);
-		//System.out.print("[" + grids[index].index + "]: " + grids[index].time + " = (" + curTime + " - " + before + ") * " + (blocksRendered / maxBlocks));
 		grids[index].time += getRandomDelay();
 	}
 
