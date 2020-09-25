@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class DrawingMapGrid {
 	private static final Random random = new Random();
-	private static final int MS_TICK_DELAY = 1000 / 50;
+	private static final int MS_TICK_DELAY = 1000 / 20;
 	
 	private final Grid[] grids;
 	private final int width;
@@ -22,6 +22,11 @@ public class DrawingMapGrid {
 	/** Sorts grids into last update time ascending order. */
 	public void sort() {
 		Arrays.sort(grids);
+		/*String str = "{" + grids[0];
+		for (int i = 1; i < grids.length; i++)
+			str += ", " + grids[i];
+		str += "}";
+		System.out.print(str);*/
 	}
 
 	public int get(int index) {
@@ -29,17 +34,19 @@ public class DrawingMapGrid {
 	}
 	
 	public void updateTime(int index, long curTime, int blocksRendered) {
-		double maxBlocks = width * width / grids.length;
+		double maxBlocks = width * width;
+		//long before = grids[index].time;
 		grids[index].time += (curTime - grids[index].time) * (blocksRendered / maxBlocks);
+		//System.out.print("[" + grids[index].index + "]: " + grids[index].time + " = (" + curTime + " - " + before + ") * " + (blocksRendered / maxBlocks));
 		grids[index].time += getRandomDelay();
 	}
 
 	private int getInitDelay() {
-		return random.nextInt(4 * MS_TICK_DELAY);
+		return random.nextInt(MS_TICK_DELAY);
 	}
 	private int getRandomDelay() {
 		int diff = (int) (grids[grids.length - 1].time - grids[0].time);
-		int avg_diff = Math.max(4 * MS_TICK_DELAY, diff / grids.length);
+		int avg_diff = Math.max(MS_TICK_DELAY, diff / grids.length);
 		return random.nextInt(avg_diff);
 	}
 	
@@ -54,7 +61,12 @@ public class DrawingMapGrid {
 
 		@Override
 		public int compareTo(Grid g) {
-			return (int) (time - g.time);
+			return Long.compare(time, g.time);
+		}
+
+		@Override
+		public String toString() {
+			return "{" + index + ":" + time + "}";
 		}
 	}
 }

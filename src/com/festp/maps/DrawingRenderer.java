@@ -24,7 +24,7 @@ public class DrawingRenderer extends AbstractRenderer {
 	private static final int RENDER_QUOTA = (MAX_PIXELS / 20) * 9 / 10;
 
 	public final DrawingMap map;
-	private DrawingMapGrid grid = null;
+	private DrawingMapGrid grids = null;
 	
 	public DrawingRenderer(DrawingMap map) {
 		super(map);
@@ -34,15 +34,15 @@ public class DrawingRenderer extends AbstractRenderer {
 	@Override
 	public void renderSpecific(MapView view, MapCanvas canvas, Player player) {
 		if (map.needReset) {
-			grid = null;
+			grids = null;
 			byte initColor = PaletteUtils.getColor(PaletteUtils.TRANSPARENT);
 			for (int x = 0; x < 128; x++)
 				for (int y = 0; y < 128; y++)
 					canvas.setPixel(x, y, initColor);
 			map.needReset = false;
 		}
-		if (grid == null) {
-			grid = new DrawingMapGrid(GRID_SIZE, map.getWidth() / GRID_ROWS, System.currentTimeMillis());
+		if (grids == null) {
+			grids = new DrawingMapGrid(GRID_SIZE, map.getWidth() / GRID_ROWS, System.currentTimeMillis());
 		}
 		
 		Integer main_id = MapUtils.getMapId(player.getInventory().getItemInMainHand());
@@ -218,26 +218,22 @@ public class DrawingRenderer extends AbstractRenderer {
 				}
 			}
 		}
-		grid.sort();
+		grids.sort();
 		int minX = mapPlayerX - RAYS_DISTANCE_SQUARED, maxX = mapPlayerX + RAYS_DISTANCE_SQUARED;
 		int minY = mapPlayerY - RAYS_DISTANCE_SQUARED, maxY = mapPlayerY + RAYS_DISTANCE_SQUARED;
-		minX = Math.max(minX, 0);
-		minY = Math.max(minY, 0);
-		maxX = Math.min(maxX, width);
-		maxY = Math.min(maxY, width);
+		minX = Math.max(minX, 0) / GRID_ROWS;
+		minY = Math.max(minY, 0) / GRID_ROWS;
+		maxX = Math.min(maxX + 1, width) / GRID_ROWS;
+		maxY = Math.min(maxY + 1, width) / GRID_ROWS;
 		for (int i = 0; i < GRID_SIZE; i++) {
-			int n = grid.get(i);
-			int firstX = n % GRID_ROWS;
-			int firstY = n / GRID_ROWS;
-			minX = minX - minX % GRID_ROWS + firstX;
-			minY = minY - minY % GRID_ROWS + firstY;
-			maxX = maxX - maxX % GRID_ROWS + firstX;
-			maxY = maxY - maxY % GRID_ROWS + firstY;
-			
+			int n = grids.get(i);
 			int gridRendered = 0;
-			for (int x = minX; x < maxX; x += GRID_ROWS) {
-				for (int y = minY; y < maxY; y += GRID_ROWS) {
-					Vector3i offsets0 = coords.getWorldCoord(x, y, 0);
+			for (int gridX = minX; gridX < maxX; gridX++) {
+				for (int gridY = minY; gridY < maxY; gridY++) {
+					int seed = n + gridX * gridX + 3 * gridY * gridY + 3 * gridX + gridY;
+					int randomedX = GRID_ROWS * gridX + seed % GRID_ROWS;
+					int randomedY = GRID_ROWS * gridY + seed / GRID_ROWS % GRID_ROWS;
+					Vector3i offsets0 = coords.getWorldCoord(randomedX, randomedY, 0);
 					int d1 = offsets0.getX(),
 						d2 = offsets0.getY(),
 						d3 = offsets0.getZ();
@@ -248,12 +244,12 @@ public class DrawingRenderer extends AbstractRenderer {
 					if (dist > RAYS_DISTANCE_SQUARED)
 						continue;
 					
-					if (pixeler.tryRender(x, y)) {
+					if (pixeler.tryRender(randomedX, randomedY)) {
 						gridRendered++;
 					}
 				}
 			}
-			grid.updateTime(i, time, gridRendered);
+			grids.updateTime(i, time, gridRendered);
 			totalRendered += gridRendered;
 			if (totalRendered >= RENDER_QUOTA) {
 				break;
