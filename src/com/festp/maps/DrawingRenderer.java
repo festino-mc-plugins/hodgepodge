@@ -42,7 +42,7 @@ public class DrawingRenderer extends AbstractRenderer {
 			map.needReset = false;
 		}
 		if (grid == null) {
-			grid = new DrawingMapGrid(GRID_SIZE, map.getWidth(), System.currentTimeMillis());
+			grid = new DrawingMapGrid(GRID_SIZE, map.getWidth() / GRID_ROWS, System.currentTimeMillis());
 		}
 		
 		Integer main_id = MapUtils.getMapId(player.getInventory().getItemInMainHand());

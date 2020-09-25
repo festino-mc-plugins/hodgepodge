@@ -1,8 +1,12 @@
 package com.festp.maps;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class DrawingMapGrid {
+	private static final Random random = new Random();
+	private static final int MS_TICK_DELAY = 1000 / 50;
+	
 	private final Grid[] grids;
 	private final int width;
 	
@@ -10,7 +14,7 @@ public class DrawingMapGrid {
 		this.width = width;
 		grids = new Grid[size];
 		for (int i = 0; i < size; i++) {
-			grids[i] = new Grid(i, initTime);
+			grids[i] = new Grid(i, initTime - getInitDelay());
 		}
 		// TODO use Collections.shuffle(); or Random (from -1000 ms to 0)
 	}
@@ -27,6 +31,16 @@ public class DrawingMapGrid {
 	public void updateTime(int index, long curTime, int blocksRendered) {
 		double maxBlocks = width * width / grids.length;
 		grids[index].time += (curTime - grids[index].time) * (blocksRendered / maxBlocks);
+		grids[index].time += getRandomDelay();
+	}
+
+	private int getInitDelay() {
+		return random.nextInt(4 * MS_TICK_DELAY);
+	}
+	private int getRandomDelay() {
+		int diff = (int) (grids[grids.length - 1].time - grids[0].time);
+		int avg_diff = Math.max(4 * MS_TICK_DELAY, diff / grids.length);
+		return random.nextInt(avg_diff);
 	}
 	
 	private class Grid implements Comparable<Grid> {
