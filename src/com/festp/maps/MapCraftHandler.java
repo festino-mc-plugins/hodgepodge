@@ -1,6 +1,7 @@
 package com.festp.maps;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.bukkit.Material;
@@ -18,6 +19,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.CartographyInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.map.MapRenderer;
@@ -123,16 +125,27 @@ public class MapCraftHandler implements Listener {
 		
 		int id = MapUtils.getMapId(item0);
 		IMap m = MapFileManager.load(id);
-		if (m != null && !(m instanceof SmallMap)) {
-			event.setCancelled(true);
-			inv.setItem(2, null);
-			((Player)event.getWhoClicked()).updateInventory();
-			return;
+		if (m != null) {
+			if (m instanceof SmallMap) {
+				onSmallCartography(event, (SmallMap) m);
+			} else if (m instanceof DrawingMap) {
+				
+			} else {
+				event.setCancelled(true);
+				inv.setItem(2, null);
+				((Player)event.getWhoClicked()).updateInventory();
+				return;
+			}
 		}
-		if (!SmallMapUtils.isSmallMap(item0))
-			return;
-		SmallMap map = (SmallMap) m;
+	}
+	
+	public void onSmallCartography(InventoryClickEvent event, SmallMap map) {
+		CartographyInventory inv = (CartographyInventory)event.getView().getTopInventory();
+		ItemStack item0 = inv.getItem(0);
+		ItemStack item1 = inv.getItem(1);
 		
+		int id = map.getId();
+
 		// prepare craft: if 0 or 1 changed
 		Runnable pre_task = new Runnable() {
 			@Override
@@ -185,12 +198,19 @@ public class MapCraftHandler implements Listener {
 				try {
 					Field field_image = view.getClass().getDeclaredField("worldMap");
 					field_image.setAccessible(true);
-					WorldMap map_image = (WorldMap)field_image.get(view);
+					WorldMap map_image = (WorldMap) field_image.get(view);
 
 					MapView old_view = MapUtils.getView(map);
 					Field field_canvases = old_view.getClass().getDeclaredField("canvases");
 					field_canvases.setAccessible(true);
-					Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>> canvases = (Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>>)field_canvases.get(old_view);
+					Object preCanvases = field_canvases.get(old_view);
+					if (!(preCanvases instanceof Map<?, ?>)) {
+						Utils.printError("MapCraftHandler couldn't get canvases on locking");
+						event.setCancelled(true);
+						return;
+					}
+					@SuppressWarnings("unchecked")
+					Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>> canvases = (Map<MapRenderer, Map<CraftPlayer, CraftMapCanvas>>) preCanvases;
 					byte[] colors = new byte[128*128];
 					for (Map<CraftPlayer, CraftMapCanvas> pair : canvases.values())
 						for (CraftMapCanvas canvas : pair.values())
@@ -253,12 +273,20 @@ public class MapCraftHandler implements Listener {
 
 		ItemStack result_draw = new ItemStack(Material.MAP, 1);
 		result_draw = Utils.setData(result_draw, MapUtils.IS_DRAWING_FIELD, 8);
+		meta = result_draw.getItemMeta();
+		meta.setLore(Arrays.asList(new String[] { "Drawing" }));
+		result_draw.setItemMeta(meta);
 		
 		NamespacedKey key_draw = new NamespacedKey(plugin, "map_draw");
     	ShapedRecipe map_draw = new ShapedRecipe(key_draw, result_draw);
     	
-    	map_draw.shape(new String[] {"   ", " P ", "   "});
+    	RecipeChoice dyeChoice = new RecipeChoice.MaterialChoice(Material.BLACK_DYE, Material.BLUE_DYE, Material.BROWN_DYE, Material.CYAN_DYE,
+    			Material.GRAY_DYE, Material.GREEN_DYE, Material.LIGHT_BLUE_DYE, Material.LIGHT_GRAY_DYE, Material.LIME_DYE, Material.MAGENTA_DYE,
+    			Material.ORANGE_DYE, Material.PINK_DYE, Material.PURPLE_DYE, Material.RED_DYE, Material.WHITE_DYE, Material.YELLOW_DYE);
+    	map_draw.shape(new String[] {" P ", "DBD", "DDD"});
     	map_draw.setIngredient('P', Material.PAPER);
+    	map_draw.setIngredient('B', Material.BOWL);
+    	map_draw.setIngredient('D', dyeChoice);
     	
     	cm.addCraftbookRecipe(key_draw);
     	server.addRecipe(map_draw);
