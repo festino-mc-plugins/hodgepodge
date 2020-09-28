@@ -6,7 +6,15 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class ClickResult {
-	public enum ClickDir {OUTSIDE, CURSOR, TOP, BOTTOM, BOTH, NOTHING};
+	public enum ClickDir {
+		OUTSIDE, CURSOR, TOP, BOTTOM, BOTH, OFFHAND, NOTHING;
+		public boolean isBottom() {
+			return this == BOTTOM || this == BOTH || this == OFFHAND;
+		}
+		public boolean isTop() {
+			return this == TOP || this == BOTH;
+		}
+	};
 	
 	public ClickDir from, to;
 	public int items_1_to_2 = 0, items_2_to_1 = 0;
@@ -21,13 +29,13 @@ public class ClickResult {
 	
 	public boolean fillsBottom()
 	{
-		return items_1_to_2 > 0 && (to == ClickDir.BOTTOM || to == ClickDir.BOTH)
-			|| items_2_to_1 > 0 && (from == ClickDir.BOTTOM || from == ClickDir.BOTH);
+		return items_1_to_2 > 0 && to.isBottom()
+			|| items_2_to_1 > 0 && from.isBottom();
 	}
 	public boolean fillsTop()
 	{
-		return items_1_to_2 > 0 && (to == ClickDir.TOP || to == ClickDir.BOTH)
-			|| items_2_to_1 > 0 && (from == ClickDir.TOP || from == ClickDir.BOTH);
+		return items_1_to_2 > 0 && to.isTop()
+			|| items_2_to_1 > 0 && from.isTop();
 	}
 	public boolean fillsCursor()
 	{
@@ -37,13 +45,13 @@ public class ClickResult {
 	
 	public boolean fromBottom()
 	{
-		return items_1_to_2 > 0 && (from == ClickDir.BOTTOM || from == ClickDir.BOTH)
-			|| items_2_to_1 > 0 && (to == ClickDir.BOTTOM || to == ClickDir.BOTH);
+		return items_1_to_2 > 0 && from.isBottom()
+			|| items_2_to_1 > 0 && to.isBottom();
 	}
 	public boolean fromTop()
 	{
-		return items_1_to_2 > 0 && (from == ClickDir.TOP || from == ClickDir.BOTH)
-			|| items_2_to_1 > 0 && (to == ClickDir.TOP || to == ClickDir.BOTH);
+		return items_1_to_2 > 0 && from.isTop()
+			|| items_2_to_1 > 0 && to.isTop();
 	}
 	public boolean fromCursor()
 	{
@@ -166,6 +174,15 @@ public class ClickResult {
 					amount_1_to_2 = current.getAmount();
 					ItemStack hotbar_slot = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
 					amount_2_to_1 = hotbar_slot == null ? 0 : hotbar_slot.getAmount();
+				}
+			}
+			if (event.getClick() == ClickType.SWAP_OFFHAND) {
+				to = ClickDir.OFFHAND;
+				from = clicked_result;
+				if (is_top) {
+					amount_1_to_2 = current.getAmount();
+					ItemStack offhand_slot = event.getWhoClicked().getInventory().getItemInOffHand();
+					amount_2_to_1 = offhand_slot == null ? 0 : offhand_slot.getAmount();
 				}
 			}
 			break;

@@ -20,6 +20,7 @@ import org.bukkit.block.data.Levelled;
 import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -27,6 +28,7 @@ import org.bukkit.entity.Turtle;
 import org.bukkit.entity.Vex;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Cauldron;
@@ -37,8 +39,11 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
+import com.festp.DelayedTask;
 import com.festp.Main;
+import com.festp.TaskList;
 import com.festp.storages.Storage;
+import com.festp.storages.StorageBottomless;
 import com.festp.storages.StorageMultitype;
 
 import net.minecraft.server.v1_16_R2.EntityAgeable;
@@ -534,5 +539,30 @@ public class Utils {
 			error += elems[i].toString() + "\n";
 		}
 		printError(error);
+	}
+	
+	public static void delayUpdate(Inventory inv) {
+		DelayedTask task = new DelayedTask(1, new Runnable() {
+			@Override
+			public void run() {
+				StorageBottomless.update_item_counts(inv);
+				for (HumanEntity human : inv.getViewers()) {
+					((Player)human).updateInventory();
+				}
+				
+				// CAN'T PREVENT OFF HAND GLITCH! (InventoryClickEcent cancelling)
+				if (inv instanceof PlayerInventory) {
+					PlayerInventory pInv = (PlayerInventory) inv;
+					ItemStack item = pInv.getItemInOffHand();
+					/*if (item == null || UtilsType.isAir(item.getType())) {
+						pInv.setItemInOffHand(new ItemStack(Material.STONE));
+					} else {
+						pInv.setItemInOffHand(null);
+					}*/
+					pInv.setItemInOffHand(item);
+				}
+			}
+		});
+		TaskList.add(task);
 	}
 }

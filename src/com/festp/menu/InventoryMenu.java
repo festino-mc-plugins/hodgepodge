@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.Main;
 import com.festp.utils.ClickResult;
+import com.festp.utils.ClickResult.ClickDir;
 import com.festp.utils.Utils;
 
 public class InventoryMenu implements Listener {
@@ -72,10 +73,15 @@ public class InventoryMenu implements Listener {
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (event.getClickedInventory() == null || !Utils.equal_invs(event.getView().getTopInventory(), gui))
 				return;
-		ClickResult click_res = ClickResult.getClickResult(event);
-		if (!click_res.fromTop() && !click_res.fillsTop())
+		ClickResult clickRes = ClickResult.getClickResult(event);
+		if (!clickRes.fromTop() && !clickRes.fillsTop())
 			return;
 		event.setCancelled(true);
+		
+		// antiglitch
+		if (clickRes.to == ClickDir.OFFHAND || clickRes.from == ClickDir.OFFHAND) {
+			Utils.delayUpdate(event.getWhoClicked().getInventory());
+		}
 		
 		Player player = (Player)event.getWhoClicked();
 		InventoryAction action = event.getAction();
