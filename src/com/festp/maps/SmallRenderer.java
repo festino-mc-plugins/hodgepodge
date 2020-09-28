@@ -22,38 +22,38 @@ public class SmallRenderer extends AbstractRenderer {
 
 	@Override
 	protected void renderSpecific(MapView view, MapCanvas canvas, Player player) {
-		Integer main_id = MapUtils.getMapId(player.getInventory().getItemInMainHand());
-		if (main_id == null || main_id != view.getId())
+		Integer mainId = MapUtils.getMapId(player.getInventory().getItemInMainHand());
+		if (mainId == null || mainId != view.getId())
 		{
-			Integer off_id = MapUtils.getMapId(player.getInventory().getItemInOffHand());
-			if (off_id == null || off_id != view.getId())
+			Integer offId = MapUtils.getMapId(player.getInventory().getItemInOffHand());
+			if (offId == null || offId != view.getId())
 				return;
 		}
 		//canvas.setCursors(null);new MapCursorCollection()
-		int player_x = player.getLocation().getBlockX();
-		int player_z = player.getLocation().getBlockZ();
+		int playerX = player.getLocation().getBlockX();
+		int playerZ = player.getLocation().getBlockZ();
 		
 		int scale = map.getScale();
-		int blocks = 128 / scale;
-		int min_x = map.getX();
-		int min_z = map.getZ();
-		for (int x = 0; x < blocks; x++)
+		int width = 128 / scale;
+		int minX = map.getX();
+		int minZ = map.getZ();
+		for (int x = 0; x < width; x++)
 		{
 			// top block pseudorender
-			PaletteUtils.getColor(view.getWorld(), min_x + x, min_z - 1, lastColorBlock);
-			for (int z = 0; z < blocks; z++)
+			PaletteUtils.getColor(view.getWorld(), minX + x, minZ - 1, lastColorBlock);
+			for (int z = 0; z < width; z++)
 			{
-				int real_x = min_x + x,
-					real_z = min_z + z;
-				int x_dist = player_x - real_x,
-					z_dist = player_z - real_z;
-				if (x_dist * x_dist + z_dist * z_dist > RENDER_DISTANCE_SQUARED + 1)
+				int realX = minX + x,
+					realZ = minZ + z;
+				int distX = playerX - realX,
+					distZ = playerZ - realZ;
+				if (distX * distX + distZ * distZ > RENDER_DISTANCE_SQUARED + 1)
 					continue;
 				// brighter block, darker under block
-				int last_y = lastColorBlock.getY();
-				byte color = PaletteUtils.getColor(view.getWorld(), real_x, real_z, lastColorBlock);
+				int lastY = lastColorBlock.getY();
+				byte color = PaletteUtils.getColor(view.getWorld(), realX, realZ, lastColorBlock);
 				
-				if (x_dist * x_dist + z_dist * z_dist > RENDER_DISTANCE_SQUARED)
+				if (distX * distX + distZ * distZ > RENDER_DISTANCE_SQUARED)
 					continue;
 				
 				if (color == PaletteUtils.getColor(PaletteUtils.WATER))
@@ -74,17 +74,17 @@ public class SmallRenderer extends AbstractRenderer {
 				else
 				{
 					int y = lastColorBlock.getY();
-					if (last_y < y)
+					if (lastY < y)
 						color += 1; // brighter
-					else if (last_y > y)
+					else if (lastY > y)
 						color -= 1; // darker
 				}
 				
-				int px_x = x * scale;
-				int px_z = z * scale;
+				int pxX = x * scale;
+				int pxZ = z * scale;
 				for (int dx = 0; dx < scale; dx++)
 					for (int dz = 0; dz < scale; dz++)
-						canvas.setPixel(px_x + dx, px_z + dz, color);
+						canvas.setPixel(pxX + dx, pxZ + dz, color);
 			}
 		}
 	}
