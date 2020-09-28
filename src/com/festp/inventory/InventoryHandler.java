@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -16,8 +17,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -72,7 +77,7 @@ public class InventoryHandler implements Listener {
 				 || event.getInventory().getType() == InventoryType.BARREL)
 		 {
 			 if(event.getInventory().getLocation() != null)
-				 closed_invs.add( new ClosedInventory(event.getPlayer().getUniqueId(), Config.max_closed_inv_ticks, event.getInventory().getLocation().getBlock()) );
+				 closed_invs.add( new ClosedInventory(event.getPlayer().getUniqueId(), Config.max_closed_inv_ticks, event.getView()) );
 		 }
 	}
 	
@@ -81,24 +86,31 @@ public class InventoryHandler implements Listener {
 	public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event)
 	{
 		ClosedInventory cinv = null;
-		for(int i=0; i < closed_invs.size(); i++)
-			if(closed_invs.get(i).UUID_match(event.getPlayer().getUniqueId())) {
-				if(closed_invs.get(i).getTicks() != Config.max_closed_inv_ticks) {
+		for (int i=0; i < closed_invs.size(); i++)
+			if (closed_invs.get(i).matchUUID(event.getPlayer().getUniqueId())) {
+				if (closed_invs.get(i).getTicks() != Config.max_closed_inv_ticks) {
 					cinv = closed_invs.get(i);
 					closed_invs.remove(i);
 					break;
 				}
 			}
-		if(cinv != null)
+		if (cinv != null)
 		{
 			Inventory inv = cinv.getInventory();
-			if(inv == null) return;
+			if (inv == null) return;
 			event.setCancelled(true);
 			Player p = event.getPlayer();
-			for(ItemStack stack : inv.getContents()) {
-				UtilsWorld.drop(p.getEyeLocation(), stack, 1);
+			ItemStack[] items = inv.getContents();
+			for (int i = 0; i < items.length; i++) {
+				ItemStack stack = items[i];
+				InventoryClickEvent dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ALL_SLOT);
+				Bukkit.getPluginManager().callEvent(dropEvent);
+				if (!dropEvent.isCancelled()) {
+					UtilsWorld.drop(p.getEyeLocation(), stack, 1);
+					items[i] = null;
+				}
 			}
-			inv.setContents(new ItemStack[inv.getContents().length]);
+			inv.setContents(items);
 		}
 	}
 	

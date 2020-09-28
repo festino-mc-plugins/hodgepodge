@@ -1,7 +1,5 @@
 package com.festp.inventory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Material;
@@ -10,26 +8,32 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 
-import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
 public class ClosedInventory {
-	private UUID closed_inv_player;
-	private Integer closed_inv_ticks;
-	private Block closed_inv;
+	private final UUID closed_inv_player;
+	private final Block closed_inv;
+	private final InventoryView closed_view;
+	private int closed_inv_ticks;
 	
-	public ClosedInventory(UUID closed_inv_player, int closed_inv_ticks, Block closed_inv) {
+	public ClosedInventory(UUID closed_inv_player, int closed_inv_ticks, InventoryView view) {
 		this.closed_inv_player = closed_inv_player;
+		this.closed_view = view;
+		this.closed_inv = view.getTopInventory().getLocation().getBlock();
 		this.closed_inv_ticks = closed_inv_ticks;
-		this.closed_inv = closed_inv;
 	}
 	
 	public int getTicks() {
 		return closed_inv_ticks;
 	}
 	
-	public boolean UUID_match(UUID swap_player) {
+	public InventoryView getView() {
+		return closed_view;
+	}
+	
+	public boolean matchUUID(UUID swap_player) {
 		return swap_player.equals(closed_inv_player);
 	}
 	
