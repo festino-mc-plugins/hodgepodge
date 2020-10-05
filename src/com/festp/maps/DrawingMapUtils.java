@@ -6,8 +6,8 @@ public class DrawingMapUtils {
 	
 	public static boolean isDrawingMap(int id)
 	{
-		DrawingMap map = (DrawingMap) MapFileManager.load(id);
-		return map != null;
+		IMap map = MapFileManager.load(id);
+		return map != null && map instanceof DrawingMap;
 	}
 	public static boolean isDrawingMap(ItemStack item)
 	{
