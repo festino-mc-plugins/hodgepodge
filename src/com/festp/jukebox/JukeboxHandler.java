@@ -1,4 +1,4 @@
-package com.festp.misc;
+package com.festp.jukebox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,21 +12,55 @@ import org.bukkit.block.data.type.RedstoneWire;
 import org.bukkit.block.data.type.RedstoneWire.Connection;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerInteractEvent;
 
+import com.festp.DelayedTask;
+import com.festp.TaskList;
+import com.festp.utils.ITickable;
 import com.festp.utils.UtilsType;
 
-public class JukeboxHandler implements Listener {
+public class JukeboxHandler implements Listener, ITickable {
 	
-	private long time = 0;
 	private List<Block> powered = new ArrayList<>();
+	private List<Jukebox> clickedJukeboxes = new ArrayList<>();
+	private final JukeboxUtils utils;
 	
-	public void onTick() {
+	public JukeboxHandler(NoteDiscList noteDiscs) {
+		utils = new JukeboxUtils(noteDiscs);
+	}
+	
+	public void tick() {
 		powered.clear();
+		
+		for (Jukebox jukebox : clickedJukeboxes) {
+			utils.tryPlayNoteDisc(jukebox);
+		}
+		clickedJukeboxes.clear();
 	}
 
+	@SuppressWarnings("deprecation")
+	@EventHandler
+	public void onJukeboxClick(PlayerInteractEvent event) {
+		if (event.isCancelled()
+				|| !event.hasBlock() || event.getAction() != Action.RIGHT_CLICK_BLOCK
+				|| !event.hasItem() || !event.getItem().getType().isRecord()) {
+			return;
+		}
+		Block block = event.getClickedBlock();
+		if (block.getType() != Material.JUKEBOX) {
+			return;
+		}
+		TaskList.add(new DelayedTask(1, new Runnable() {
+			@Override
+			public void run() {
+				clickedJukeboxes.add((Jukebox) block.getState());
+			}
+		}));
+	}
+	
 	@EventHandler
 	public void onJukeboxPower(BlockRedstoneEvent event) {
 		if (event.getNewCurrent() > event.getOldCurrent()) {
@@ -54,7 +88,10 @@ public class JukeboxHandler implements Listener {
 				playAround(b);
 			} else if (m == Material.LEVER || UtilsType.isButton(m) || m == Material.TRIPWIRE_HOOK) {
 				playAround(b);
-				playAround(b.getRelative(getFace(b).getOppositeFace()));
+				Block centralBlock = b.getRelative(getFace(b).getOppositeFace());
+				if (centralBlock.getType().isOccluding()) {
+					playAround(centralBlock);
+				}
 			} else if (m == Material.DETECTOR_RAIL || UtilsType.isPlessurePlate(m)) {
 				playAround(b);
 				playAround(b.getRelative(BlockFace.DOWN));
@@ -63,7 +100,12 @@ public class JukeboxHandler implements Listener {
 			} else if (m == Material.REDSTONE_WALL_TORCH) {
 				playFrom(b, getFace(b).getOppositeFace());
 			} else if (m == Material.REPEATER || m == Material.COMPARATOR || m == Material.OBSERVER) {
-				playFrom(b, getFace(b).getOppositeFace());
+				BlockFace face = getFace(b);
+				Block centralBlock = b.getRelative(face.getOppositeFace());
+				play(centralBlock);
+				if (centralBlock.getType().isOccluding()) {
+					playFrom(centralBlock, face);
+				}
 			}
 		}
 	}
@@ -91,10 +133,10 @@ public class JukeboxHandler implements Listener {
 			play(b.getRelative(face));
 	}
 	
-	public void playFrom(Block b, BlockFace not_play) {
+	public void playFrom(Block b, BlockFace notPlay) {
 		BlockFace faces[] = { BlockFace.DOWN, BlockFace.UP, BlockFace.EAST, BlockFace.NORTH, BlockFace.WEST, BlockFace.SOUTH };
 		for (BlockFace face : faces)
-			if (face != not_play)
+			if (face != notPlay)
 				play(b.getRelative(face));
 	}
 	
@@ -103,23 +145,20 @@ public class JukeboxHandler implements Listener {
 		return directional.getFacing();
 	}
 
-	public void play(Block b) {
-		if (b.getType() == Material.JUKEBOX) {
-			if (!canPlay(b))
-				return;
-			Jukebox jukebox = (Jukebox) b.getState();
-			ItemStack record = jukebox.getRecord();
-			//jukebox.eject();
-			jukebox.setRecord(record);
-			jukebox.update();
-			powered.add(b);
-		}
-	}
 	
 	private boolean canPlay(Block block) {
 		for (Block b : powered)
 			if (block.equals(b))
 				return false;
 		return true;
+	}
+	
+
+	public void play(Block b) {
+		if (!canPlay(b))
+			return;
+		utils.play(b);
+		if (b.getType() == Material.JUKEBOX)
+			powered.add(b);
 	}
 }

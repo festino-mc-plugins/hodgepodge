@@ -21,11 +21,13 @@ import com.festp.enderchest.EnderFileStorage;
 import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
+import com.festp.jukebox.JukeboxHandler;
+import com.festp.jukebox.NoteDiscList;
+import com.festp.jukebox.NoteDiscListener;
 import com.festp.maps.MapCraftHandler;
 import com.festp.maps.MapHandler;
 import com.festp.menu.InventoryMenu;
 import com.festp.misc.InteractHandler;
-import com.festp.misc.JukeboxHandler;
 import com.festp.misc.LeashManager;
 import com.festp.misc.AmethystManager;
 import com.festp.misc.FeatureHandler;
@@ -185,9 +187,12 @@ public class Main extends JavaPlugin implements Listener
     	
     	craft_manager.addCrafts();
     	pm.registerEvents(craft_manager, this);
-    	
-    	JukeboxHandler jukebox_handler = new JukeboxHandler();
+
+    	NoteDiscList noteDiscList = new NoteDiscList();
+    	JukeboxHandler jukebox_handler = new JukeboxHandler(noteDiscList);
     	pm.registerEvents(jukebox_handler, this);
+    	NoteDiscListener noteDiscListener = new NoteDiscListener();
+    	pm.registerEvents(noteDiscListener, this);
     	
 		t1 = System.nanoTime();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
@@ -292,7 +297,9 @@ public class Main extends JavaPlugin implements Listener
 					
 					ecH.tick();
 					
-					jukebox_handler.onTick();
+					jukebox_handler.tick();
+					
+					noteDiscList.tick();
 				}
 			}, 0L, 1L);
 		

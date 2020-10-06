@@ -140,21 +140,26 @@ public class Utils {
 		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
 	
+	// TODO UtilsNBT
 	public static ItemStack setData(ItemStack i, String field, Object data) {
         if (data == null || field == null || i == null)
             return i;
 		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
-           compound = new NBTTagCompound();
-            nmsStack.setTag(compound);
-            compound = nmsStack.getTag();
+        	compound = new NBTTagCompound();
+        	nmsStack.setTag(compound);
+        	compound = nmsStack.getTag();
         }
         
         if (data instanceof String)
         	compound.setString(field, (String)data);
         else if (data instanceof Integer)
         	compound.setInt(field, (Integer)data);
+        else if (data instanceof Boolean)
+        	compound.setBoolean(field, (Boolean)data);
+        else if (data instanceof byte[])
+        	compound.setByteArray(field, (byte[])data);
         
         nmsStack.setTag(compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
@@ -190,6 +195,13 @@ public class Utils {
         if (compound == null || !compound.hasKey(field))
             return null;
         return compound.getBoolean(field);
+	}
+	
+	public static byte[] getByteArray(ItemStack i, String field) {
+		NBTTagCompound compound = get(i, field);
+        if (compound == null || !compound.hasKey(field))
+            return null;
+        return compound.getByteArray(field);
 	}
 	
 	public static boolean hasDataField(ItemStack i, String field) {
