@@ -12,14 +12,15 @@ import org.bukkit.inventory.ItemStack;
 import com.festp.utils.Utils;
 
 public class NoteDisc {
-	private static final double SOUND_DISTANCE = 48;
 	public static final String NBT_TAG = "note_disc_data";
 
 	private final NoteDiscRecord parser;
 	public final Jukebox jukebox;
+	private final Location soundSource;
 	
 	private NoteDisc(Jukebox jukebox, byte[] data) {
 		this.jukebox = jukebox;
+		soundSource = jukebox.getLocation().add(0.5, 0.5, 0.5);
 		parser = new NoteDiscRecord(data);
 	}
 
@@ -31,13 +32,12 @@ public class NoteDisc {
 		JukeboxUtils.stopVanillaPlaying(jukebox);
 		
 		List<NoteSound> sounds = parser.getNext();
-		Location soundSource = jukebox.getLocation();
 		for (Player player : soundSource.getWorld().getPlayers()) {
-			if (player.getLocation().distance(soundSource) <= SOUND_DISTANCE) {
+			if (player.getLocation().distance(soundSource) <= NoteUtils.SOUND_DISTANCE) {
 				for (NoteSound sound : sounds) {
-					// no player.playNote(soundSource, Instrument.BANJO, Note.sharp(octave, tone));
+					// no player.playNote(soundSource, NoteInstrument.BANJO, Note.sharp(octave, tone));
 					// because Note.Tone is inconvenient
-					player.playSound(soundSource, sound.instrument, SoundCategory.RECORDS, 1, sound.pitch);
+					player.playSound(soundSource, sound.instrument, SoundCategory.RECORDS, 3, sound.pitch);
 				}
 			}
 		}
