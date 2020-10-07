@@ -6,9 +6,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+
+import com.festp.utils.UtilsType;
 
 public class NoteBookParser {
 	private static final int MAX_VARINT_BYTES = 8;
@@ -16,7 +17,7 @@ public class NoteBookParser {
 	
 	// format => disc
 	public static byte[] genDiscData(ItemStack item) {
-		if (item == null || !(item.getType() == Material.WRITABLE_BOOK || item.getType() == Material.WRITTEN_BOOK)) {
+		if (item == null || !UtilsType.isBook(item.getType())) {
 			return null;
 		}
 		BookMeta meta = (BookMeta) item.getItemMeta();
@@ -77,7 +78,7 @@ public class NoteBookParser {
 						if (!instruments.containsKey(idStr))
 							continue;
 						int id = instruments.get(idStr);
-						int pitch = getPitch(sound.substring(k));
+						int pitch = NoteUtils.getPitch(sound.substring(k));
 						dataStream.write(id | continueMask);
 						dataStream.write(pitch);
 					}
@@ -112,57 +113,5 @@ public class NoteBookParser {
 		    n++;
 	    }
 	    return Arrays.copyOf(buf, n);
-		/*
-		var buf [maxVarintBytes]byte
-	    var n int
-	    for n = 0; x > 127; n++ {
-	        buf[n] = 0x80 | uint8(x&0x7F)
-	        x >>= 7
-	        x -= 1
-	    }
-	    buf[n] = uint8(x)
-	    n++
-	    return buf[0:n];
-	    */
-	}
-	
-	/**"C0" -> 0<br>
-	 * "C1" -> 12<br>
-	 * e.t.c*/
-	private static int getPitch(String note) {
-		int octaves;
-		try {
-			octaves = Integer.parseInt(note.substring(note.length() - 1));
-			note = note.substring(0, note.length() - 1);
-		} catch (Exception e) {
-			octaves = 3;
-		}
-		int semitone = -1;
-		if (note.equals("C")) {
-			semitone = 0;
-		} else if (note.equals("C#")) {
-			semitone = 1;
-		} else if (note.equals("D")) {
-			semitone = 2;
-		} else if (note.equals("D#")) {
-			semitone = 3;
-		} else if (note.equals("E")) {
-			semitone = 4;
-		} else if (note.equals("F")) {
-			semitone = 5;
-		} else if (note.equals("F#")) {
-			semitone = 6;
-		} else if (note.equals("G")) {
-			semitone = 7;
-		} else if (note.equals("G#")) {
-			semitone = 8;
-		} else if (note.equals("A")) {
-			semitone = 9;
-		} else if (note.equals("A#")) {
-			semitone = 10;
-		} else if (note.equals("B") || note.equals("H")) {
-			semitone = 11;
-		}
-		return semitone + octaves * NoteDiscRecord.OCTAVE;
 	}
 }

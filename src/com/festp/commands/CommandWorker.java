@@ -63,7 +63,7 @@ public class CommandWorker implements Listener, CommandExecutor {
 							+ norm_metrics.get(0)+"(re), " + norm_metrics.get(1)+"(tasklist), " + norm_metrics.get(2)+"(groups), " + norm_metrics.get(3)+"(sleep), "
 							+ norm_metrics.get(4)+"(dispensers), " + norm_metrics.get(5)+"(cauldrons), " + norm_metrics.get(6)+"(leash), " + norm_metrics.get(7)+"(ih), "
 							+ norm_metrics.get(8)+"(portal), " + norm_metrics.get(9)+"(tome), " + norm_metrics.get(10)+"(storage), " + norm_metrics.get(11)+"(xp-hopper), "
-							+ norm_metrics.get(12)+"(beams).");
+							+ norm_metrics.get(12)+"(beams), " + norm_metrics.get(13)+"(ec), " + norm_metrics.get(14)+"(juke/note).");
 				}
 				return true;
 			}

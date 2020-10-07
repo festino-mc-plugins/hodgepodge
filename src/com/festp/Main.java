@@ -23,7 +23,9 @@ import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.jukebox.JukeboxHandler;
 import com.festp.jukebox.NoteDiscList;
-import com.festp.jukebox.NoteDiscListener;
+import com.festp.jukebox.NoteSoundRecorder;
+import com.festp.jukebox.RecordingBookList;
+import com.festp.jukebox.NoteDiscCrafter;
 import com.festp.maps.MapCraftHandler;
 import com.festp.maps.MapHandler;
 import com.festp.menu.InventoryMenu;
@@ -67,7 +69,7 @@ public class Main extends JavaPlugin implements Listener
 	//TODO: metrics class, no public
 	public int metrics_ticks = 0;
 	public int max_metrics_ticks = 60*20; //3 minutes
-	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
@@ -191,8 +193,12 @@ public class Main extends JavaPlugin implements Listener
     	NoteDiscList noteDiscList = new NoteDiscList();
     	JukeboxHandler jukebox_handler = new JukeboxHandler(noteDiscList);
     	pm.registerEvents(jukebox_handler, this);
-    	NoteDiscListener noteDiscListener = new NoteDiscListener();
+    	NoteDiscCrafter noteDiscListener = new NoteDiscCrafter();
     	pm.registerEvents(noteDiscListener, this);
+
+    	RecordingBookList recordingBookList = new RecordingBookList();
+    	NoteSoundRecorder noteSoundRecorder = new NoteSoundRecorder(recordingBookList);
+    	pm.registerEvents(noteSoundRecorder, this);
     	
 		t1 = System.nanoTime();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
@@ -297,9 +303,19 @@ public class Main extends JavaPlugin implements Listener
 					
 					ecH.tick();
 					
+					t2 = System.nanoTime();
+					metrics[13] += t2 - t1;
+					t1 = t2;
+					
 					jukebox_handler.tick();
 					
 					noteDiscList.tick();
+					
+					recordingBookList.tick();
+					
+					t2 = System.nanoTime();
+					metrics[14] += t2 - t1;
+					t1 = t2;
 				}
 			}, 0L, 1L);
 		
