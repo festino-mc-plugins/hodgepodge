@@ -34,6 +34,10 @@ public class UtilsType {
 		return m.toString().toLowerCase().contains("stairs");
 	}
 	
+	public static boolean isBook(Material m) {
+		return m == Material.WRITABLE_BOOK || m == Material.WRITTEN_BOOK;
+	}
+	
 	public static boolean isWoodenTrapdoor(Material m) {
 		switch(m) {
 		case ACACIA_TRAPDOOR: return true;
