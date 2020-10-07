@@ -18,7 +18,7 @@ import com.festp.CraftManager;
 import com.festp.Main;
 import com.festp.utils.Utils;
 
-public class NoteDiscListener implements Listener {
+public class NoteDiscCrafter implements Listener {
 	@EventHandler
 	public void onDiscCraft(CraftItemEvent event) {
 		boolean isNoteCraft = true;
