@@ -22,7 +22,8 @@ public class RecordingBook {
 	private final EquipmentSlot slot;
 	private final int handSlot;
 
-	private int silenceTicks = -5;
+	private int initTicks = 5;
+	private int silenceTicks = 0;
 	private ItemStack book;
 	private BookMeta currentMeta;
 	private final int startPage;
@@ -63,10 +64,10 @@ public class RecordingBook {
 		if (!canTick()) {
 			return;
 		}
-		if (silenceTicks < 0) {
+		if (initTicks > 0) {
 			initYaw = player.getLocation().getYaw();
 			initPitch = player.getLocation().getPitch();
-			silenceTicks++;
+			initTicks--;
 		}
 		// tickBuffer "" => "."; .]. => ..; n]. => ,.; notes => ,notes
 		int count = getPageCount(currentMeta);
@@ -103,7 +104,7 @@ public class RecordingBook {
 	
 	public boolean canTick() {
 		return player.isOnline() && (slot != EquipmentSlot.HAND || playerInv.getHeldItemSlot() == handSlot)
-				&& silenceTicks <= MAX_SILENCE && (silenceTicks < 0 || player.getLocation().getYaw() == initYaw && player.getLocation().getPitch() == initPitch)
+				&& silenceTicks <= MAX_SILENCE && (initTicks > 0 || player.getLocation().getYaw() == initYaw && player.getLocation().getPitch() == initPitch)
 				&& canModifyItem();
 	}
 	
