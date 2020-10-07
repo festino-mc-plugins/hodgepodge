@@ -3,43 +3,52 @@ package com.festp.jukebox;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Instrument;
 import org.bukkit.Sound;
 
 import com.festp.Pair;
 
 public class NoteDiscRecord {
 	public static final int OCTAVE = 12;
-	private static final int STANDART_OFFSET = -(6 + 3 * OCTAVE);
+	public static final int STANDART_OCTAVE_OFFSET = 3;
+	public static final int STANDART_SEMITONE_OFFSET = 6 + STANDART_OCTAVE_OFFSET * OCTAVE;
 	/** index is instrument id => order is fixed! <br>
 	 * standart range is F#3->F#5 (according to https://minecraft.gamepedia.com/Note_Block#Playing_music) <br>
 	 * octaves starting from C0, that is 0x00 in record data<br>
-	 * Instrument.semitoneShift = semitone of the instrument sounds like C0<br>*/
-	public static final Instrument[] INSTRUMENTS = new Instrument[] {
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_HARP, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_BASS, STANDART_OFFSET + 2 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_BASEDRUM, STANDART_OFFSET ),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_SNARE, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_HAT, STANDART_OFFSET), // "CLICK" in OpenNBS
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_GUITAR, STANDART_OFFSET + 1 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_FLUTE, STANDART_OFFSET - 1 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_BELL, STANDART_OFFSET - 2 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_CHIME, STANDART_OFFSET - 2 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_XYLOPHONE, STANDART_OFFSET - 2 * OCTAVE),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_COW_BELL, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_BIT, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_BANJO, STANDART_OFFSET),
-		new Instrument(Sound.BLOCK_NOTE_BLOCK_PLING, STANDART_OFFSET),
+	 * NoteInstrument.semitoneShift = semitone of the instrument sounds like C0<br>*/
+	public static final NoteInstrument[] INSTRUMENTS = new NoteInstrument[] {
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_HARP, Instrument.PIANO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BASS, Instrument.BASS_GUITAR, +2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BASEDRUM, Instrument.BASS_DRUM),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_SNARE, Instrument.SNARE_DRUM),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_HAT, Instrument.STICKS), // "CLICK" in OpenNBS
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_GUITAR, Instrument.GUITAR, +1),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_FLUTE, Instrument.FLUTE, -1),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BELL, Instrument.BELL, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_CHIME, Instrument.CHIME, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_XYLOPHONE, Instrument.XYLOPHONE, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE, Instrument.IRON_XYLOPHONE),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_COW_BELL, Instrument.COW_BELL),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, Instrument.DIDGERIDOO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BIT, Instrument.BIT),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BANJO, Instrument.BANJO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_PLING, Instrument.PLING),
 	};
 
-	public static class Instrument {
+	public static class NoteInstrument {
 		public final Sound sound;
+		public final int octaveShift;
 		public final int semitoneShift;
+		public final Instrument spigot;
 		
-		public Instrument(Sound sound, int semitoneShift) {
+		public NoteInstrument(Sound sound, Instrument inst, int octaveShift) {
 			this.sound = sound;
-			this.semitoneShift = semitoneShift;
+			this.octaveShift = octaveShift;
+			this.semitoneShift = -STANDART_SEMITONE_OFFSET + octaveShift * OCTAVE;
+			this.spigot = inst;
+		}
+		public NoteInstrument(Sound sound, Instrument inst) {
+			this(sound, inst, 0);
 		}
 	}
 	
@@ -86,7 +95,7 @@ public class NoteDiscRecord {
 					return res;
 				}
 				
-				Instrument parsed = INSTRUMENTS[id];
+				NoteInstrument parsed = INSTRUMENTS[id];
 				Sound instrument = parsed.sound;
 				float pitch = (float) Math.pow(2, (parsed.semitoneShift + note) / 12d - 1);
 				res.add(new NoteSound(instrument, pitch));
@@ -135,23 +144,5 @@ public class NoteDiscRecord {
 	    }
 	    // The number is too large to represent in a 64-bit value.
 	    return new Pair<>(0, data.length - pos);
-	    
-	    /*
-	    
-	    for shift := uint(0); shift < 64; shift += 7 {
-	        if n >= len(buf) {
-	            return 0, 0
-	        }
-	        b := uint64(buf[n])
-	        n++
-	        x += (b & 0xFF) << shift
-	        if (b & 0x80) == 0 {
-	            return x, n
-	        }
-	    }
-
-	    // The number is too large to represent in a 64-bit value.
-	    return 0, 0
-	    */
 	}
 }
