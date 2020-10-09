@@ -117,12 +117,22 @@ public class RecordingBook {
 		} else {
 			book = playerInv.getItem(slot);
 		}
-		//System.out.print("canTick: " + book.getItemMeta()+ " "+ currentMeta +" "+ (book.getItemMeta() == currentMeta)+" "+book.getItemMeta().equals(currentMeta)+" "+book.equals(this.book));
-		return book != null && book.getItemMeta().equals(currentMeta) && currentMeta.getPageCount() < 100;
+		if (book == null || book.getType() != Material.WRITABLE_BOOK || currentMeta.getPageCount() >= 100) {
+			return false;
+		}
+		return true;
+		/*
+		//if (!book.hasItemMeta() || !(book.getItemMeta() instanceof BookMeta)) { - too heavy, full book copy
+		BookMeta bookMeta = (BookMeta) book.getItemMeta(); // should remove this part \/
+		// bookMeta.equals(currentMeta) is too heavy
+		return bookMeta.getPageCount() == currentMeta.getPageCount()
+				&& bookMeta.hasPages() == currentMeta.hasPages()
+				&& bookMeta.getPage(1).equals(currentMeta.getPage(1));
+		*/
 	}
 	
 	public void show() {
-		openBookAtPage(player, book, getPageCount(book));
+		openBookAtPage(player, currentMeta, getPageCount(currentMeta));
 	}
 	
 	public void reduceSize() {
@@ -151,7 +161,7 @@ public class RecordingBook {
 				pages.remove(page);
 			}
 		}
-		currentMeta.setPages(pages);
+		currentMeta.setPages(pages); // heavy
 		book.setItemMeta(currentMeta);
 		playerInv.setItem(slot, book);
 		if (!player.isOnline()) {
@@ -171,14 +181,6 @@ public class RecordingBook {
 	}
 	
 	/**pages indexed from 1!*/
-	public static void openBookAtPage(Player player, ItemStack book, int page) {
-		if (book == null || !UtilsType.isBook(book.getType())) {
-			return;
-		}
-		openBookAtPage(player, (BookMeta) book.getItemMeta(), page);
-	}
-	
-	/**pages indexed from 1!*/
 	public static void openBookAtPage(Player player, BookMeta bookMeta, int page) {
 		if (page < 1) {
 			page = 1;
@@ -195,14 +197,25 @@ public class RecordingBook {
 		player.openBook(pageBook);
 	}
 
+	public static int getPageCount(BookMeta bookMeta) {
+		return bookMeta.getPageCount();
+	}
+	
+	/**@deprecated too slow because of <b>book.getItemMeta()</b>*/
+	@Deprecated
 	public static int getPageCount(ItemStack book) {
 		if (book == null || !UtilsType.isBook(book.getType())) {
 			return -1;
 		}
 		return getPageCount((BookMeta) book.getItemMeta());
 	}
-
-	public static int getPageCount(BookMeta bookMeta) {
-		return bookMeta.getPageCount();
+	/**pages indexed from 1!
+	 * @deprecated too slow because of <b>book.getItemMeta()</b>*/
+	@Deprecated
+	public static void openBookAtPage(Player player, ItemStack book, int page) {
+		if (book == null || !UtilsType.isBook(book.getType())) {
+			return;
+		}
+		openBookAtPage(player, (BookMeta) book.getItemMeta(), page);
 	}
 }
