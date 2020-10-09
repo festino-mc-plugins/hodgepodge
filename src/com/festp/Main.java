@@ -22,6 +22,7 @@ import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.jukebox.JukeboxHandler;
+import com.festp.jukebox.JukeboxPacketListener;
 import com.festp.jukebox.NoteDiscList;
 import com.festp.jukebox.NoteSoundRecorder;
 import com.festp.jukebox.RecordingBookList;
@@ -191,14 +192,17 @@ public class Main extends JavaPlugin implements Listener
     	pm.registerEvents(craft_manager, this);
 
     	NoteDiscList noteDiscList = new NoteDiscList();
-    	JukeboxHandler jukebox_handler = new JukeboxHandler(noteDiscList);
-    	pm.registerEvents(jukebox_handler, this);
+    	JukeboxHandler jukeboxHandler = new JukeboxHandler(noteDiscList);
+    	pm.registerEvents(jukeboxHandler, this);
     	NoteDiscCrafter noteDiscListener = new NoteDiscCrafter();
     	pm.registerEvents(noteDiscListener, this);
 
     	RecordingBookList recordingBookList = new RecordingBookList();
     	NoteSoundRecorder noteSoundRecorder = new NoteSoundRecorder(recordingBookList);
     	pm.registerEvents(noteSoundRecorder, this);
+
+    	JukeboxPacketListener jukePackets = new JukeboxPacketListener(jukeboxHandler);
+    	pm.registerEvents(jukePackets, this);
     	
 		t1 = System.nanoTime();
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
@@ -307,7 +311,7 @@ public class Main extends JavaPlugin implements Listener
 					metrics[13] += t2 - t1;
 					t1 = t2;
 					
-					jukebox_handler.tick();
+					jukeboxHandler.tick();
 					
 					noteDiscList.tick();
 					

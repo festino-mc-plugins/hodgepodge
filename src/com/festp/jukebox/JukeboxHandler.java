@@ -24,8 +24,8 @@ import com.festp.utils.UtilsType;
 
 public class JukeboxHandler implements Listener, ITickable {
 	
-	private List<Block> powered = new ArrayList<>();
-	private List<Jukebox> clickedJukeboxes = new ArrayList<>();
+	private final List<Block> powered = new ArrayList<>();
+	private final List<Jukebox> clickedJukeboxes = new ArrayList<>();
 	private final JukeboxUtils utils;
 	
 	public JukeboxHandler(NoteDiscList noteDiscs) {
@@ -36,7 +36,13 @@ public class JukeboxHandler implements Listener, ITickable {
 		powered.clear();
 		
 		for (Jukebox jukebox : clickedJukeboxes) {
-			utils.tryPlayNoteDisc(jukebox);
+			TaskList.add(new DelayedTask(1, new Runnable() {
+				@Override
+				public void run() {
+					Jukebox jukeboxUpdated = (Jukebox) jukebox.getBlock().getState();
+					utils.tryPlayNoteDisc(jukeboxUpdated);
+				}
+			}));
 		}
 		clickedJukeboxes.clear();
 	}
@@ -53,12 +59,11 @@ public class JukeboxHandler implements Listener, ITickable {
 		if (block.getType() != Material.JUKEBOX) {
 			return;
 		}
-		TaskList.add(new DelayedTask(1, new Runnable() {
-			@Override
-			public void run() {
-				clickedJukeboxes.add((Jukebox) block.getState());
-			}
-		}));
+		
+		Jukebox jukebox = (Jukebox) block.getState();
+		if (NoteDisc.isNoteDisc(event.getItem()) && UtilsType.isAir(jukebox.getRecord())) {
+			clickedJukeboxes.add((Jukebox) block.getState());
+		}
 	}
 	
 	@EventHandler
@@ -125,6 +130,10 @@ public class JukeboxHandler implements Listener, ITickable {
 		} else if (b.getType() == Material.REDSTONE_WALL_TORCH) {
 			playFrom(b, getFace(b).getOppositeFace());
 		}
+	}
+	
+	public List<Jukebox> getClickedJukeboxes() {
+		return clickedJukeboxes;
 	}
 	
 	public void playAround(Block b) {

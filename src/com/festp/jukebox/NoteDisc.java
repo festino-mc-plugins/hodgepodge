@@ -58,4 +58,9 @@ public class NoteDisc {
 		NoteDisc disc = new NoteDisc(jukebox, data);
 		return disc;
 	}
+	
+	public static boolean isNoteDisc(ItemStack item) {
+		byte[] data = Utils.getByteArray(item, NBT_TAG);
+		return data != null;
+	}
 }
