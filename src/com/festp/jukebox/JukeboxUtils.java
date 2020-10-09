@@ -36,11 +36,5 @@ public class JukeboxUtils {
 	
 	public static void stopVanillaPlaying(Jukebox jukebox) {
 		jukebox.stopPlaying();
-		/*TaskList.add(new DelayedTask(1, new Runnable() {
-			@Override
-			public void run() {
-				jukebox.stopPlaying();
-			}
-		}));*/
 	}
 }
