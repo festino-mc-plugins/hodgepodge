@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.block.data.type.BubbleColumn;
+import org.bukkit.inventory.ItemStack;
 
 public class UtilsType {
 
@@ -240,6 +241,10 @@ public class UtilsType {
 	
 	public static boolean isAir(Material m) {
 		return m == Material.AIR || m == Material.CAVE_AIR || m == Material.VOID_AIR;
+	}
+	
+	public static boolean isAir(ItemStack is) {
+		return is == null || isAir(is.getType());
 	}
 	
 	public static boolean isTransparent(Material m) {
