@@ -1,15 +1,28 @@
 package com.festp.jukebox;
 
+import java.util.HashMap;
+
+import org.bukkit.Instrument;
 import org.bukkit.Note;
 import org.bukkit.Note.Tone;
 
 public class NoteUtils {
 	public static final double SOUND_DISTANCE = 48;
+	private static HashMap<String, Integer> INSTRUMENT_NAMES = null;
+	
+	public static Integer getInstrument(String name) {
+		tryInitAlliases();
+		return INSTRUMENT_NAMES.get(name);
+	}
 	
 	/**"C0" -> 0<br>
 	 * "C1" -> 12<br>
-	 * e.t.c*/
+	 * e.t.c<br>
+	 * Also supports clicks count: "0" (="F#3") -> 42 (= 6+3*12)*/
 	public static int getPitch(String note) {
+		if (isUnsignedInteger(note)) {
+			return Integer.parseInt(note) + NoteDiscRecord.STANDART_SEMITONE_OFFSET;
+		}
 		int octaves;
 		try {
 			octaves = Integer.parseInt(note.substring(note.length() - 1));
@@ -17,7 +30,7 @@ public class NoteUtils {
 		} catch (Exception e) {
 			octaves = 3;
 		}
-		int semitone = -1;
+		int semitone = 0;
 		if (note.equals("C")) {
 			semitone = 0;
 		} else if (note.equals("C#")) {
@@ -52,5 +65,50 @@ public class NoteUtils {
 		if (tone == Tone.C || tone == Tone.D || tone == Tone.E || tone == Tone.F && !spigotNote.isSharped())
 			octaves++;
 		return tone + (spigotNote.isSharped() ? "#" : "") + octaves;
+	}
+	
+	private static boolean isUnsignedInteger(String str) {
+		for (char c : str.toCharArray()) {
+			if (!Character.isDigit(c)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private static void tryInitAlliases() {
+		if (INSTRUMENT_NAMES == null) {
+			Instrument[] allInstruments = {
+					Instrument.BANJO, Instrument.BASS_DRUM, Instrument.BASS_GUITAR, Instrument.BELL, Instrument.BIT, Instrument.CHIME,
+					Instrument.COW_BELL, Instrument.DIDGERIDOO, Instrument.FLUTE, Instrument.GUITAR, Instrument.IRON_XYLOPHONE, Instrument.PIANO,
+					Instrument.PLING, Instrument.SNARE_DRUM, Instrument.STICKS, Instrument.XYLOPHONE
+			};
+			String[] nbsNames = {
+					"Banjo", "Bass Drum", "Double Bass", "Bell", "Bit", "Chime",
+					"Cow Bell", "Didgeridoo", "Flute", "Guitar", "Iron Xylophone", "Harp",
+					"Pling", "Snare Drum", "Click", "Xylophone"
+			};
+			String[] rusNames = { // ну и кринж названия
+					"Банджо", "Большой барабан", "Бас-гитара", "Металлофон", "Аудиочип", "Колокольчик", // "(битная музыка)"
+					"Коровий колокольчик", "Диджериду", "Флейта", "Гитара", "Железный ксилофон", "Пианино", // "/арфа"
+					"Звонкая арфа", "Малый барабан", "Палочки", "Ксилофон"
+			};
+			INSTRUMENT_NAMES = new HashMap<>();
+			for (int i = 0; i < allInstruments.length; i++) {
+				Instrument inst = allInstruments[i];
+				for (int j = 0; j < NoteDiscRecord.INSTRUMENTS.length; j++) {
+					if (NoteDiscRecord.INSTRUMENTS[j].spigot == inst) {
+						String vanillaName = NoteDiscRecord.INSTRUMENTS[j].sound.toString().substring("BLOCK_NOTE_BLOCK_".length());
+						vanillaName = vanillaName.replace("_", "").toLowerCase();
+						nbsNames[i] = nbsNames[i].replace(" ", "").toLowerCase();
+						rusNames[i] = rusNames[i].replace(" ", "").toLowerCase();
+						INSTRUMENT_NAMES.put(vanillaName, j);
+						INSTRUMENT_NAMES.put(nbsNames[i], j);
+						INSTRUMENT_NAMES.put(rusNames[i], j);
+						break;
+					}
+				}
+			}
+		}
 	}
 }
