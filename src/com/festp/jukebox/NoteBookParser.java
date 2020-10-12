@@ -13,6 +13,8 @@ import com.festp.utils.UtilsType;
 
 public class NoteBookParser {
 	private static final int MAX_VARINT_BYTES = 8;
+	public static final int MAX_TICKRATE = 20;
+	public static final int DEFAULT_TICKRATE = 10;
 	
 	// format => disc
 	/**item.getItemMeta() is heavy*/
@@ -47,20 +49,52 @@ public class NoteBookParser {
 	public static byte[] toDiscData(String bookFormat) {
 		ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
 		
-		bookFormat = bookFormat.replace(" ", ""); // TODO? use regex replace
+		bookFormat = bookFormat.replace(" ", "");
 		bookFormat = bookFormat.replace("|", "-");
 		HashMap<String, Integer> instruments = new HashMap<>(); // alias : id
 		for (int i = 1; i <= NoteDiscRecord.INSTRUMENTS.length; i++) {
 			instruments.put(Integer.toString(i), i - 1);
 		}
 
+		FormatSettings settings = new FormatSettings.NBSSettings(DEFAULT_TICKRATE); 
 		boolean hasDefault = false;
 		int defaultInst = 0;
+		
 		// "-" had not to be in aliases
-		String aliasesStr = bookFormat.substring(0, bookFormat.indexOf("-"));
-		int aliasesEnd = Math.max(aliasesStr.lastIndexOf(","), aliasesStr.lastIndexOf("\n"));
+		int aliasesEnd = Math.max(getFirstSep(bookFormat, '='), getLastSep(bookFormat, '-'));
 		if (aliasesEnd >= 0) {
-			aliasesStr = aliasesStr.substring(0, aliasesEnd);
+			String aliasesStr = bookFormat.substring(0, aliasesEnd);
+			bookFormat = bookFormat.substring(aliasesEnd); // heavy?
+			aliasesStr = aliasesStr.replace(',', '\n');
+			
+			int formatSettingsEnd = aliasesStr.indexOf("\n");
+			String formatSettingsStr;
+			if (formatSettingsEnd < 0) {
+				formatSettingsStr = aliasesStr;
+				formatSettingsEnd = formatSettingsStr.length();
+			} else {
+				formatSettingsStr = aliasesStr.substring(0, formatSettingsEnd);
+			}
+			if (!formatSettingsStr.contains("=")) {
+				aliasesStr = aliasesStr.substring(formatSettingsEnd);
+				String tickrateStr = "";
+				for (int i = formatSettingsEnd - 1; i >= 0; i--) {
+					char c = formatSettingsStr.charAt(i);
+					if (Character.isDigit(c)) {
+						tickrateStr = c + tickrateStr;
+					} else {
+						break;
+					}
+				}
+				if (tickrateStr.length() <= 2) {
+					formatSettingsStr = formatSettingsStr.substring(0, formatSettingsStr.length() - tickrateStr.length());
+					if (tickrateStr.length() == 0) {
+						settings = FormatSettings.getSettings(formatSettingsStr, DEFAULT_TICKRATE);
+					} else {
+						settings = FormatSettings.getSettings(formatSettingsStr, Integer.parseInt(tickrateStr));
+					}
+				}
+			}
 			int defaultInstRes = getAliases(aliasesStr, instruments);
 			if (defaultInstRes >= 0) {
 				hasDefault = true;
@@ -68,15 +102,20 @@ public class NoteBookParser {
 			}
 		}
 
-		bookFormat = bookFormat.substring(aliasesEnd); // heavy?
 		bookFormat = bookFormat.replace("\n", ",");
 		try {
+			int zeroGap = settings.getGapLength(0);
 			String[] ticks = bookFormat.split(",");
 			for (String part : ticks) {
-				if (part.isEmpty()) {
-					dataStream.write(getGap(1));
-				} else if (part.matches("[.]+")) {
-					dataStream.write(getGap(part.length()));
+				if (part.matches("[.]+") || part.isEmpty()) {
+					int length = part.length();
+					if (part.isEmpty()) {
+						length = 1;
+					}
+					int gapLength = settings.getGapLength(length) - zeroGap;
+					if (gapLength > 0) {
+						dataStream.write(getGap(gapLength));
+					}
 				} else {
 					String[] sounds = part.split("&");
 					int continueMask = 0x40;
@@ -84,13 +123,18 @@ public class NoteBookParser {
 						if (i == sounds.length - 1) {
 							continueMask = 0x00;
 						}
+						String idStr;
+						String note;
 						String sound[] = sounds[i].split("-");
-						if (sound.length != 2) {
+						if (sound.length == 1) {
+							idStr = "";
+							note = sound[0];
+						} else if (sound.length == 2) {
+							idStr = sound[0];
+							note = sound[1];
+						} else {
 							return null;
 						}
-						
-						String idStr = sound[0];
-						String note = sound[1];
 						
 						int id;
 						if (instruments.containsKey(idStr)) {
@@ -98,11 +142,17 @@ public class NoteBookParser {
 						} else if (hasDefault) {
 							id = defaultInst;
 						} else {
-							continue;
+							return null;
 						}
-						int pitch = NoteUtils.getPitch(note);
+						int pitch = NoteUtils.getPitch(note) + settings.getPitchShift(id);
+						if (pitch < 0) {
+							pitch = 0;
+						}
 						dataStream.write(continueMask | id);
 						dataStream.write(pitch);
+					}
+					if (zeroGap > 0) {
+						dataStream.write(getGap(zeroGap));
 					}
 				}
 			}
@@ -116,7 +166,6 @@ public class NoteBookParser {
 	/**@return default instrument or negative value*/
 	private static int getAliases(String aliasesStr, HashMap<String, Integer> instruments) {
 		aliasesStr = aliasesStr.replace("_", "").replace(",", "\n").toLowerCase();
-		// no alias intersections, both left and right, names from NBS and minecraft(F3/wiki), default = inst or default = alias
 		String defaultInst = "";
 		for (String aliasStr : aliasesStr.split("\n")) {
 			String[] parts = aliasStr.split("=");
@@ -166,6 +215,31 @@ public class NoteBookParser {
 		byte[] varInt = getVarInt(length, 1);
 		varInt[0] |= 0x80;
 		return varInt;
+	}
+	
+	private static int getLastSep(String s, char beforeFirst) {
+		int index = s.indexOf(beforeFirst);
+		if (index < 0) {
+			return -1;
+		}
+		s = s.substring(0, index);
+		return Math.max(s.lastIndexOf(','), s.lastIndexOf('\n'));
+	}
+	
+	private static int getFirstSep(String s, char afterLast) {
+		int index = s.lastIndexOf(afterLast);
+		if (index < 0) {
+			return -1;
+		}
+		index++;
+		int index1 = s.indexOf(',', index);
+		int index2 = s.indexOf('\n', index);
+		if (index1 < 0) {
+			return index2;
+		} else if (index2 < 0) {
+			return index1;
+		}
+		return Math.min(index1, index2);
 	}
 	
 	private static byte[] getVarInt(int x, int offset) {
