@@ -5,11 +5,13 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.SoundCategory;
+import org.bukkit.block.Block;
 import org.bukkit.block.Jukebox;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.utils.Utils;
+import com.festp.utils.UtilsType;
 
 public class NoteDisc {
 	public static final String NBT_TAG = "note_disc_data";
@@ -45,7 +47,9 @@ public class NoteDisc {
 	}
 	
 	public boolean isTerminated() {
-		return parser.isTerminated() || jukebox.getBlock().getType() != Material.JUKEBOX || jukebox.getRecord() == null;
+		Block updatedBlock = jukebox.getBlock();
+		return parser.isTerminated() || updatedBlock.getType() != Material.JUKEBOX
+				|| UtilsType.isAir(((Jukebox) updatedBlock.getState()).getRecord());
 	}
 	
 	/** @return <b>null</b> if jukebox isn't containing note disc */
