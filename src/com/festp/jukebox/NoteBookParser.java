@@ -50,57 +50,13 @@ public class NoteBookParser {
 		ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
 		
 		bookFormat = bookFormat.replace(" ", "");
-		bookFormat = bookFormat.replace("|", "-");
-		HashMap<String, Integer> instruments = new HashMap<>(); // alias : id
-		for (int i = 1; i <= NoteDiscRecord.INSTRUMENTS.length; i++) {
-			instruments.put(Integer.toString(i), i - 1);
-		}
 
-		FormatSettings settings = new FormatSettings.NBSSettings(DEFAULT_TICKRATE); 
-		boolean hasDefault = false;
-		int defaultInst = 0;
-		
-		// "-" had not to be in aliases
-		int aliasesEnd = Math.max(getFirstSep(bookFormat, '='), getLastSep(bookFormat, '-'));
-		if (aliasesEnd >= 0) {
-			String aliasesStr = bookFormat.substring(0, aliasesEnd);
-			bookFormat = bookFormat.substring(aliasesEnd); // heavy?
-			aliasesStr = aliasesStr.replace(',', '\n');
-			
-			int formatSettingsEnd = aliasesStr.indexOf("\n");
-			String formatSettingsStr;
-			if (formatSettingsEnd < 0) {
-				formatSettingsStr = aliasesStr;
-				formatSettingsEnd = formatSettingsStr.length();
-			} else {
-				formatSettingsStr = aliasesStr.substring(0, formatSettingsEnd);
-			}
-			if (!formatSettingsStr.contains("=")) {
-				aliasesStr = aliasesStr.substring(formatSettingsEnd);
-				String tickrateStr = "";
-				for (int i = formatSettingsEnd - 1; i >= 0; i--) {
-					char c = formatSettingsStr.charAt(i);
-					if (Character.isDigit(c)) {
-						tickrateStr = c + tickrateStr;
-					} else {
-						break;
-					}
-				}
-				if (tickrateStr.length() <= 2) {
-					formatSettingsStr = formatSettingsStr.substring(0, formatSettingsStr.length() - tickrateStr.length());
-					if (tickrateStr.length() == 0) {
-						settings = FormatSettings.getSettings(formatSettingsStr, DEFAULT_TICKRATE);
-					} else {
-						settings = FormatSettings.getSettings(formatSettingsStr, Integer.parseInt(tickrateStr));
-					}
-				}
-			}
-			int defaultInstRes = getAliases(aliasesStr, instruments);
-			if (defaultInstRes >= 0) {
-				hasDefault = true;
-				defaultInst = defaultInstRes;
-			}
-		}
+		ParseResult res = parseHeader(bookFormat);
+		FormatSettings settings = res.settings;
+		final boolean hasDefault = res.defaultInst >= 0;
+		final int defaultInst = res.defaultInst;
+		HashMap<String, Integer> instruments = res.aliases;
+		bookFormat = bookFormat.substring(res.endIndex); // heavy?
 
 		bookFormat = bookFormat.replace("\n", ",");
 		try {
@@ -163,6 +119,97 @@ public class NoteBookParser {
 		return dataStream.toByteArray();
 	}
 	
+	private static byte[] getGap(int length) {
+		byte[] varInt = getVarInt(length, 1);
+		varInt[0] |= 0x80;
+		return varInt;
+	}
+	
+	private static byte[] getVarInt(int x, int offset) {
+		byte[] buf = new byte[MAX_VARINT_BYTES];
+		buf[0] = (byte) (x & 0x7F >> offset);
+        x >>= 7 - offset;
+		int n = 1;
+	    if (x != 0) {
+	    	buf[0] |= 0x80 >> offset;
+	        x -= 1;
+		    for (; x > 127; n++) {
+		        buf[n] = (byte) (0x80 | (x & 0x7F));
+		        x >>= 7;
+		        x -= 1;
+		    }
+		    buf[n] = (byte) x;
+		    n++;
+	    }
+	    return Arrays.copyOf(buf, n);
+	}
+	
+	public static ParseResult parseHeader(String bookFormat) {
+		HashMap<String, Integer> instruments = new HashMap<>(); // alias : id
+		for (int i = 1; i <= NoteDiscRecord.INSTRUMENTS.length; i++) {
+			instruments.put(Integer.toString(i), i - 1);
+		}
+
+		FormatSettings settings = new FormatSettings.NBSSettings(DEFAULT_TICKRATE); 
+		
+		int aliasesEnd = getFirstSep(bookFormat, '=');
+		if (aliasesEnd < 0) {
+			// "-" had not to be in aliases
+			aliasesEnd = getLastSep(bookFormat, '-');
+		}
+		int defaultInst = -1;
+		if (aliasesEnd >= 0) {
+			String aliasesStr = bookFormat.substring(0, aliasesEnd);
+			aliasesStr = aliasesStr.replace(',', '\n');
+			
+			int formatSettingsEnd = aliasesStr.indexOf("\n");
+			String formatSettingsStr;
+			if (formatSettingsEnd < 0) {
+				formatSettingsStr = aliasesStr;
+				formatSettingsEnd = formatSettingsStr.length();
+			} else {
+				formatSettingsStr = aliasesStr.substring(0, formatSettingsEnd);
+			}
+			if (!formatSettingsStr.contains("=")) {
+				aliasesStr = aliasesStr.substring(formatSettingsEnd);
+				String tickrateStr = "";
+				for (int i = formatSettingsEnd - 1; i >= 0; i--) {
+					char c = formatSettingsStr.charAt(i);
+					if (Character.isDigit(c)) {
+						tickrateStr = c + tickrateStr;
+					} else {
+						break;
+					}
+				}
+				if (tickrateStr.length() <= 2) {
+					formatSettingsStr = formatSettingsStr.substring(0, formatSettingsStr.length() - tickrateStr.length());
+					if (tickrateStr.length() == 0) {
+						settings = FormatSettings.getSettings(formatSettingsStr, DEFAULT_TICKRATE);
+					} else {
+						settings = FormatSettings.getSettings(formatSettingsStr, Integer.parseInt(tickrateStr));
+					}
+				}
+			}
+			defaultInst = getAliases(aliasesStr, instruments);
+		} else {
+			aliasesEnd = 0;
+		}
+		return new ParseResult(settings, instruments, defaultInst, aliasesEnd);
+	}
+
+	public static final class ParseResult {
+		public final FormatSettings settings;
+		public final HashMap<String, Integer> aliases;
+		public final int defaultInst;
+		public final int endIndex;
+		public ParseResult(FormatSettings settings, HashMap<String, Integer> aliases, int defaultInst, int endIndex) {
+			this.settings = settings;
+			this.aliases = aliases;
+			this.defaultInst = defaultInst;
+			this.endIndex = endIndex;
+		}
+	}
+	
 	/**@return default instrument or negative value*/
 	private static int getAliases(String aliasesStr, HashMap<String, Integer> instruments) {
 		aliasesStr = aliasesStr.replace("_", "").replace(",", "\n").toLowerCase();
@@ -174,9 +221,9 @@ public class NoteBookParser {
 			}
 			String left = parts[0];
 			String right = parts[1];
-			if (left.equals("default")) {
+			if (left.equalsIgnoreCase("default")) {
 				defaultInst = right;
-			} else if (right.equals("default")) {
+			} else if (right.equalsIgnoreCase("default")) {
 				defaultInst = left;
 			} else {
 				if (!tryPut(left, right, instruments)) {
@@ -211,12 +258,6 @@ public class NoteBookParser {
 		return getInstrument(name);
 	}
 	
-	private static byte[] getGap(int length) {
-		byte[] varInt = getVarInt(length, 1);
-		varInt[0] |= 0x80;
-		return varInt;
-	}
-	
 	private static int getLastSep(String s, char beforeFirst) {
 		int index = s.indexOf(beforeFirst);
 		if (index < 0) {
@@ -240,24 +281,5 @@ public class NoteBookParser {
 			return index1;
 		}
 		return Math.min(index1, index2);
-	}
-	
-	private static byte[] getVarInt(int x, int offset) {
-		byte[] buf = new byte[MAX_VARINT_BYTES];
-		buf[0] = (byte) (x & 0x7F >> offset);
-        x >>= 7 - offset;
-		int n = 1;
-	    if (x != 0) {
-	    	buf[0] |= 0x80 >> offset;
-	        x -= 1;
-		    for (; x > 127; n++) {
-		        buf[n] = (byte) (0x80 | (x & 0x7F));
-		        x >>= 7;
-		        x -= 1;
-		    }
-		    buf[n] = (byte) x;
-		    n++;
-	    }
-	    return Arrays.copyOf(buf, n);
 	}
 }
