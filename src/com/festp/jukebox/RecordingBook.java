@@ -1,19 +1,36 @@
 package com.festp.jukebox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.bukkit.Material;
+import org.bukkit.Note;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BookMeta;
 
+import com.festp.jukebox.FormatSettings.NBSSettings;
+import com.festp.jukebox.NoteBookParser.ParseResult;
 import com.festp.utils.UtilsType;
 
 public class RecordingBook {
 	private static final int MAX_SILENCE = 20 * 8;
+
+	private int ticks = -1;
+	private int initTicks = 5;
+	private int silenceTicks = 0;
+	private ItemStack book;
+	private BookMeta currentMeta;
+	private final int startPage;
+	private final int startChar;
+
+	private final FormatSettings settings;
+	private final int defaultInst;
+	private final HashMap<Integer, String> instruments;
 	
 	public final Player player;
 	private float initYaw;
@@ -21,13 +38,6 @@ public class RecordingBook {
 	private final PlayerInventory playerInv;
 	private final EquipmentSlot slot;
 	private final int handSlot;
-
-	private int initTicks = 5;
-	private int silenceTicks = 0;
-	private ItemStack book;
-	private BookMeta currentMeta;
-	private final int startPage;
-	private final int startChar;
 	
 	String tickBuffer = "";
 	
@@ -40,23 +50,57 @@ public class RecordingBook {
 		book = playerInv.getItem(slot);
 		currentMeta = (BookMeta) book.getItemMeta();
 		startPage = currentMeta.getPageCount();
+		String headerPages;
 		if (startPage > 0) {
 			startChar = currentMeta.getPage(startPage).length();
+			headerPages = currentMeta.getPage(1) + "\n";
 		} else {
 			startChar = 0;
+			headerPages = "";
 		}
-		// TODO load aliases
+		ParseResult res = NoteBookParser.parseHeader(headerPages); // TODO? check next pages if header is long - check pages for "="
+		defaultInst = res.defaultInst;
+		settings = res.settings;
+		instruments = new HashMap<>();
+		for (Entry<String, Integer> entry : res.aliases.entrySet()) {
+			Integer id = entry.getValue();
+			String alias = entry.getKey();
+			if (instruments.containsKey(id)) {
+				String curAlias = instruments.get(id);
+				if (!(NoteUtils.isUnsignedInteger(alias) && !NoteUtils.isUnsignedInteger(curAlias))
+						&& curAlias.compareTo(alias) > 0) {
+					instruments.put(id, alias);
+				}
+			} else {
+				instruments.put(id, alias);
+			}
+		}
 	}
 	
-	public void appendToTick(int instIndex, String note) {
-		// TODO use aliases
-		String instAlias = (instIndex + 1) + "";
-		
-		note = instAlias + "-" + note;
-		if (tickBuffer.isEmpty()) {
-			tickBuffer = note;
+	public void appendToTick(int instIndex, Note note) {
+		String noteStr = "";
+		if (settings instanceof NBSSettings) {
+			noteStr = NoteUtils.getNote(note, NoteDiscRecord.STANDART_OCTAVE_OFFSET);
+			int semitone = NoteUtils.getPitch(noteStr) - NoteDiscRecord.STANDART_SEMITONE_OFFSET;
+			if (0 <= semitone && semitone <= 24) {
+				noteStr = "" + semitone;
+			}
 		} else {
-			tickBuffer += "&" + note;
+			noteStr = NoteUtils.getNote(note, -NoteDiscRecord.INSTRUMENTS[instIndex].octaveShift + NoteDiscRecord.STANDART_OCTAVE_OFFSET);
+		}
+		
+		if (instIndex != defaultInst) {
+			String instAlias = instruments.get(instIndex);
+			if (instAlias == null) {
+				return;
+			}
+			noteStr = instAlias + "-" + noteStr;
+		}
+		
+		if (tickBuffer.isEmpty()) {
+			tickBuffer = noteStr;
+		} else {
+			tickBuffer += "&" + noteStr;
 		}
 	}
 	
@@ -69,7 +113,15 @@ public class RecordingBook {
 			initPitch = player.getLocation().getPitch();
 			initTicks--;
 		}
-		// tickBuffer "" => "."; .]. => ..; n]. => ,.; notes => ,notes
+		
+		if (ticks >= 0) {
+			ticks++;
+			if (ticks % settings.multiplier != 0) {
+				tickBuffer = "";
+				return;
+			}
+		}
+		
 		int count = getPageCount(currentMeta);
 		if (count == 0) {
 			currentMeta.addPage("");
@@ -77,15 +129,21 @@ public class RecordingBook {
 		}
 		
 		String page = currentMeta.getPage(count);
+		// tickBuffer "" => "."; .]. => ..; n]. => ,.; notes => ,notes
 		if (!page.isEmpty()) {
 			if (tickBuffer.isEmpty()) {
 				silenceTicks++;
-				if (page.charAt(page.length() - 1) == '.') {
-					tickBuffer = ".";
-				} else {
-					tickBuffer = ",.";
+				if (ticks >= 0) { /*startPage != count || startChar != page.length()*/
+					if (page.charAt(page.length() - 1) == '.') {
+						tickBuffer = ".";
+					} else {
+						tickBuffer = ",.";
+					}
 				}
 			} else {
+				if (ticks == -1) {
+					ticks = 0;
+				}
 				silenceTicks = 0;
 				tickBuffer = "," + tickBuffer;
 			}
@@ -177,7 +235,7 @@ public class RecordingBook {
 		meta.setPage(page, pageStr1);
 		String pageStr2 = meta.getPage(page);
 		meta.setPage(page, pageStr0);
-		return pageStr1.length() == pageStr2.length();
+		return pageStr1.length() == pageStr2.length(); // TODO + calc lines height
 	}
 	
 	/**pages indexed from 1!*/
