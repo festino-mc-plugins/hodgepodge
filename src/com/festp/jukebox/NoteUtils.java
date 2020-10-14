@@ -67,7 +67,7 @@ public class NoteUtils {
 		return tone + (spigotNote.isSharped() ? "#" : "") + octaves;
 	}
 	
-	private static boolean isUnsignedInteger(String str) {
+	public static boolean isUnsignedInteger(String str) {
 		for (char c : str.toCharArray()) {
 			if (!Character.isDigit(c)) {
 				return false;
