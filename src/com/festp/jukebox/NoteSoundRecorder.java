@@ -43,10 +43,9 @@ public class NoteSoundRecorder implements Listener {
 		if (inst == null) {
 			return;
 		}
-		String note = NoteUtils.getNote(event.getNote(), -inst.octaveShift + NoteDiscRecord.STANDART_OCTAVE_OFFSET);
 		Block block = event.getBlock();
 		Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
-		recordingBookList.play(instId, note, blockCenter);
+		recordingBookList.play(instId, event.getNote(), blockCenter);
 	}
 
 	@EventHandler
