@@ -19,7 +19,7 @@ public class NoteUtils {
 	 * "C1" -> 12<br>
 	 * e.t.c<br>
 	 * Also supports clicks count: "0" (="F#3") -> 42 (= 6+3*12)*/
-	public static int getPitch(String note) {
+	public static int getSemitone(String note) {
 		if (isUnsignedInteger(note)) {
 			return Integer.parseInt(note) + NoteDiscRecord.STANDART_SEMITONE_OFFSET;
 		}
@@ -59,6 +59,45 @@ public class NoteUtils {
 		return semitone + octaves * NoteDiscRecord.OCTAVE;
 	}
 
+	public static int getSemitone(Note spigotNote) {
+		int semitone = NoteDiscRecord.OCTAVE * (spigotNote.getOctave() + NoteDiscRecord.STANDART_OCTAVE_OFFSET);
+		Tone tone = spigotNote.getTone();
+		if (tone == Tone.C || tone == Tone.D || tone == Tone.E || tone == Tone.F && !spigotNote.isSharped())
+			semitone += NoteDiscRecord.OCTAVE;
+		switch (tone) {
+		case C: semitone += 0; break;
+		case D: semitone += 2; break;
+		case E: semitone += 4; break;
+		case F: semitone += 5; break;
+		case G: semitone += 7; break;
+		case A: semitone += 9; break;
+		case B: semitone += 11; break;
+		}
+		return semitone + (spigotNote.isSharped() ? 1 : 0);
+	}
+
+	public static String getNote(int semitone) {
+		int octaves = semitone / NoteDiscRecord.OCTAVE; // move to NoteUtils
+		semitone = semitone % 12;
+		String note;
+		switch (semitone) {
+		case 0: note = "C"; break;
+		case 1: note = "C#"; break;
+		case 2: note = "D"; break;
+		case 3: note = "D#"; break;
+		case 4: note = "E"; break;
+		case 5: note = "F"; break;
+		case 6: note = "F#"; break;
+		case 7: note = "G"; break;
+		case 8: note = "G#"; break;
+		case 9: note = "A"; break;
+		case 10: note = "A#"; break;
+		case 11: note = "B"; break;
+		default: note = ""; break;
+		}
+		return note + octaves;
+	}
+
 	public static String getNote(Note spigotNote, int octaveShift) {
 		int octaves = spigotNote.getOctave() + octaveShift;
 		Tone tone = spigotNote.getTone();
@@ -73,7 +112,7 @@ public class NoteUtils {
 				return false;
 			}
 		}
-		return true;
+		return str.length() > 0;
 	}
 	
 	private static void tryInitAlliases() {

@@ -39,12 +39,14 @@ public class NoteDiscRecord {
 		public final Sound sound;
 		public final int octaveShift;
 		public final int semitoneShift;
+		public final int fullSemitoneShift;
 		public final Instrument spigot;
 		
 		public NoteInstrument(Sound sound, Instrument inst, int octaveShift) {
 			this.sound = sound;
 			this.octaveShift = octaveShift;
-			this.semitoneShift = -STANDART_SEMITONE_OFFSET + octaveShift * OCTAVE;
+			this.semitoneShift = octaveShift * OCTAVE;
+			this.fullSemitoneShift = this.semitoneShift - STANDART_SEMITONE_OFFSET;
 			this.spigot = inst;
 		}
 		public NoteInstrument(Sound sound, Instrument inst) {
@@ -89,16 +91,14 @@ public class NoteDiscRecord {
 				if (pos >= data.length) {
 					return res;
 				}
-				int note = getByteInt(data, pos, 0);
+				int semitone = getByteInt(data, pos, 0);
 				pos++;
 				if (id < 0 || id >= INSTRUMENTS.length) {
 					return res;
 				}
 				
 				NoteInstrument parsed = INSTRUMENTS[id];
-				Sound instrument = parsed.sound;
-				float pitch = (float) Math.pow(2, (parsed.semitoneShift + note) / 12d - 1);
-				res.add(new NoteSound(instrument, pitch));
+				res.add(new NoteSound(parsed, semitone));
 			} while (pos < data.length && (data[pos - 2] & 0x40) != 0);
 			tick++;
 		}

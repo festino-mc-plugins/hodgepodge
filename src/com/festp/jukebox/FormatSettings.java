@@ -9,13 +9,13 @@ public abstract class FormatSettings {
 	final int multiplier;
 	
 	public FormatSettings(int tickrate) {
-		if (tickrate == 0) {
+		if (tickrate <= 0) {
 			this.tickrate = NoteBookParser.DEFAULT_TICKRATE;
 		} else {
 			this.tickrate = tickrate;
 		}
 		int multiplier = (int) Math.round(NoteBookParser.MAX_TICKRATE / (double) this.tickrate);
-		if (multiplier  <= 0) {
+		if (multiplier == 0) {
 			multiplier = NoteBookParser.MAX_TICKRATE / NoteBookParser.DEFAULT_TICKRATE;
 		}
 		this.multiplier = multiplier;

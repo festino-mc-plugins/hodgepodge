@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
-import org.bukkit.Note;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 
@@ -48,11 +47,11 @@ public class RecordingBookList implements ITickable {
 		book.player.closeInventory();
 	}
 
-	public void play(int instId, Note note, Location from) {
+	public void play(int instId, int nbsSemitone, Location from) {
 		for (RecordingBook book : books) {
 			Player player = book.player;
 			if (player.getWorld() == from.getWorld() && player.getLocation().distance(from) <= NoteUtils.SOUND_DISTANCE) {
-				book.appendToTick(instId, note);
+				book.appendToTick(instId, nbsSemitone);
 			}
 		}
 	}

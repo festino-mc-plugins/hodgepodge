@@ -48,7 +48,7 @@ public class NoteDiscCrafter implements Listener {
 			}
 		}
 		ItemStack resultDisc = event.getInventory().getResult();
-		if (isNoteCraft && book != null && coalCount == 6 && resultDisc.getType().isRecord()) {
+		if (isNoteCraft && book != null && coalCount == 6 && resultDisc != null && resultDisc.getType().isRecord()) {
 			BookMeta bookMeta = (BookMeta) book.getItemMeta();
 			if (bookMeta.hasTitle()) {
 				ItemMeta meta = resultDisc.getItemMeta();

@@ -100,7 +100,7 @@ public class NoteBookParser {
 						} else {
 							return null;
 						}
-						int pitch = NoteUtils.getPitch(note) + settings.getPitchShift(id);
+						int pitch = NoteUtils.getSemitone(note) + settings.getPitchShift(id);
 						if (pitch < 0) {
 							pitch = 0;
 						}
@@ -172,29 +172,50 @@ public class NoteBookParser {
 			}
 			if (!formatSettingsStr.contains("=")) {
 				aliasesStr = aliasesStr.substring(formatSettingsEnd);
-				String tickrateStr = "";
-				for (int i = formatSettingsEnd - 1; i >= 0; i--) {
-					char c = formatSettingsStr.charAt(i);
-					if (Character.isDigit(c)) {
-						tickrateStr = c + tickrateStr;
-					} else {
-						break;
-					}
-				}
-				if (tickrateStr.length() <= 2) {
-					formatSettingsStr = formatSettingsStr.substring(0, formatSettingsStr.length() - tickrateStr.length());
-					if (tickrateStr.length() == 0) {
-						settings = FormatSettings.getSettings(formatSettingsStr, DEFAULT_TICKRATE);
-					} else {
-						settings = FormatSettings.getSettings(formatSettingsStr, Integer.parseInt(tickrateStr));
-					}
+				FormatSettings settingsRes = getFormatSetting(formatSettingsStr);
+				if (settingsRes != null) {
+					settings = settingsRes;
 				}
 			}
 			defaultInst = getAliases(aliasesStr, instruments);
 		} else {
-			aliasesEnd = 0;
+			String formatSettingsStr = bookFormat.substring(0, Math.min(50, bookFormat.length()));
+			formatSettingsStr = formatSettingsStr.replace(',', '\n');
+			int formatSettingsEnd = formatSettingsStr.indexOf("\n");
+			if (formatSettingsEnd < 0) {
+				formatSettingsEnd = formatSettingsStr.length();
+			}
+			formatSettingsStr = formatSettingsStr.substring(0, formatSettingsEnd);
+			FormatSettings settingsRes = getFormatSetting(formatSettingsStr);
+			if (settingsRes != null) {
+				settings = settingsRes;
+				aliasesEnd = formatSettingsStr.length();
+			} else {
+				aliasesEnd = 0;
+			}
 		}
 		return new ParseResult(settings, instruments, defaultInst, aliasesEnd);
+	}
+	
+	public static FormatSettings getFormatSetting(String formatSettingsStr) {
+		String tickrateStr = "";
+		for (int i = formatSettingsStr.length() - 1; i >= 0; i--) {
+			char c = formatSettingsStr.charAt(i);
+			if (Character.isDigit(c)) {
+				tickrateStr = c + tickrateStr;
+			} else {
+				break;
+			}
+		}
+		if (tickrateStr.length() <= 2) {
+			formatSettingsStr = formatSettingsStr.substring(0, formatSettingsStr.length() - tickrateStr.length());
+			if (tickrateStr.length() == 0) {
+				return FormatSettings.getSettings(formatSettingsStr, DEFAULT_TICKRATE);
+			} else {
+				return FormatSettings.getSettings(formatSettingsStr, Integer.parseInt(tickrateStr));
+			}
+		}
+		return null;
 	}
 
 	public static final class ParseResult {

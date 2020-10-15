@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.bukkit.Material;
-import org.bukkit.Note;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -77,16 +76,17 @@ public class RecordingBook {
 		}
 	}
 	
-	public void appendToTick(int instIndex, Note note) {
+	public void appendToTick(int instIndex, int nbsSemitone) {
 		String noteStr = "";
 		if (settings instanceof NBSSettings) {
-			noteStr = NoteUtils.getNote(note, NoteDiscRecord.STANDART_OCTAVE_OFFSET);
-			int semitone = NoteUtils.getPitch(noteStr) - NoteDiscRecord.STANDART_SEMITONE_OFFSET;
-			if (0 <= semitone && semitone <= 24) {
+			int semitone = NoteUtils.getSemitone(noteStr) - NoteDiscRecord.STANDART_SEMITONE_OFFSET;
+			if (0 <= nbsSemitone && nbsSemitone <= 24) {
 				noteStr = "" + semitone;
+			} else {
+				noteStr = NoteUtils.getNote(nbsSemitone);
 			}
 		} else {
-			noteStr = NoteUtils.getNote(note, -NoteDiscRecord.INSTRUMENTS[instIndex].octaveShift + NoteDiscRecord.STANDART_OCTAVE_OFFSET);
+			noteStr = NoteUtils.getNote(nbsSemitone - NoteDiscRecord.INSTRUMENTS[instIndex].semitoneShift);
 		}
 		
 		if (instIndex != defaultInst) {
@@ -133,7 +133,7 @@ public class RecordingBook {
 		if (!page.isEmpty()) {
 			if (tickBuffer.isEmpty()) {
 				silenceTicks++;
-				if (ticks >= 0) { /*startPage != count || startChar != page.length()*/
+				if (ticks >= 0) {
 					if (page.charAt(page.length() - 1) == '.') {
 						tickBuffer = ".";
 					} else {

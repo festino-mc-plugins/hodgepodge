@@ -10,8 +10,6 @@ import org.bukkit.event.block.NotePlayEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import com.festp.jukebox.NoteDiscRecord.NoteInstrument;
-
 public class NoteSoundRecorder implements Listener {
 	private final RecordingBookList recordingBookList;
 	
@@ -32,20 +30,25 @@ public class NoteSoundRecorder implements Listener {
 	@EventHandler
 	public void onNotePlay(NotePlayEvent event) {
 		Instrument spigotInst = event.getInstrument();
-		NoteInstrument inst = null;
 		int instId;
 		for (instId = 0; instId < NoteDiscRecord.INSTRUMENTS.length; instId++) {
 			if (NoteDiscRecord.INSTRUMENTS[instId].spigot == spigotInst) {
-				inst = NoteDiscRecord.INSTRUMENTS[instId];
 				break;
 			}
 		}
-		if (inst == null) {
+		if (instId == NoteDiscRecord.INSTRUMENTS.length) {
 			return;
 		}
 		Block block = event.getBlock();
 		Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
-		recordingBookList.play(instId, event.getNote(), blockCenter);
+		int semitone = NoteUtils.getSemitone(event.getNote());
+		recordingBookList.play(instId, semitone, blockCenter);
+	}
+
+	@EventHandler
+	public void onNoteDiscPlay(NoteDiscPlayEvent event) {
+		NoteSound sound = event.getNoteSound();
+		recordingBookList.play(sound.getInstrumentId(), sound.getNbsSemitone(), event.getLocation());
 	}
 
 	@EventHandler

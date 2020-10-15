@@ -2,6 +2,7 @@ package com.festp.jukebox;
 
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.SoundCategory;
@@ -38,10 +39,14 @@ public class NoteDisc {
 			if (player.getLocation().distance(soundSource) <= NoteUtils.SOUND_DISTANCE) {
 				for (NoteSound sound : sounds) {
 					// no player.playNote(soundSource, NoteInstrument.BANJO, Note.sharp(octave, tone));
-					// because Note.Tone is inconvenient
-					player.playSound(soundSource, sound.instrument, SoundCategory.RECORDS, 3, sound.pitch);
+					// because Note.Tone is restricted
+					player.playSound(soundSource, sound.getSpigotSound(), SoundCategory.RECORDS, 3, sound.getPitch());
 				}
 			}
+		}
+		for (NoteSound sound : sounds) {
+			//Bukkit.getPluginManager().callEvent(new NotePlayEvent(jukebox.getBlock(), sound.getSpigotInstrument(), sound.getSpigotNote()));
+			Bukkit.getPluginManager().callEvent(new NoteDiscPlayEvent(soundSource, sound));
 		}
 		return true;
 	}
