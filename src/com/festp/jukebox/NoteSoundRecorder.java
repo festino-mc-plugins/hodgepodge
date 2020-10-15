@@ -31,12 +31,12 @@ public class NoteSoundRecorder implements Listener {
 	public void onNotePlay(NotePlayEvent event) {
 		Instrument spigotInst = event.getInstrument();
 		int instId;
-		for (instId = 0; instId < NoteDiscRecord.INSTRUMENTS.length; instId++) {
-			if (NoteDiscRecord.INSTRUMENTS[instId].spigot == spigotInst) {
+		for (instId = 0; instId < NoteUtils.INSTRUMENTS.length; instId++) {
+			if (NoteUtils.INSTRUMENTS[instId].spigot == spigotInst) {
 				break;
 			}
 		}
-		if (instId == NoteDiscRecord.INSTRUMENTS.length) {
+		if (instId == NoteUtils.INSTRUMENTS.length) {
 			return;
 		}
 		Block block = event.getBlock();

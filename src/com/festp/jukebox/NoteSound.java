@@ -3,7 +3,7 @@ package com.festp.jukebox;
 import org.bukkit.Instrument;
 import org.bukkit.Sound;
 
-import com.festp.jukebox.NoteDiscRecord.NoteInstrument;
+import com.festp.jukebox.NoteUtils.NoteInstrument;
 
 public class NoteSound {
 	private final int instIndex;
@@ -14,8 +14,8 @@ public class NoteSound {
 		this.full = inst;
 		this.realSemitone = realSemitone;
 		int id = 0;
-		for (int i = 0; i < NoteDiscRecord.INSTRUMENTS.length; i++) {
-			if (NoteDiscRecord.INSTRUMENTS[i].spigot == inst.spigot) {
+		for (int i = 0; i < NoteUtils.INSTRUMENTS.length; i++) {
+			if (NoteUtils.INSTRUMENTS[i].spigot == inst.spigot) {
 				id = i;
 				break;
 			}
@@ -25,7 +25,7 @@ public class NoteSound {
 	
 	public NoteSound(int instIndex, int realSemitone) {
 		this.instIndex = instIndex;
-		this.full = NoteDiscRecord.INSTRUMENTS[instIndex];
+		this.full = NoteUtils.INSTRUMENTS[instIndex];
 		this.realSemitone = realSemitone;
 	}
 	

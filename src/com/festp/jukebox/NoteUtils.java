@@ -4,9 +4,55 @@ import java.util.HashMap;
 
 import org.bukkit.Instrument;
 import org.bukkit.Note;
+import org.bukkit.Sound;
 import org.bukkit.Note.Tone;
 
 public class NoteUtils {
+	public static final int OCTAVE = 12;
+	public static final int STANDART_OCTAVE_OFFSET = 3;
+	public static final int STANDART_SEMITONE_OFFSET = 6 + STANDART_OCTAVE_OFFSET * OCTAVE;
+	/** index is instrument id => order is fixed! <br>
+	 * standart range is F#3->F#5 (according to https://minecraft.gamepedia.com/Note_Block#Playing_music) <br>
+	 * octaves starting from C0, that is 0x00 in record data<br>
+	 * NoteInstrument.semitoneShift = semitone of the instrument sounds like C0<br>*/
+	public static final NoteInstrument[] INSTRUMENTS = new NoteInstrument[] {
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_HARP, Instrument.PIANO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BASS, Instrument.BASS_GUITAR, +2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BASEDRUM, Instrument.BASS_DRUM),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_SNARE, Instrument.SNARE_DRUM),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_HAT, Instrument.STICKS), // "CLICK" in OpenNBS
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_GUITAR, Instrument.GUITAR, +1),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_FLUTE, Instrument.FLUTE, -1),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BELL, Instrument.BELL, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_CHIME, Instrument.CHIME, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_XYLOPHONE, Instrument.XYLOPHONE, -2),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_IRON_XYLOPHONE, Instrument.IRON_XYLOPHONE),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_COW_BELL, Instrument.COW_BELL),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_DIDGERIDOO, Instrument.DIDGERIDOO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BIT, Instrument.BIT),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_BANJO, Instrument.BANJO),
+		new NoteInstrument(Sound.BLOCK_NOTE_BLOCK_PLING, Instrument.PLING),
+	};
+
+	public static class NoteInstrument {
+		public final Sound sound;
+		public final int octaveShift;
+		public final int semitoneShift;
+		public final int fullSemitoneShift;
+		public final Instrument spigot;
+		
+		public NoteInstrument(Sound sound, Instrument inst, int octaveShift) {
+			this.sound = sound;
+			this.octaveShift = octaveShift;
+			this.semitoneShift = octaveShift * OCTAVE;
+			this.fullSemitoneShift = this.semitoneShift - STANDART_SEMITONE_OFFSET;
+			this.spigot = inst;
+		}
+		public NoteInstrument(Sound sound, Instrument inst) {
+			this(sound, inst, 0);
+		}
+	}
+	
 	public static final double SOUND_DISTANCE = 48;
 	private static HashMap<String, Integer> INSTRUMENT_NAMES = null;
 	
@@ -21,7 +67,7 @@ public class NoteUtils {
 	 * Also supports clicks count: "0" (="F#3") -> 42 (= 6+3*12)*/
 	public static int getSemitone(String note) {
 		if (isUnsignedInteger(note)) {
-			return Integer.parseInt(note) + NoteDiscRecord.STANDART_SEMITONE_OFFSET;
+			return Integer.parseInt(note) + STANDART_SEMITONE_OFFSET;
 		}
 		int octaves;
 		try {
@@ -56,14 +102,14 @@ public class NoteUtils {
 		} else if (note.equals("B") || note.equals("H")) {
 			semitone = 11;
 		}
-		return semitone + octaves * NoteDiscRecord.OCTAVE;
+		return semitone + octaves * OCTAVE;
 	}
 
 	public static int getSemitone(Note spigotNote) {
-		int semitone = NoteDiscRecord.OCTAVE * (spigotNote.getOctave() + NoteDiscRecord.STANDART_OCTAVE_OFFSET);
+		int semitone = OCTAVE * (spigotNote.getOctave() + STANDART_OCTAVE_OFFSET);
 		Tone tone = spigotNote.getTone();
 		if (tone == Tone.C || tone == Tone.D || tone == Tone.E || tone == Tone.F && !spigotNote.isSharped())
-			semitone += NoteDiscRecord.OCTAVE;
+			semitone += OCTAVE;
 		switch (tone) {
 		case C: semitone += 0; break;
 		case D: semitone += 2; break;
@@ -77,7 +123,7 @@ public class NoteUtils {
 	}
 
 	public static String getNote(int semitone) {
-		int octaves = semitone / NoteDiscRecord.OCTAVE; // move to NoteUtils
+		int octaves = semitone / OCTAVE;
 		semitone = semitone % 12;
 		String note;
 		switch (semitone) {
@@ -135,9 +181,9 @@ public class NoteUtils {
 			INSTRUMENT_NAMES = new HashMap<>();
 			for (int i = 0; i < allInstruments.length; i++) {
 				Instrument inst = allInstruments[i];
-				for (int j = 0; j < NoteDiscRecord.INSTRUMENTS.length; j++) {
-					if (NoteDiscRecord.INSTRUMENTS[j].spigot == inst) {
-						String vanillaName = NoteDiscRecord.INSTRUMENTS[j].sound.toString().substring("BLOCK_NOTE_BLOCK_".length());
+				for (int j = 0; j < INSTRUMENTS.length; j++) {
+					if (INSTRUMENTS[j].spigot == inst) {
+						String vanillaName = INSTRUMENTS[j].sound.toString().substring("BLOCK_NOTE_BLOCK_".length());
 						vanillaName = vanillaName.replace("_", "").toLowerCase();
 						nbsNames[i] = nbsNames[i].replace(" ", "").toLowerCase();
 						rusNames[i] = rusNames[i].replace(" ", "").toLowerCase();

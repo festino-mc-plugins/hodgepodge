@@ -79,14 +79,14 @@ public class RecordingBook {
 	public void appendToTick(int instIndex, int nbsSemitone) {
 		String noteStr = "";
 		if (settings instanceof NBSSettings) {
-			int semitone = NoteUtils.getSemitone(noteStr) - NoteDiscRecord.STANDART_SEMITONE_OFFSET;
+			int semitone = NoteUtils.getSemitone(noteStr) - NoteUtils.STANDART_SEMITONE_OFFSET;
 			if (0 <= nbsSemitone && nbsSemitone <= 24) {
 				noteStr = "" + semitone;
 			} else {
 				noteStr = NoteUtils.getNote(nbsSemitone);
 			}
 		} else {
-			noteStr = NoteUtils.getNote(nbsSemitone - NoteDiscRecord.INSTRUMENTS[instIndex].semitoneShift);
+			noteStr = NoteUtils.getNote(nbsSemitone - NoteUtils.INSTRUMENTS[instIndex].semitoneShift);
 		}
 		
 		if (instIndex != defaultInst) {

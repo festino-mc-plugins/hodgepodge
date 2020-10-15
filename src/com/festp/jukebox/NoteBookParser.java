@@ -146,7 +146,7 @@ public class NoteBookParser {
 	
 	public static ParseResult parseHeader(String bookFormat) {
 		HashMap<String, Integer> instruments = new HashMap<>(); // alias : id
-		for (int i = 1; i <= NoteDiscRecord.INSTRUMENTS.length; i++) {
+		for (int i = 1; i <= NoteUtils.INSTRUMENTS.length; i++) {
 			instruments.put(Integer.toString(i), i - 1);
 		}
 

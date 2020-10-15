@@ -47,7 +47,7 @@ public abstract class FormatSettings {
 
 		@Override
 		public int getPitchShift(int id) {
-			return - NoteDiscRecord.INSTRUMENTS[id].octaveShift * NoteDiscRecord.OCTAVE;
+			return - NoteUtils.INSTRUMENTS[id].octaveShift * NoteUtils.OCTAVE;
 		}
 	}
 	
