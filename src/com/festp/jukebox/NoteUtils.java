@@ -67,14 +67,18 @@ public class NoteUtils {
 	 * Also supports clicks count: "0" (="F#3") -> 42 (= 6+3*12)*/
 	public static int getSemitone(String note) {
 		if (isUnsignedInteger(note)) {
-			return Integer.parseInt(note) + STANDART_SEMITONE_OFFSET;
+			int res = Integer.parseInt(note);
+			if (res > 127) {
+				return -1;
+			}
+			return res + STANDART_SEMITONE_OFFSET;
 		}
 		int octaves;
 		try {
 			octaves = Integer.parseInt(note.substring(note.length() - 1));
 			note = note.substring(0, note.length() - 1);
 		} catch (Exception e) {
-			octaves = 3;
+			return -1;
 		}
 		int semitone = 0;
 		if (note.equals("C")) {
@@ -101,6 +105,8 @@ public class NoteUtils {
 			semitone = 10;
 		} else if (note.equals("B") || note.equals("H")) {
 			semitone = 11;
+		} else {
+			return -1;
 		}
 		return semitone + octaves * OCTAVE;
 	}
