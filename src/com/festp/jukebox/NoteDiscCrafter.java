@@ -1,7 +1,9 @@
 package com.festp.jukebox;
 
 import java.util.Arrays;
+import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -10,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -19,10 +22,59 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.festp.CraftManager;
 import com.festp.DelayedTask;
 import com.festp.Main;
+import com.festp.Pair;
 import com.festp.TaskList;
 import com.festp.utils.Utils;
 
 public class NoteDiscCrafter implements Listener {
+	private static final int OFFSET = 5;
+	private static final int MAX_ERROR_LEN = 20;
+	
+	@EventHandler
+	public void onDiscPreCraft(PrepareItemCraftEvent event) {
+		boolean isNoteCraft = true; // TODO avoid code copy
+		int coalCount = 0;
+		ItemStack book = null;
+		int bookIndex = -1;
+		for (int i = 0; i < event.getInventory().getMatrix().length; i++) {
+			ItemStack ingredient = event.getInventory().getMatrix()[i];
+			if (ingredient == null)
+				continue;
+			if (ingredient.getType() == Material.COAL_BLOCK) {
+				coalCount++;
+			} else if (ingredient.getType() == Material.WRITABLE_BOOK || ingredient.getType() == Material.WRITTEN_BOOK) {
+				if (book != null) {
+					isNoteCraft = false;
+				} else {
+					book = ingredient;
+					bookIndex = i;
+				}
+			}
+		}
+		ItemStack resultDisc = event.getInventory().getResult();
+		if (isNoteCraft && book != null && coalCount == 6 && resultDisc != null && resultDisc.getType().isRecord()) {
+			BookMeta bookMeta = (BookMeta) book.getItemMeta();
+			if (bookMeta.hasTitle()) {
+				ItemMeta meta = resultDisc.getItemMeta();
+				meta.setLore(Arrays.asList(bookMeta.getTitle()));
+				resultDisc.setItemMeta(meta);
+			}
+			
+			byte[] data = null;
+			try {
+				data = NoteBookParser.genDiscData(book); // heavy
+			} catch (NoteFormatException e) {
+				resultDisc = genErrorDisc(e);
+			} catch (Exception e) {
+				e.printStackTrace();
+				resultDisc = genErrorDisc("UNEXPECTED ERROR, CALL FEST");
+			}
+			if (data == null) {
+				event.getInventory().setResult(resultDisc);
+			}
+		}
+	}
+	
 	@EventHandler
 	public void onDiscCraft(CraftItemEvent event) {
 		if (event.isCancelled()) {
@@ -59,11 +111,15 @@ public class NoteDiscCrafter implements Listener {
 			byte[] data = null;
 			try {
 				data = NoteBookParser.genDiscData(book);
+			} catch (NoteFormatException e) {
+				resultDisc = genErrorDisc(e);
 			} catch (Exception e) {
 				e.printStackTrace();
+				resultDisc = genErrorDisc("UNEXPECTED ERROR, CALL FEST");
 			}
 			if (data == null) {
-				event.getInventory().setResult(null);
+				//event.getInventory().setResult(null);
+				event.getInventory().setResult(resultDisc);
 				event.setCancelled(true);
 				return;
 			}
@@ -93,6 +149,76 @@ public class NoteDiscCrafter implements Listener {
 		}
 	}
 	
+	private static ItemStack genErrorDisc(NoteFormatException ex) {
+		ItemStack disc = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+		ItemMeta meta = disc.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Error");
+		List<String> pages = ex.getPages();
+		Pair<Integer, Integer> begin = ex.getBegin();
+		Pair<Integer, Integer> end = ex.getEnd();
+		String page1 = pages.get(begin.first);
+		String page2 = pages.get(end.first);
+		String pageMsg;
+		if (begin.first == end.first) {
+			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "page " + begin.first;
+			String chars1 = "(" + begin.second + " -> " + end.second + " (/" + page2.length() + "))";
+			pageMsg = pageNum1 + chars1;
+		} else {
+			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "from page " + begin.first;
+			String chars1 = "(" + begin.second + "/" + page1.length() + ")";
+			String pageNum2 = " -> page " + end.first;
+			String chars2 = "(" + end.second + "/" + page2.length() + ")";
+			pageMsg = pageNum1 + chars1 + pageNum2 + chars2;
+		}
+		String where;
+		if (begin.second < OFFSET) {
+			where = ChatColor.BLACK + "|" + ChatColor.DARK_RED + page1.substring(0, begin.second);
+		} else {
+			where = ChatColor.DARK_RED + page1.substring(begin.second - OFFSET, begin.second);
+		}
+		int lenCap = MAX_ERROR_LEN;
+		int page = begin.first;
+		int startChar = begin.second;
+		while (lenCap > 0) {
+			if (page < end.first) {
+				int len = page1.length() - startChar;
+				if (len < lenCap) {
+					where += ChatColor.RED + page1.substring(startChar, startChar + len) + ChatColor.BLACK + "|";
+					page++;
+					page1 = pages.get(page);
+				} else {
+					where += ChatColor.RED + page1.substring(startChar, startChar + lenCap);
+				}
+				lenCap -= len;
+				startChar = 0;
+			} else {
+				int len = Math.min(lenCap, end.second - startChar);
+				where += ChatColor.RED + page1.substring(startChar, startChar + len);
+				startChar += len;
+				break;
+			}
+		}
+		if (lenCap < 0) {
+			where += "...";
+		}
+		where += ChatColor.DARK_RED + page1.substring(startChar, Math.min(page1.length(), startChar + OFFSET));
+		if (page1.length() - startChar <= OFFSET) {
+			where += ChatColor.BLACK + "|";
+		}
+		meta.setLore(Arrays.asList(pageMsg, where.replace('\n', '_').replace(' ', '_')));
+		disc.setItemMeta(meta);
+		return disc;
+	}
+	
+	private static ItemStack genErrorDisc(String loreMsg) {
+		ItemStack disc = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
+		ItemMeta meta = disc.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Error");
+		meta.setLore(Arrays.asList(ChatColor.ITALIC + "" + ChatColor.DARK_RED + loreMsg));
+		disc.setItemMeta(meta);
+		return disc;
+	}
+
 	public static void addCrafts(Main plugin) {
     	CraftManager cm = plugin.getCraftManager();
     	Server server = plugin.getServer();

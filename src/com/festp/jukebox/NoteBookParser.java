@@ -9,6 +9,7 @@ import java.util.List;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
+import com.festp.Pair;
 import com.festp.utils.UtilsType;
 
 public class NoteBookParser {
@@ -16,22 +17,68 @@ public class NoteBookParser {
 	public static final int MAX_TICKRATE = 20;
 	public static final int DEFAULT_TICKRATE = 10;
 	
-	// format => disc
-	/**item.getItemMeta() is heavy*/
-	public static byte[] genDiscData(ItemStack item) {
+	private static class StringListWrapper {
+		private List<String> list;
+		private String currentPage;
+		private int n = 0;
+		private int index = -1;
+		public StringListWrapper(List<String> list, int startPage, int startChar) {
+			this.list = list;
+			this.n = startPage;
+			this.index = startChar - 1;
+			if (0 <= n && n < list.size()) {
+				currentPage = list.get(n);
+			}
+		}
+		public int getNext() {
+			if (n >= list.size()) {
+				return -1;
+			}
+			do {
+				index++;
+				if (index >= currentPage.length()) {
+					index -= currentPage.length();
+					n++;
+					while (n < list.size() && list.get(n).isEmpty()) {
+						n++;
+					}
+					if (n >= list.size()) {
+						return -1;
+					}
+					currentPage = list.get(n);
+				}
+			} while (index < currentPage.length() && isSpace(currentPage.charAt(index)));
+			return currentPage.charAt(index);
+		}
+		
+		public Pair<Integer, Integer> getPageAndIndex() {
+			return new Pair<Integer, Integer>(getPage(), getIndex());
+		}
+		
+		public int getPage() {
+			if (n >= list.size() && list.size() > 0) {
+				return list.size() - 1;
+			}
+			return n;
+		}
+		
+		public int getIndex() {
+			if (n >= list.size() && list.size() > 0) {
+				return list.get(n - 1).length();
+			}
+			return index;
+		}
+	}
+	
+	/**item.getItemMeta() is heavy
+	 * @throws NoteFormatException 
+	 * @throws IOException */
+	public static byte[] genDiscData(ItemStack item) throws NoteFormatException, IOException {
 		if (item == null || !UtilsType.isBook(item.getType())) {
 			return null;
 		}
 		BookMeta meta = (BookMeta) item.getItemMeta();
 		return toDiscData(meta.getPages());
-	}
-	
-	public static byte[] toDiscData(List<String> bookPages) {
-		String str = "";
-		for (String page : bookPages) {
-			str += page + " ";
-		}
-		return toDiscData(str);
 	}
 	
 	/**<b>Format description</b><br>
@@ -45,77 +92,122 @@ public class NoteBookParser {
 	 * &nbsp;&nbsp; <i>inst id</i> by default from 1 to 16 (according to OpenNBS)<br>
 	 * &nbsp;&nbsp; <i>note</i> from "C0" to "B8" or from 0 to 24<br>
 	 * <br><b>Example:</b> 1-F3 & 2-C2,.,1-F#3,...,1-F3 & 3-C#4,.,1-C4
+	 * @throws NoteFormatException
+	 * @throws IOException
 	 * */
-	public static byte[] toDiscData(String bookFormat) {
-		ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
-		
-		bookFormat = bookFormat.replace(" ", "");
-
-		ParseResult res = parseHeader(bookFormat);
+	public static byte[] toDiscData(List<String> bookPages) throws NoteFormatException, IOException {
+		if (bookPages.size() == 0) {
+			return null;
+		}
+		ParseResult res = parseHeader(bookPages.get(0)); // TODO process multiple pages
 		FormatSettings settings = res.settings;
 		final boolean hasDefault = res.defaultInst >= 0;
 		final int defaultInst = res.defaultInst;
-		HashMap<String, Integer> instruments = res.aliases;
-		bookFormat = bookFormat.substring(res.endIndex); // heavy?
+		final HashMap<String, Integer> instruments = res.aliases;
+		
+		ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+		int zeroGap = settings.getGapLength(0);
 
-		bookFormat = bookFormat.replace("\n", ",");
-		try {
-			int zeroGap = settings.getGapLength(0);
-			String[] ticks = bookFormat.split(",");
-			for (String part : ticks) {
-				if (part.matches("[.]+") || part.isEmpty()) {
-					int length = part.length();
-					if (part.isEmpty()) {
-						length = 1;
+		StringListWrapper charrer = new StringListWrapper(bookPages, 0, res.endIndex);
+		while (true) {
+			int c = charrer.getNext();
+			if (c < 0) {
+				break;
+			}
+			if (isSeparator((char) c)) {
+				int gapLength = settings.getGapLength(1) - zeroGap;
+				if (gapLength > 0) {
+					dataStream.write(getGap(gapLength));
+				}
+			} else if (c == '.') {
+				Pair<Integer, Integer> begin = charrer.getPageAndIndex();
+				int dotCount = 1;
+				int errorCount = 0;
+				c = charrer.getNext();
+				while (c >= 0) {
+					if (c == '.') {
+						if (errorCount > 0) {
+							errorCount++;
+						}
+						dotCount++;
+					} else if (isSeparator((char) c)) {
+						break;
+					} else {
+						errorCount++;
 					}
-					int gapLength = settings.getGapLength(length) - zeroGap;
+					c = charrer.getNext();
+				}
+				if (errorCount > 0) {
+					Pair<Integer, Integer> end = charrer.getPageAndIndex();
+					throw new NoteFormatException(bookPages, begin, end);
+				}
+				if (c >= 0) {
+					int gapLength = settings.getGapLength(dotCount) - zeroGap;
 					if (gapLength > 0) {
 						dataStream.write(getGap(gapLength));
 					}
-				} else {
-					String[] sounds = part.split("&");
-					int continueMask = 0x40;
-					for (int i = 0; i < sounds.length; i++) {
-						if (i == sounds.length - 1) {
+				}
+			} else {
+				int sepCount = 0;
+				int inst = 0;
+				int pitch = 0;
+				String buf = "";
+				// controls errors from buf
+				Pair<Integer, Integer> begin = charrer.getPageAndIndex();
+				while (true) {
+					if (c < 0 || isSeparator((char) c) || c == '&') {
+						if (sepCount == 0) {
+							if (!hasDefault) {
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+							}
+							inst = defaultInst;
+							sepCount++;
+						}
+						if (sepCount == 1) {
+							pitch = NoteUtils.getSemitone(buf) + settings.getPitchShift(inst);
+							if (pitch < 0) {
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+							}
+							buf = "";
+							begin = charrer.getPageAndIndex();
+						}
+						sepCount = 0;
+						int continueMask;
+						if (c == '&') {
+							continueMask = 0x40;
+						} else {
 							continueMask = 0x00;
 						}
-						String idStr;
-						String note;
-						String sound[] = sounds[i].split("-");
-						if (sound.length == 1) {
-							idStr = "";
-							note = sound[0];
-						} else if (sound.length == 2) {
-							idStr = sound[0];
-							note = sound[1];
-						} else {
-							return null;
-						}
-						
-						int id;
-						if (instruments.containsKey(idStr)) {
-							id = instruments.get(idStr);
-						} else if (hasDefault) {
-							id = defaultInst;
-						} else {
-							return null;
-						}
-						int pitch = NoteUtils.getSemitone(note) + settings.getPitchShift(id);
-						if (pitch < 0) {
-							pitch = 0;
-						}
-						dataStream.write(continueMask | id);
+						dataStream.write(continueMask | inst);
 						dataStream.write(pitch);
+						if (c != '&') {
+							break;
+						}
+					} else if (c == '-') {
+						if (sepCount == 0) {
+							if (!instruments.containsKey(buf)) {
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+							} 
+							inst = instruments.get(buf);
+						}
+						sepCount++;
+						buf = "";
+						begin = charrer.getPageAndIndex();
+						if (sepCount >= 2) {
+							c = charrer.getNext();
+							throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+						}
+					} else {
+						buf += (char) c;
 					}
-					if (zeroGap > 0) {
-						dataStream.write(getGap(zeroGap));
-					}
+					c = charrer.getNext();
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
+			if (zeroGap > 0) {
+				dataStream.write(getGap(zeroGap));
+			}
 		}
+		
 		return dataStream.toByteArray();
 	}
 	
@@ -156,7 +248,7 @@ public class NoteBookParser {
 		int i = 0;
 		while (i < bookFormat.length() && i < 30 && !isSeparator(bookFormat.charAt(i))) {
 			char c = bookFormat.charAt(i);
-			if (c == '=') {
+			if (c == '=' || c == '-') {
 				formatSettingsStr = "";
 				i = -1;
 				break;
@@ -187,6 +279,8 @@ public class NoteBookParser {
 				if (equalityCount == 1) {
 					String left = bookFormat.substring(aliasBegin, equalityIndex);
 					String right = bookFormat.substring(equalityIndex + 1, i);
+					left = left.toLowerCase().replace(" ", "");
+					right = right.toLowerCase().replace(" ", "");
 					if (left.equalsIgnoreCase("default")) {
 						defaultInstStr = right;
 					} else if (right.equalsIgnoreCase("default")) {
