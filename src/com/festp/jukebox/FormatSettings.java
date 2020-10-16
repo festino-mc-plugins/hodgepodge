@@ -21,7 +21,7 @@ public abstract class FormatSettings {
 		this.multiplier = multiplier;
 	}
 	
-	public abstract int getPitchShift(int id);
+	public abstract int getPitchShift(int instId);
 	
 	public int getGapLength(int pauseLength) {
 		if (tickrate != NoteBookParser.MAX_TICKRATE) {
@@ -46,8 +46,8 @@ public abstract class FormatSettings {
 		}
 
 		@Override
-		public int getPitchShift(int id) {
-			return - NoteUtils.INSTRUMENTS[id].octaveShift * NoteUtils.OCTAVE;
+		public int getPitchShift(int instId) {
+			return - NoteUtils.INSTRUMENTS[instId].octaveShift * NoteUtils.OCTAVE;
 		}
 	}
 	
@@ -57,7 +57,7 @@ public abstract class FormatSettings {
 		}
 
 		@Override
-		public int getPitchShift(int id) {
+		public int getPitchShift(int instId) {
 			return 0;
 		}
 	}
