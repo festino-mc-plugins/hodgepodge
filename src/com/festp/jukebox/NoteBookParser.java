@@ -150,51 +150,82 @@ public class NoteBookParser {
 			instruments.put(Integer.toString(i), i - 1);
 		}
 
-		FormatSettings settings = new FormatSettings.NBSSettings(DEFAULT_TICKRATE); 
+		FormatSettings settings = new FormatSettings.NBSSettings(DEFAULT_TICKRATE);
 		
-		int aliasesEnd = getFirstSep(bookFormat, '=');
-		if (aliasesEnd < 0) {
-			// "-" had not to be in aliases
-			aliasesEnd = getLastSep(bookFormat, '-');
-		}
-		int defaultInst = -1;
-		if (aliasesEnd >= 0) {
-			String aliasesStr = bookFormat.substring(0, aliasesEnd);
-			aliasesStr = aliasesStr.replace(',', '\n');
-			
-			int formatSettingsEnd = aliasesStr.indexOf("\n");
-			String formatSettingsStr;
-			if (formatSettingsEnd < 0) {
-				formatSettingsStr = aliasesStr;
-				formatSettingsEnd = formatSettingsStr.length();
-			} else {
-				formatSettingsStr = aliasesStr.substring(0, formatSettingsEnd);
+		String formatSettingsStr = "";
+		int i = 0;
+		while (i < bookFormat.length() && i < 30 && !isSeparator(bookFormat.charAt(i))) {
+			char c = bookFormat.charAt(i);
+			if (c == '=') {
+				formatSettingsStr = "";
+				i = -1;
+				break;
 			}
-			if (!formatSettingsStr.contains("=")) {
-				aliasesStr = aliasesStr.substring(formatSettingsEnd);
-				FormatSettings settingsRes = getFormatSetting(formatSettingsStr);
-				if (settingsRes != null) {
-					settings = settingsRes;
+			if (!isSpace(c)) {
+				formatSettingsStr += c;
+			}
+			i++;
+		}
+		i++;
+		FormatSettings settingsRes = getFormatSetting(formatSettingsStr);
+		if (settingsRes != null) {
+			settings = settingsRes;
+		}
+		
+		int defaultInst = -1;
+
+		String defaultInstStr = "";
+		int aliasBegin = i;
+		int equalityCount = 0;
+		int equalityIndex = 0;
+		while (true) {
+			if (i >= bookFormat.length() || isSeparator(bookFormat.charAt(i))) {
+				if (equalityCount == 0) {
+					i = aliasBegin;
+					break;
+				}
+				if (equalityCount == 1) {
+					String left = bookFormat.substring(aliasBegin, equalityIndex);
+					String right = bookFormat.substring(equalityIndex + 1, i);
+					if (left.equalsIgnoreCase("default")) {
+						defaultInstStr = right;
+					} else if (right.equalsIgnoreCase("default")) {
+						defaultInstStr = left;
+					} else {
+						if (!tryPut(left, right, instruments)) {
+							tryPut(right, left, instruments);
+						}
+					}
+				}
+				i++;
+				aliasBegin = i;
+				equalityCount = 0;
+				if (i >= bookFormat.length()) {
+					i = bookFormat.length();
+					break;
 				}
 			}
-			defaultInst = getAliases(aliasesStr, instruments);
-		} else {
-			String formatSettingsStr = bookFormat.substring(0, Math.min(50, bookFormat.length()));
-			formatSettingsStr = formatSettingsStr.replace(',', '\n');
-			int formatSettingsEnd = formatSettingsStr.indexOf("\n");
-			if (formatSettingsEnd < 0) {
-				formatSettingsEnd = formatSettingsStr.length();
+			char c = bookFormat.charAt(i);
+			if (c == '=') {
+				if (equalityCount == 0) {
+					equalityIndex = i;
+				}
+				equalityCount++;
 			}
-			formatSettingsStr = formatSettingsStr.substring(0, formatSettingsEnd);
-			FormatSettings settingsRes = getFormatSetting(formatSettingsStr);
-			if (settingsRes != null) {
-				settings = settingsRes;
-				aliasesEnd = formatSettingsStr.length();
-			} else {
-				aliasesEnd = 0;
-			}
+
+			i++;
 		}
-		return new ParseResult(settings, instruments, defaultInst, aliasesEnd);
+		defaultInst = getInstrument(defaultInstStr, instruments);
+		
+		return new ParseResult(settings, instruments, defaultInst, i);
+	}
+	
+	public static boolean isSeparator(char c) {
+		return c == '\n' || c == ',';
+	}
+	
+	public static boolean isSpace(char c) {
+		return c == ' ' || c == '_';
 	}
 	
 	public static FormatSettings getFormatSetting(String formatSettingsStr) {
@@ -231,30 +262,6 @@ public class NoteBookParser {
 		}
 	}
 	
-	/**@return default instrument or negative value*/
-	private static int getAliases(String aliasesStr, HashMap<String, Integer> instruments) {
-		aliasesStr = aliasesStr.replace("_", "").replace(",", "\n").toLowerCase();
-		String defaultInst = "";
-		for (String aliasStr : aliasesStr.split("\n")) {
-			String[] parts = aliasStr.split("=");
-			if (parts.length != 2) {
-				continue;
-			}
-			String left = parts[0];
-			String right = parts[1];
-			if (left.equalsIgnoreCase("default")) {
-				defaultInst = right;
-			} else if (right.equalsIgnoreCase("default")) {
-				defaultInst = left;
-			} else {
-				if (!tryPut(left, right, instruments)) {
-					tryPut(right, left, instruments);
-				}
-			}
-		}
-		return getInstrument(defaultInst, instruments);
-	}
-	
 	private static boolean tryPut(String instrument, String alias, HashMap<String, Integer> instruments) {
 		int inst = getInstrument(instrument);
 		if (inst < 0 || instruments.containsKey(alias)) {
@@ -277,30 +284,5 @@ public class NoteBookParser {
 			return aliases.get(name);
 		}
 		return getInstrument(name);
-	}
-	
-	private static int getLastSep(String s, char beforeFirst) {
-		int index = s.indexOf(beforeFirst);
-		if (index < 0) {
-			return -1;
-		}
-		s = s.substring(0, index);
-		return Math.max(s.lastIndexOf(','), s.lastIndexOf('\n'));
-	}
-	
-	private static int getFirstSep(String s, char afterLast) {
-		int index = s.lastIndexOf(afterLast);
-		if (index < 0) {
-			return -1;
-		}
-		index++;
-		int index1 = s.indexOf(',', index);
-		int index2 = s.indexOf('\n', index);
-		if (index1 < 0) {
-			return index2;
-		} else if (index2 < 0) {
-			return index1;
-		}
-		return Math.min(index1, index2);
 	}
 }
