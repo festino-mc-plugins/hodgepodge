@@ -10,6 +10,14 @@ public class NoteFormatException extends Exception {
 	private final Pair<Integer, Integer> from, to;
 	
 	public NoteFormatException(List<String> pages, Pair<Integer, Integer> from, Pair<Integer, Integer> to) {
+		super("Reason is unknown");
+		this.pages = pages;
+		this.from = from;
+		this.to = to;
+	}
+	
+	public NoteFormatException(List<String> pages, Pair<Integer, Integer> from, Pair<Integer, Integer> to, String reason) {
+		super(reason);
 		this.pages = pages;
 		this.from = from;
 		this.to = to;

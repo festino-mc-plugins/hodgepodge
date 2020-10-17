@@ -31,6 +31,11 @@ public abstract class FormatSettings {
 		return pauseLength;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "{" + tickrate + " tps -> " + multiplier + "}";
+	}
+	
 	public static FormatSettings getSettings(String name, int tickrate) {
 		if (name.contains("real")) {
 			return new RealSettings(tickrate);

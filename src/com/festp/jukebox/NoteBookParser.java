@@ -139,7 +139,7 @@ public class NoteBookParser {
 				}
 				if (errorCount > 0) {
 					Pair<Integer, Integer> end = charrer.getPageAndIndex();
-					throw new NoteFormatException(bookPages, begin, end);
+					throw new NoteFormatException(bookPages, begin, end, "Dot line is corrupted");
 				}
 				if (c >= 0) {
 					int gapLength = settings.getGapLength(dotCount) - zeroGap;
@@ -158,15 +158,17 @@ public class NoteBookParser {
 					if (c < 0 || isSeparator((char) c) || c == '&') {
 						if (sepCount == 0) {
 							if (!hasDefault) {
-								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex(), "default=?");
 							}
 							inst = defaultInst;
 							sepCount++;
 						}
 						if (sepCount == 1) {
 							pitch = NoteUtils.getSemitone(buf) + settings.getPitchShift(inst);
-							if (pitch < 0) {
-								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+							if (pitch < -NoteUtils.OCTAVE * 2) {
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex(), "Too low-frequency note");
+							} else if (pitch >= NoteUtils.OCTAVE * 9) {
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex(), "Too high-frequency note");
 							}
 							buf = "";
 							begin = charrer.getPageAndIndex();
@@ -186,7 +188,7 @@ public class NoteBookParser {
 					} else if (c == '-') {
 						if (sepCount == 0) {
 							if (!instruments.containsKey(buf)) {
-								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+								throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex(), "Invalid instrument");
 							} 
 							inst = instruments.get(buf);
 						}
@@ -195,16 +197,16 @@ public class NoteBookParser {
 						begin = charrer.getPageAndIndex();
 						if (sepCount >= 2) {
 							c = charrer.getNext();
-							throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex());
+							throw new NoteFormatException(bookPages, begin, charrer.getPageAndIndex(), "Extra \"-\"");
 						}
 					} else {
 						buf += (char) c;
 					}
 					c = charrer.getNext();
 				}
-			}
-			if (zeroGap > 0) {
-				dataStream.write(getGap(zeroGap));
+				if (zeroGap > 0) {
+					dataStream.write(getGap(zeroGap));
+				}
 			}
 		}
 		

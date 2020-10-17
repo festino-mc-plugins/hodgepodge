@@ -64,10 +64,10 @@ public class NoteDiscCrafter implements Listener {
 			try {
 				data = NoteBookParser.genDiscData(book); // heavy
 			} catch (NoteFormatException e) {
-				resultDisc = genErrorDisc(e);
+				resultDisc = genErrorDisc(e, "");
 			} catch (Exception e) {
 				e.printStackTrace();
-				resultDisc = genErrorDisc("UNEXPECTED ERROR, CALL FEST");
+				resultDisc = genErrorDisc(null, "UNEXPECTED ERROR, CALL FEST");
 			}
 			if (data == null) {
 				event.getInventory().setResult(resultDisc);
@@ -112,10 +112,10 @@ public class NoteDiscCrafter implements Listener {
 			try {
 				data = NoteBookParser.genDiscData(book);
 			} catch (NoteFormatException e) {
-				resultDisc = genErrorDisc(e);
+				resultDisc = genErrorDisc(e, "");
 			} catch (Exception e) {
 				e.printStackTrace();
-				resultDisc = genErrorDisc("UNEXPECTED ERROR, CALL FEST");
+				resultDisc = genErrorDisc(null, "UNEXPECTED ERROR, CALL FEST");
 			}
 			if (data == null) {
 				//event.getInventory().setResult(null);
@@ -149,10 +149,22 @@ public class NoteDiscCrafter implements Listener {
 		}
 	}
 	
-	private static ItemStack genErrorDisc(NoteFormatException ex) {
+	private static ItemStack genErrorDisc(NoteFormatException ex, String loreMsg) {
 		ItemStack disc = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
 		ItemMeta meta = disc.getItemMeta();
 		meta.setDisplayName(ChatColor.RED + "Error");
+		List<String> lore;
+		if (ex == null) {
+			lore = Arrays.asList(ChatColor.ITALIC + "" + ChatColor.DARK_RED + loreMsg);
+		} else {
+			lore = genErrorMessage(ex, loreMsg);
+		}
+		meta.setLore(lore);
+		disc.setItemMeta(meta);
+		return disc;
+	}
+	
+	private static List<String> genErrorMessage(NoteFormatException ex, String loreMsg) {
 		List<String> pages = ex.getPages();
 		Pair<Integer, Integer> begin = ex.getBegin();
 		Pair<Integer, Integer> end = ex.getEnd();
@@ -160,13 +172,13 @@ public class NoteDiscCrafter implements Listener {
 		String page2 = pages.get(end.first);
 		String pageMsg;
 		if (begin.first == end.first) {
-			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "page " + begin.first;
+			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "page " + (begin.first + 1);
 			String chars1 = "(" + begin.second + " -> " + end.second + " (/" + page2.length() + "))";
 			pageMsg = pageNum1 + chars1;
 		} else {
-			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "from page " + begin.first;
+			String pageNum1 = ChatColor.ITALIC + "" + ChatColor.DARK_RED + "page " + (begin.first + 1);
 			String chars1 = "(" + begin.second + "/" + page1.length() + ")";
-			String pageNum2 = " -> page " + end.first;
+			String pageNum2 = " -> page " + (end.first + 1);
 			String chars2 = "(" + end.second + "/" + page2.length() + ")";
 			pageMsg = pageNum1 + chars1 + pageNum2 + chars2;
 		}
@@ -205,18 +217,14 @@ public class NoteDiscCrafter implements Listener {
 		if (page1.length() - startChar <= OFFSET) {
 			where += ChatColor.BLACK + "|";
 		}
-		meta.setLore(Arrays.asList(pageMsg, where.replace('\n', '_').replace(' ', '_')));
-		disc.setItemMeta(meta);
-		return disc;
-	}
-	
-	private static ItemStack genErrorDisc(String loreMsg) {
-		ItemStack disc = new ItemStack(Material.MUSIC_DISC_PIGSTEP);
-		ItemMeta meta = disc.getItemMeta();
-		meta.setDisplayName(ChatColor.RED + "Error");
-		meta.setLore(Arrays.asList(ChatColor.ITALIC + "" + ChatColor.DARK_RED + loreMsg));
-		disc.setItemMeta(meta);
-		return disc;
+		
+		where = where.replace('\n', '_').replace(' ', '_');
+		String reason = ChatColor.ITALIC + "" + ChatColor.DARK_RED + ex.getMessage();
+		if (loreMsg.isEmpty()) {
+			return Arrays.asList(pageMsg, where, reason);
+		}
+		loreMsg = ChatColor.ITALIC + "" + ChatColor.DARK_RED + loreMsg;
+		return Arrays.asList(pageMsg, where, reason, loreMsg);
 	}
 
 	public static void addCrafts(Main plugin) {
