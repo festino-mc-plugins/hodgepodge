@@ -8,6 +8,8 @@ import org.bukkit.Sound;
 import org.bukkit.Note.Tone;
 
 public class NoteUtils {
+	public static final String SPIGOT_NAME_BEGIN = "BLOCK_NOTE_BLOCK_";
+	public static final String VANILLA_NAME_BEGIN = "block.note_block.";
 	public static final int OCTAVE = 12;
 	public static final int STANDART_OCTAVE_OFFSET = 3;
 	public static final int STANDART_SEMITONE_OFFSET = 6 + STANDART_OCTAVE_OFFSET * OCTAVE;
@@ -187,7 +189,7 @@ public class NoteUtils {
 				Instrument inst = allInstruments[i];
 				for (int j = 0; j < INSTRUMENTS.length; j++) {
 					if (INSTRUMENTS[j].spigot == inst) {
-						String vanillaName = INSTRUMENTS[j].sound.toString().substring("BLOCK_NOTE_BLOCK_".length());
+						String vanillaName = INSTRUMENTS[j].sound.toString().substring(SPIGOT_NAME_BEGIN.length());
 						vanillaName = vanillaName.replace("_", "").toLowerCase();
 						nbsNames[i] = nbsNames[i].replace(" ", "").toLowerCase();
 						rusNames[i] = rusNames[i].replace(" ", "").toLowerCase();

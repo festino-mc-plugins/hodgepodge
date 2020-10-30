@@ -5,6 +5,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.Jukebox;
@@ -38,9 +39,20 @@ public class NoteDisc {
 		for (Player player : soundSource.getWorld().getPlayers()) {
 			if (player.getLocation().distance(soundSource) <= NoteUtils.SOUND_DISTANCE) {
 				for (NoteSound sound : sounds) {
-					// no player.playNote(soundSource, NoteInstrument.BANJO, Note.sharp(octave, tone));
-					// because Note.Tone is restricted
-					player.playSound(soundSource, sound.getSpigotSound(), SoundCategory.RECORDS, 3, sound.getPitch());
+					float pitch = sound.getPitch();
+					if (0.5 <= pitch && pitch <= 2.0) {
+						player.playSound(soundSource, sound.getSpigotSound(), SoundCategory.RECORDS, 3, sound.getPitch());
+					} else {
+						String instName = sound.getSpigotSound().toString().substring(NoteUtils.SPIGOT_NAME_BEGIN.length());
+						String vanillaSoundName = NoteUtils.VANILLA_NAME_BEGIN + instName.toLowerCase();
+						// 0.25 => -2, 0.2 -> -2, 0.120 -> -4 ||| 3 -> 2, 4 => 2, 7 -> 2, 8.5 -> 4
+						double realShift = Math.log(pitch) / Math.log(2);
+						int octaveShift = (int) Math.round(realShift / 2) * 2;
+						pitch = pitch * (float) Math.pow(2, -octaveShift);
+						String octaveShiftStr = (octaveShift < 0 ? "m" : "") + Math.abs(octaveShift);
+						String customSoundName = vanillaSoundName + "_" + octaveShiftStr;
+						player.playSound(soundSource, customSoundName, SoundCategory.RECORDS, 3, pitch);
+					}
 				}
 			}
 		}

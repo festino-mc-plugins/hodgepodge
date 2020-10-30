@@ -39,12 +39,12 @@ public class NoteDiscRecord {
 		}
 		if (!isAux) {
 			do {
-				int id = getByteInt(data, pos, 2);
+				int id = getByteInt(data, pos, 2, false);
 				pos++;
 				if (pos >= data.length) {
 					return res;
 				}
-				int semitone = getByteInt(data, pos, 0);
+				int semitone = getByteInt(data, pos, 0, true);
 				pos++;
 				if (id < 0 || id >= NoteUtils.INSTRUMENTS.length) {
 					return res;
@@ -63,11 +63,14 @@ public class NoteDiscRecord {
 		return pos >= data.length;
 	}
 	
-	private int getByteInt(byte[] data, int pos, int bitOffset) {
+	private int getByteInt(byte[] data, int pos, int bitOffset, boolean signed) {
 		if (pos >= data.length) {
 			return -1;
 		}
-		return data[pos] & ~(~0 << (8 - bitOffset));
+		int res = data[pos] & ~(~0 << (8 - bitOffset));
+		if (signed && (data[pos] & 0x80 >> bitOffset) > 0)
+			return res - 256;
+		return res;
 	}
 	
 	private Pair<Integer, Integer> getVarInt(byte[] data, int pos, int bitOffset) {
