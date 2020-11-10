@@ -7,8 +7,8 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_16_R2.map.CraftMapCanvas;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.map.CraftMapCanvas;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,7 +35,7 @@ import com.festp.utils.UtilsWorld;
 import com.google.common.collect.Lists;
 
 import net.md_5.bungee.api.ChatColor;
-import net.minecraft.server.v1_16_R2.WorldMap;
+import net.minecraft.server.v1_16_R3.WorldMap;
 
 public class MapCraftHandler implements Listener {
 

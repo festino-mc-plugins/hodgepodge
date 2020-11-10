@@ -1,6 +1,6 @@
 package com.festp.enderchest;
 
-import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,20 +125,20 @@ public class EnderChestHandler implements Listener {
 	
 
 	void playOpenAnimation(Player p, Block chest) {
-		net.minecraft.server.v1_16_R2.PacketPlayOutBlockAction packet =
-				new net.minecraft.server.v1_16_R2.PacketPlayOutBlockAction(
-					new net.minecraft.server.v1_16_R2.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_16_R2.util.CraftMagicNumbers.getBlock(chest.getType()),
+		net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction packet =
+				new net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction(
+					new net.minecraft.server.v1_16_R3.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
+					org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers.getBlock(chest.getType()),
 	                1, // Action ID, always 1 to opening chests
 	                3); // Action param, number of players (> 0 to open)
 		((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
 	}
 	
 	void playCloseAnimation(Player p, Block chest) {
-		net.minecraft.server.v1_16_R2.PacketPlayOutBlockAction packet =
-				new net.minecraft.server.v1_16_R2.PacketPlayOutBlockAction(
-					new net.minecraft.server.v1_16_R2.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_16_R2.util.CraftMagicNumbers.getBlock(chest.getType()),
+		net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction packet =
+				new net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction(
+					new net.minecraft.server.v1_16_R3.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
+					org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers.getBlock(chest.getType()),
 					1, // Action ID, always 1 to close chests
 					0); // Action param, number of players (0 to close)
 		((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);

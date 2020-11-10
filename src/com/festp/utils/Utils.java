@@ -17,7 +17,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
@@ -46,9 +46,9 @@ import com.festp.storages.Storage;
 import com.festp.storages.StorageBottomless;
 import com.festp.storages.StorageMultitype;
 
-import net.minecraft.server.v1_16_R2.EntityAgeable;
-import net.minecraft.server.v1_16_R2.EntityAnimal;
-import net.minecraft.server.v1_16_R2.NBTTagCompound;
+import net.minecraft.server.v1_16_R3.EntityAgeable;
+import net.minecraft.server.v1_16_R3.EntityAnimal;
+import net.minecraft.server.v1_16_R3.NBTTagCompound;
 
 public class Utils {
 	private static Main plugin;
@@ -144,7 +144,7 @@ public class Utils {
 	public static ItemStack setData(ItemStack i, String field, Object data) {
         if (data == null || field == null || i == null)
             return i;
-		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null) {
         	compound = new NBTTagCompound();
@@ -169,7 +169,7 @@ public class Utils {
 	public static String getString(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         if (compound == null || !compound.hasKey(field))
             return null;
@@ -179,7 +179,7 @@ public class Utils {
 	private static NBTTagCompound get(ItemStack i, String field) {
         if (field == null || i == null)
             return null;
-		net.minecraft.server.v1_16_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
+		net.minecraft.server.v1_16_R3.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
         NBTTagCompound compound = nmsStack.getTag();
         return compound;
 	}
@@ -229,7 +229,7 @@ public class Utils {
 		return stack;
 	}
 	
-	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_16_R2.entity.CraftHorse" */
+	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_16_R3.entity.CraftHorse" */
 	public static Class<?> getBukkitClass(String name) {
 		if (!name.startsWith(BUKKIT_PACKAGE)) {
 			String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
