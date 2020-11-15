@@ -21,6 +21,7 @@ import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
 import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Bed.Part;
+import org.bukkit.block.data.type.Cake;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -299,6 +300,19 @@ public class InteractHandler implements Listener {
 		if (event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
 		if (event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(player))
 			return;
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.hasBlock() && event.getClickedBlock().getType() == Material.CAKE) {
+			if (!player.isSneaking() && player.getFoodLevel() >= 20) {
+				Cake cake = (Cake) event.getClickedBlock().getBlockData();
+				if (cake.getBites() == cake.getMaximumBites()) {
+					event.getClickedBlock().setType(Material.AIR);
+				} else {
+					cake.setBites(cake.getBites() + 1);
+					event.getClickedBlock().setBlockData(cake);
+				}
+				player.setSaturation(Math.min(player.getSaturation() + 0.4f, player.getFoodLevel()));
+				return;
+			}
+		}
 		if (event.hasBlock() && event.getItem() != null) {
 			if (!player.isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
 			{
