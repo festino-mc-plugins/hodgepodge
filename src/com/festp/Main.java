@@ -44,6 +44,7 @@ import com.festp.tome.TomeClickHandler;
 import com.festp.tome.TomeEntityHandler;
 import com.festp.tome.TomeItemHandler;
 import com.festp.utils.BeamedPair;
+import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 
 import java.io.File;
@@ -208,6 +209,8 @@ public class Main extends JavaPlugin implements Listener
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
+					TimeUtils.addTick();
+					
 					metrics_ticks++;
 					if (metrics_ticks > max_metrics_ticks) {
 						for (int i = 0; i < metrics.length; i++)

@@ -4,19 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
-import com.festp.storages.Storage.StorageType;
+import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 
 public class StoragesList {
 	private List<Storage> storages = new ArrayList<>();
-	static long unload_time = 20*60*60*1;
+	static long unload_time = 1*60*60*20; // 1h
 	
 	public void tryUnload(long cur_time) {
-		long temp_time = unload_time - cur_time;
-		for (int i = storages.size()-1; i >= 0; i--) {
-			if (storages.get(i).last_load + temp_time < 0) {
+		for (int i = storages.size() - 1; i >= 0; i--) {
+			if (storages.get(i).getInventory().getViewers().size() > 0) {
+				storages.get(i).updateLastLoad(cur_time);
+				continue;
+			}
+			long time_unloaded = cur_time - storages.get(i).last_load;
+			if (time_unloaded > unload_time) {
 				storages.get(i).saveToFile();
 				storages.remove(i);
 			}
@@ -42,6 +45,7 @@ public class StoragesList {
 		if (id < 0) return null;
 		for (Storage st : storages) {
 			if (st.getID() == id) {
+				st.updateLastLoad(TimeUtils.getTicks());
 				return st;
 			}
 		}

@@ -205,4 +205,8 @@ public abstract class Storage
 			return Utils.getPlugin().stcraft.getMultitype(ID, ((StorageMultitype)this).getLvl());
 		return null;
 	}
+	
+	public void updateLastLoad(long new_val) {
+		last_load = new_val;
+	}
 }

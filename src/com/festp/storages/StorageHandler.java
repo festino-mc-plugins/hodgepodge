@@ -45,6 +45,7 @@ import com.festp.storages.StorageMultitype.HandleTime;
 import com.festp.storages.StorageMultitype.UncraftMode;
 import com.festp.utils.BeamedPair;
 import com.festp.utils.ClickResult;
+import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
@@ -56,7 +57,7 @@ public class StorageHandler implements Listener {
 	private int storage_save_ticks = 0;
 	private int storage_save_maxticks = 3*60*20; //3 minutes
 	private int storage_unloadcheck_ticks = 0;
-	private int storage_unloadcheck_maxticks = 60*20;
+	private int storage_unloadcheck_maxticks = 60*20; // 1 munute
 	private List<Inventory> updating_invs = new ArrayList<>();
 	private List<Inventory> grabbing_invs = new ArrayList<>();
 	public static final String LABEL_YOUR_ITEMS = "YOUR ITEMS";
@@ -119,14 +120,14 @@ public class StorageHandler implements Listener {
 			}
 			grabbing_invs.remove(i);
 		}
-		
+
 		storage_unloadcheck_ticks += 1;
 		if (storage_unloadcheck_ticks >= storage_unloadcheck_maxticks) {
-			plugin.stlist.tryUnload(plugin.mainworld.getFullTime());
+			plugin.stlist.tryUnload(TimeUtils.getTicks());
 			storage_unloadcheck_ticks = 0;
 		}
 		
-		storage_save_ticks+=1;
+		storage_save_ticks += 1;
 		if(storage_save_ticks >= storage_save_maxticks) {
 			plugin.stlist.saveStorages();
 			storage_save_ticks = 0;
@@ -692,7 +693,7 @@ public class StorageHandler implements Listener {
 		Inventory inventory = event.getInventory();
 		Storage st = plugin.stlist.findByInventory(inventory);
 		if (st instanceof StorageMultitype)
-			if (inventory.getViewers().size() == 1) { // because when closing last player is still considered a viewer
+			if (inventory.getViewers().size() == 1) { // because when closing last player is still considered as a viewer
 				StorageMultitype sm = (StorageMultitype)st;
 				if (sm.getSortTime() == HandleTime.OPEN_CLOSE)
 					sm.sort();

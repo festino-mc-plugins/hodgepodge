@@ -11,7 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.Main;
-import com.festp.storages.Storage.Grab;
+import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 
 public class StoragesFileManager {
@@ -91,21 +91,21 @@ public class StoragesFileManager {
 		//type
 		String stype = ymlFormat.getString("type");
 		try {
-			if(stype.contains("bottomless")) {
+			if (stype.contains("bottomless")) {
 				String smat = ymlFormat.getString("material");
 				if(Material.valueOf(smat) == null)
 					return null;
 				
-				StorageBottomless st = new StorageBottomless(ID, pl.mainworld.getFullTime(), Material.valueOf(smat));
+				StorageBottomless st = new StorageBottomless(ID, TimeUtils.getTicks(), Material.valueOf(smat));
 				int amount = ymlFormat.getInt("amount");
 				st.setAmount(amount);
 				String grab = ymlFormat.getString("grab");
 				st.setGrab(Storage.Grab.valueOf(grab));
 				return st;
 			}
-			else if(stype.contains("multitype")) {
+			else if (stype.contains("multitype")) {
 				int lvl = ymlFormat.getInt("level");
-				StorageMultitype st = new StorageMultitype(ID, pl.mainworld.getFullTime(), lvl);
+				StorageMultitype st = new StorageMultitype(ID, TimeUtils.getTicks(), lvl);
 				
 				int slots = ymlFormat.getInt("slots");
 				ArrayList<ItemStack> items = new ArrayList<ItemStack>();
@@ -159,9 +159,9 @@ public class StoragesFileManager {
 	public boolean saveStorage(Storage st) {
 		try
 		{
-			if(st instanceof StorageBottomless)
+			if (st instanceof StorageBottomless)
 				saveInventory_Bottomless((StorageBottomless)st);
-			else if(st instanceof StorageMultitype)
+			else if (st instanceof StorageMultitype)
 				saveInventory_Multitype((StorageMultitype)st);
 			
 			return true;
