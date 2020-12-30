@@ -32,6 +32,7 @@ import com.festp.maps.MapHandler;
 import com.festp.menu.InventoryMenu;
 import com.festp.misc.InteractHandler;
 import com.festp.misc.LeashManager;
+import com.festp.misc.MountManager;
 import com.festp.misc.AmethystManager;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.Sleeping;
@@ -156,6 +157,9 @@ public class Main extends JavaPlugin implements Listener
     	pm.registerEvents(invs, this);
 
     	lm = new LeashManager(this);
+    	MountManager mm = new MountManager();
+    	pm.registerEvents(mm, this);
+    	
     	InteractHandler interacts = new InteractHandler(this, lm);
     	pm.registerEvents(interacts, this);
 
@@ -254,6 +258,8 @@ public class Main extends JavaPlugin implements Listener
 					
 					//items in cauldrons, saddle hp updating, hoe left click cooldown
 					interacts.onTick();
+					
+					mm.tick();
 
 					t2 = System.nanoTime();
 					metrics[5] += t2 - t1;
