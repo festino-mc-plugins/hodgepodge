@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
@@ -20,11 +22,13 @@ import org.bukkit.util.Vector;
 
 import com.festp.utils.Utils;
 
-public class SaddledPolarBear {
+public class SaddledBear {
 	private static final PotionEffect EFFECT_INVISIBILITY = new PotionEffect(PotionEffectType.INVISIBILITY, 10000, 0, false, false, false);
 	private static final PotionEffect EFFECT_IMMORTALITY = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 5, 5, false, false, false);
 	private static final PotionEffect EFFECT_WITHER = new PotionEffect(PotionEffectType.WITHER, 10000, 10, false, false, false);
 	private static final Vector SADDLE_SHIFT = new Vector(0, 0.55, 0);
+	private static final double JUMP_STRENGTH = 0.43;
+	private static final double JUMP_POWER_THRESHOLD = 0.55; // min 4/9
 	
 	private PolarBear main;
 	private Horse controller;
@@ -33,10 +37,9 @@ public class SaddledPolarBear {
 	private static final int START_DELAY = 20;
 	private int cooldown = START_DELAY;
 	
-	public SaddledPolarBear(PolarBear saddled)
+	public SaddledBear(PolarBear saddled)
 	{
 		main = saddled;
-		setSaddled(main);
 		visual = main.getWorld().spawn(main.getLocation().add(SADDLE_SHIFT), Pig.class, new Consumer<Pig>() {
 			@Override
 			public void accept(Pig pig) {
@@ -46,12 +49,18 @@ public class SaddledPolarBear {
 				pig.setSaddle(true);
 				pig.setLootTable(LootTables.EMPTY.getLootTable());
 				Utils.setNoCollide(pig, true);
-				applyEffects(pig);
+				applyInvisibility(pig);
 				link(pig);
 			} });
 	}
 	
-	public void addPassenger(LivingEntity le)
+	public List<Entity> getPassengers()
+	{
+		// add second passenger to list
+		return main.getPassengers();
+	}
+	
+	public void addPassenger(Entity entity)
 	{
 		if (cooldown > 0)
 			return;
@@ -69,13 +78,14 @@ public class SaddledPolarBear {
 				horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
 				horse.setLootTable(LootTables.EMPTY.getLootTable());
 				horse.setRemoveWhenFarAway(true);
-				applyEffects(horse);
+				applyInvisibility(horse);
 				double bearSpeed = main.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getValue() / 2.5;
 				double bearHealth = main.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
 				horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(bearSpeed);
 				horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(bearHealth);
+				horse.setJumpStrength(JUMP_STRENGTH);
 				link(horse);
-				horse.addPassenger(le);
+				horse.addPassenger(entity);
 			} });
 		updateHealth();
 	}
@@ -95,12 +105,13 @@ public class SaddledPolarBear {
 				controller = null;
 			} else {
 				updateHealth();
-				applyEffects(controller);
+				applyInvisibility(controller);
 				main.teleport(controller.getLocation()); // TODO try move 1 tick forward, if it is not in solid or lava
 				main.setVelocity(controller.getVelocity());
 			}
 		}
-		applyEffects(visual);
+		applyInvisibility(visual);
+		applyImmortality(visual);
 		//applyWither(visual);
 		visual.teleport(main.getLocation().add(SADDLE_SHIFT));
 		visual.setVelocity(main.getVelocity());
@@ -111,7 +122,7 @@ public class SaddledPolarBear {
 		controller.setHealth(main.getHealth());
 	}
 	
-	public PolarBear getPolarBear() {
+	public PolarBear getBear() {
 		return main;
 	}
 	
@@ -123,24 +134,37 @@ public class SaddledPolarBear {
 		return controller;
 	}
 	
+	public boolean isPart(Entity entity) {
+		return entity.equals(main)
+				|| entity.equals(controller)
+				|| entity.equals(visual);
+	}
+	
 	public void remove() {
 		if (controller != null)
 			controller.remove();
 		visual.remove();
 	}
+
+	public void onJump(float power) {
+		if (power < JUMP_POWER_THRESHOLD) {
+			main.getWorld().playSound(main.getEyeLocation(), Sound.ENTITY_POLAR_BEAR_WARNING, SoundCategory.PLAYERS, 0.5f, 1.0f);
+		}
+	}
 	
-	public static void applyEffects(LivingEntity le)
-	{
+	public static void applyInvisibility(LivingEntity le) {
 		le.addPotionEffect(EFFECT_INVISIBILITY);
+	}
+	
+	public static void applyImmortality(LivingEntity le) {
 		le.addPotionEffect(EFFECT_IMMORTALITY);
 	}
 	
-	public static void applyWither(LivingEntity le)
-	{
+	public static void applyWither(LivingEntity le) {
 		le.addPotionEffect(EFFECT_WITHER);
 	}
 	
-	private static void setSaddled(PolarBear bear) {
+	public static void setSaddled(PolarBear bear) {
 		bear.getEquipment().setChestplate(new ItemStack(Material.SADDLE));
 	}
 	
@@ -163,8 +187,10 @@ public class SaddledPolarBear {
 			Entity en = entities.get(i);
 			if (en instanceof LivingEntity) {
 				ItemStack helmet = ((LivingEntity) en).getEquipment().getHelmet();
-				if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().getDisplayName().equals(uuid))
+				if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().getDisplayName().equals(uuid)) {
+					System.out.println("[SaddledBear] Removed " + en);
 					en.remove();
+				}
 			}
 		}
 	}

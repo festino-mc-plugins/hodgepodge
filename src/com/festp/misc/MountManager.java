@@ -3,19 +3,25 @@ package com.festp.misc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.PolarBear;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.HorseJumpEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class MountManager implements Listener {
-	private List<SaddledPolarBear> bears = new ArrayList<>();
+	private List<SaddledBear> bears = new ArrayList<>();
 	
 	public MountManager() {};
 	
@@ -32,7 +38,7 @@ public class MountManager implements Listener {
 	public void onPlayerQuit(PlayerQuitEvent event) {
 		Entity vehicle = event.getPlayer().getVehicle();
 		if (vehicle != null) {
-			if (getSaddledPolarBear(vehicle) != null) {
+			if (getSaddledBear(vehicle) != null) {
 				vehicle.remove();
 			}
 		}
@@ -43,54 +49,106 @@ public class MountManager implements Listener {
 	{
 		for (Entity en : event.getChunk().getEntities()) {
 			if (isSaddled(en)) {
-				SaddledPolarBear.removeLinkedEntities(en, event.getChunk());
-				bears.add(new SaddledPolarBear((PolarBear)en));
+				SaddledBear.removeLinkedEntities(en, event.getChunk());
+				bears.add(new SaddledBear((PolarBear)en));
 			}
 		}
 	}
 	
-	// TODO transfer damage from controller and visual to bear
+	// transfer damage from controller to bear
+	@EventHandler
+	public void onEntityDamage(EntityDamageEvent event)
+	{
+		SaddledBear spb = getSaddledBear(event.getEntity());
+		if (spb != null) {
+			if (spb.getHorse() != null && event.getEntity().equals(spb.getHorse())) {
+				EntityDamageEvent damageEvent = new EntityDamageEvent(spb.getBear(), event.getCause(), event.getDamage());
+				Bukkit.getPluginManager().callEvent(damageEvent);
+				if (!damageEvent.isCancelled()) {
+					spb.getBear().damage(event.getDamage());
+				}
+				event.setCancelled(true);
+			}
+		}
+	}
+
+	// cancel own bear damaging
+	@EventHandler
+	public void onEntityDamageByEntity(EntityDamageByEntityEvent event)
+	{
+		Entity damaged = event.getEntity();
+		Entity damager = event.getDamager();
+		if (damager.isInsideVehicle()) {
+			SaddledBear spb = getSaddledBear(damager.getVehicle());
+			if (spb != null) {
+				if (spb.isPart(damaged)) {
+					event.setCancelled(true);
+				} else {
+					if (damaged instanceof LivingEntity) {
+						spb.getBear().setTarget((LivingEntity) damaged);
+					}
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onHorseJumpEvent(HorseJumpEvent event)
+	{
+		SaddledBear sb = getSaddledBear(event.getEntity());
+		if (sb != null) {
+			sb.onJump(event.getPower());
+		}
+	}
 	
 	@EventHandler
 	public void onPlayerInteractEntity(PlayerInteractEntityEvent event)
 	{
-		SaddledPolarBear spb = getSaddledPolarBear(event.getRightClicked());
+		SaddledBear sb = getSaddledBear(event.getRightClicked());
 		Player player = event.getPlayer();
-		if (spb == null) {
+		if (sb == null) {
 			if (!(event.getRightClicked() instanceof PolarBear))
 				return;
+			PolarBear bear = (PolarBear) event.getRightClicked();
+			if (isTarget(bear, player))
+				return;
+			
 			if (player.getInventory().getItem(event.getHand()).getType() == Material.SADDLE) {
-				PolarBear bear = (PolarBear) event.getRightClicked();
-				// store saddle
-				bears.add(new SaddledPolarBear(bear));
+				SaddledBear.setSaddled(bear);
+				bears.add(new SaddledBear(bear));
 				player.getInventory().setItem(event.getHand(), null);
 				event.setCancelled(true);
 			}
 		} else {
+			if (isTarget(sb.getBear(), player))
+				return;
+			
 			if (player.getInventory().getItem(event.getHand()).getType() == Material.AIR
 					&& player.isSneaking()) {
 				player.getInventory().setItem(event.getHand(), new ItemStack(Material.SADDLE));
-				spb.remove();
-				bears.remove(spb);
+				sb.remove();
+				bears.remove(sb);
 			} else {
-				spb.addPassenger(player);
+				sb.addPassenger(player);
 			}
 			event.setCancelled(true);
 		}
 	}
 	
-	private SaddledPolarBear getSaddledPolarBear(Entity part) {
-		for (SaddledPolarBear spb : bears) {
-			if (part.equals(spb.getPolarBear())
-					|| part.equals(spb.getHorse())
-					|| part.equals(spb.getSaddle())) {
-				return spb;
+	private SaddledBear getSaddledBear(Entity part) {
+		for (SaddledBear sb : bears) {
+			if (sb.isPart(part)) {
+				return sb;
 			}
 		}
 		return null;
 	}
 	
 	private boolean isSaddled(Entity bear) {
-		return bear instanceof PolarBear && SaddledPolarBear.isSaddled((PolarBear)bear);
+		return bear instanceof PolarBear && SaddledBear.isSaddled((PolarBear)bear);
+	}
+	
+	private boolean isTarget(Mob agressive, LivingEntity victim) {
+		return agressive.getTarget() != null && agressive.getTarget().equals(victim);
 	}
 }
