@@ -15,10 +15,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.HorseJumpEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.inventory.AbstractHorseInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+
+import com.festp.DelayedTask;
+import com.festp.TaskList;
+import com.festp.utils.UtilsType;
 
 public class MountManager implements Listener {
 	private List<SaddledBear> bears = new ArrayList<>();
@@ -35,6 +45,17 @@ public class MountManager implements Listener {
 	}
 
 	@EventHandler
+	public void onPlayerJoin(PlayerJoinEvent event) {
+		TaskList.add(new DelayedTask(1, new Runnable() { @Override
+				public void run() {
+					if (event.getPlayer().isInsideVehicle()) {
+						SaddledBear.removeIfLinkedEntity(event.getPlayer().getVehicle());
+					}
+				}
+		}));
+	}
+
+	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
 		Entity vehicle = event.getPlayer().getVehicle();
 		if (vehicle != null) {
@@ -47,9 +68,9 @@ public class MountManager implements Listener {
 	@EventHandler
 	public void onChunkLoad(ChunkLoadEvent event)
 	{
+		SaddledBear.removeLinkedEntities(event.getChunk());
 		for (Entity en : event.getChunk().getEntities()) {
 			if (isSaddled(en)) {
-				SaddledBear.removeLinkedEntities(en, event.getChunk());
 				bears.add(new SaddledBear((PolarBear)en));
 			}
 		}
@@ -106,6 +127,8 @@ public class MountManager implements Listener {
 	{
 		SaddledBear sb = getSaddledBear(event.getRightClicked());
 		Player player = event.getPlayer();
+		ItemStack item = player.getInventory().getItem(event.getHand());
+		
 		if (sb == null) {
 			if (!(event.getRightClicked() instanceof PolarBear))
 				return;
@@ -113,18 +136,20 @@ public class MountManager implements Listener {
 			if (isTarget(bear, player))
 				return;
 			
-			if (player.getInventory().getItem(event.getHand()).getType() == Material.SADDLE) {
-				SaddledBear.setSaddled(bear);
-				bears.add(new SaddledBear(bear));
+			if (item.getType() == Material.SADDLE) {
+				SaddledBear.setSaddled(bear, true);
 				player.getInventory().setItem(event.getHand(), null);
+				bears.add(new SaddledBear(bear));
 				event.setCancelled(true);
 			}
 		} else {
-			if (isTarget(sb.getBear(), player))
+			PolarBear bear = sb.getBear();
+			if (isTarget(bear, player))
 				return;
 			
-			if (player.getInventory().getItem(event.getHand()).getType() == Material.AIR
+			if (item.getType() == Material.AIR
 					&& player.isSneaking()) {
+				SaddledBear.setSaddled(bear, false);
 				player.getInventory().setItem(event.getHand(), new ItemStack(Material.SADDLE));
 				sb.remove();
 				bears.remove(sb);
@@ -133,6 +158,40 @@ public class MountManager implements Listener {
 			}
 			event.setCancelled(true);
 		}
+	}
+	
+	// TODO united class, merge work with TomeClickHandler - check if entity in list, then cancel event if:
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		if (event.isCancelled()) return;
+		if (!(event.getView().getTopInventory() instanceof AbstractHorseInventory)) return;
+		
+		Entity horse = (Entity) event.getView().getTopInventory().getHolder();
+		if (getSaddledBear(horse) == null) return;
+		
+		int slot = event.getRawSlot();
+		if (slot < 0) return;
+		
+		boolean illegal = false;
+		Inventory inv = event.getClickedInventory();
+		InventoryAction action = event.getAction();
+		
+		if (inv instanceof AbstractHorseInventory) {
+			if(action != InventoryAction.CLONE_STACK && action != InventoryAction.UNKNOWN)
+				illegal = true;
+		}
+		else if (inv instanceof PlayerInventory) {
+			Material m = event.getCurrentItem().getType();
+			if ( (event.getView().getItem(1) == null || event.getView().getItem(1).getType() == Material.AIR)
+					&& UtilsType.isHorseArmor(m)) {
+					if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+						illegal = true;
+					}
+				}
+		}
+		
+		if (illegal)
+			event.setCancelled(true);
 	}
 	
 	private SaddledBear getSaddledBear(Entity part) {

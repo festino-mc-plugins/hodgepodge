@@ -1,5 +1,6 @@
 package com.festp.misc;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Chunk;
@@ -29,6 +30,7 @@ public class SaddledBear {
 	private static final Vector SADDLE_SHIFT = new Vector(0, 0.55, 0);
 	private static final double JUMP_STRENGTH = 0.43;
 	private static final double JUMP_POWER_THRESHOLD = 0.55; // min 4/9
+	private static final String LINK_LORE = "linked_to_bear";
 	
 	private PolarBear main;
 	private Horse controller;
@@ -164,8 +166,12 @@ public class SaddledBear {
 		le.addPotionEffect(EFFECT_WITHER);
 	}
 	
-	public static void setSaddled(PolarBear bear) {
-		bear.getEquipment().setChestplate(new ItemStack(Material.SADDLE));
+	public static void setSaddled(PolarBear bear, boolean saddled) {
+		if (saddled) {
+			bear.getEquipment().setChestplate(new ItemStack(Material.SADDLE));
+		} else {
+			bear.getEquipment().setChestplate(new ItemStack(Material.AIR));
+		}
 	}
 	
 	public static boolean isSaddled(PolarBear bear) {
@@ -175,22 +181,26 @@ public class SaddledBear {
 	private void link(LivingEntity le) {
 		ItemStack helmet = new ItemStack(Material.OAK_BUTTON);
 		ItemMeta meta = helmet.getItemMeta();
-		meta.setDisplayName(main.getUniqueId().toString());
+		meta.setLore(Arrays.asList(LINK_LORE, main.getUniqueId().toString()));
 		helmet.setItemMeta(meta);
 		le.getEquipment().setHelmet(helmet);
 	}
 
-	public static void removeLinkedEntities(Entity bear, Chunk chunk) {
-		String uuid = bear.getUniqueId().toString();
-		List<Entity> entities = bear.getNearbyEntities(0.5, 0.5, 0.5);
-		for (int i = entities.size() - 1; i >= 0; i--) {
-			Entity en = entities.get(i);
-			if (en instanceof LivingEntity) {
-				ItemStack helmet = ((LivingEntity) en).getEquipment().getHelmet();
-				if (helmet != null && helmet.hasItemMeta() && helmet.getItemMeta().getDisplayName().equals(uuid)) {
-					System.out.println("[SaddledBear] Removed " + en);
-					en.remove();
-				}
+	public static void removeLinkedEntities(Chunk chunk) {
+		Entity[] entities = chunk.getEntities();
+		for (int i = entities.length - 1; i >= 0; i--) {
+			Entity en = entities[i];
+			removeIfLinkedEntity(en);
+		}
+	}
+	public static void removeIfLinkedEntity(Entity entity) {
+		if (entity instanceof LivingEntity) {
+			ItemStack helmet = ((LivingEntity) entity).getEquipment().getHelmet();
+			if (helmet != null && helmet.hasItemMeta()
+					&& helmet.getItemMeta().getLore() != null
+					&& helmet.getItemMeta().getLore().size() >= 1
+					&& helmet.getItemMeta().getLore().get(0).equals(LINK_LORE)) {
+				entity.remove();
 			}
 		}
 	}
