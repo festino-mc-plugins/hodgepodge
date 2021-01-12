@@ -24,7 +24,9 @@ public class AmethystManager implements Listener {
 		BLOCKED_TYPES = Lists.newArrayList(EntityType.SKELETON, EntityType.STRAY,
 											EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER, EntityType.HUSK,
 											EntityType.SPIDER, EntityType.CAVE_SPIDER,
-											EntityType.CREEPER, EntityType.GUARDIAN);
+											EntityType.CREEPER, EntityType.GHAST,
+											EntityType.PIGLIN, EntityType.ZOMBIFIED_PIGLIN,
+											EntityType.GUARDIAN);
 	}
 	
 	// cancel spawn
