@@ -3,6 +3,7 @@ package com.festp.misc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -34,6 +35,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -57,9 +62,10 @@ public class InteractHandler implements Listener {
 	public static final String BEACON_SADDLE_ID = "saddlemob";
 	public static final Class<? extends LivingEntity> BEACON_SADDLE_CLASS = Turtle.class;
 	
+	public static final int CAULDRON_COOLDOWN = 6;
+	
 	//cauldrons to wash items
-	List<BlockData> cauls = new ArrayList<>();
-	List<Integer> caulticks = new ArrayList<>();
+	List<CooldownedCauldron> cauls = new ArrayList<>();
 	List<Item> world_items = new ArrayList<>();
 	List<LivingEntity> world_beacons = new ArrayList<>();
 
@@ -94,12 +100,11 @@ public class InteractHandler implements Listener {
 			}
 		}
 		
-		for (int i = caulticks.size() - 1; i >= 0; i--) {
-			caulticks.set(i, caulticks.get(i) + 1);
+		for (int i = cauls.size() - 1; i >= 0; i--) {
+			cauls.get(i).ticks--;
 			
-			if(caulticks.get(i) > 5) {
+			if (cauls.get(i).ticks <= 0) {
 				cauls.remove(i);
-				caulticks.remove(i);
 			}
 		}
 
@@ -116,8 +121,11 @@ public class InteractHandler implements Listener {
 			if(b.getType() == Material.CAULDRON) {
 				BlockData cauldron = b.getBlockData();
 				if (UtilsWorld.getCauldronLevel(cauldron) > 0) {
-					int j = cauls.indexOf(cauldron);
-					if(j >= 0) {
+					boolean found = false;
+					for (CooldownedCauldron cooldowned : cauls)
+						if (cooldowned.cauldron.equals(b))
+							found = true;
+					if (found) {
 						continue;
 					}
 					Material m = item.getItemStack().getType();
@@ -140,8 +148,8 @@ public class InteractHandler implements Listener {
 						item.getItemStack().setAmount(item.getItemStack().getAmount()-1);
 						w.dropItem(item.getLocation(), new ItemStack(drop));
 						Utils.lower_cauldron_water(b.getState());
-		                cauls.add(cauldron);
-		                caulticks.add(0);
+						CooldownedCauldron coolCauldron = new CooldownedCauldron(CAULDRON_COOLDOWN, b);
+						cauls.add(coolCauldron);
 		                
 						if (item.getItemStack().getAmount() <= 0)
 							world_items.remove(i);
@@ -302,6 +310,12 @@ public class InteractHandler implements Listener {
 			return;
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.hasBlock() && event.getClickedBlock().getType() == Material.CAKE) {
 			if (!player.isSneaking() && player.getFoodLevel() >= 20) {
+				/*InventoryClickEvent dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ALL_SLOT);
+				Bukkit.getPluginManager().callEvent(dropEvent);
+				if (!dropEvent.isCancelled()) {
+					UtilsWorld.drop(p.getEyeLocation(), stack, 1);
+					items[i] = null;
+				}*/
 				Cake cake = (Cake) event.getClickedBlock().getBlockData();
 				if (cake.getBites() == cake.getMaximumBites()) {
 					event.getClickedBlock().setType(Material.AIR);
