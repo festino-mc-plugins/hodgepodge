@@ -34,6 +34,7 @@ import org.bukkit.entity.Turtle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
@@ -310,117 +311,167 @@ public class InteractHandler implements Listener {
 			return;
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.hasBlock() && event.getClickedBlock().getType() == Material.CAKE) {
 			if (!player.isSneaking() && player.getFoodLevel() >= 20) {
-				/*InventoryClickEvent dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ALL_SLOT);
-				Bukkit.getPluginManager().callEvent(dropEvent);
-				if (!dropEvent.isCancelled()) {
-					UtilsWorld.drop(p.getEyeLocation(), stack, 1);
-					items[i] = null;
-				}*/
-				Cake cake = (Cake) event.getClickedBlock().getBlockData();
-				if (cake.getBites() == cake.getMaximumBites()) {
-					event.getClickedBlock().setType(Material.AIR);
-				} else {
-					cake.setBites(cake.getBites() + 1);
-					event.getClickedBlock().setBlockData(cake);
+				Block block = event.getClickedBlock();
+				BlockBreakEvent breakEvent = new BlockBreakEvent(block, player);
+				Bukkit.getPluginManager().callEvent(breakEvent);
+				if (!breakEvent.isCancelled()) {
+					Cake cake = (Cake) block.getBlockData();
+					if (cake.getBites() == cake.getMaximumBites()) {
+						event.getClickedBlock().setType(Material.AIR);
+					} else {
+						cake.setBites(cake.getBites() + 1);
+						event.getClickedBlock().setBlockData(cake);
+					}
+					player.setSaturation(Math.min(player.getSaturation() + 0.4f, player.getFoodLevel()));
 				}
-				player.setSaturation(Math.min(player.getSaturation() + 0.4f, player.getFoodLevel()));
 				return;
 			}
 		}
 		if (event.hasBlock() && event.getItem() != null) {
-			if (!player.isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
+			Material handMaterial = event.getItem().getType();
+			if (event.getAction() == Action.RIGHT_CLICK_BLOCK)
 			{
-	                BlockState d = event.getClickedBlock().getState();
-					if (d.getData().getData() == 0)
-						return;
-					MaterialData hand_data = event.getItem().getData();
-					Material hand = Utils.from_legacy(hand_data);
-					ItemStack washed;
-					if (UtilsType.is_colored_terracotta(hand)) {
-						washed = new ItemStack(Material.TERRACOTTA, 1);
-					} else if (UtilsType.is_wool(hand)) {
-						washed = new ItemStack(Material.WHITE_WOOL, 1);
-					} else if (UtilsType.is_concrete(hand)) {
-						washed = new ItemStack(Material.WHITE_CONCRETE, 1);
-					} else if (UtilsType.is_carpet(hand)) {
-						washed = new ItemStack(Material.WHITE_CARPET, 1);
-					} else if (UtilsType.is_glazed_terracotta(hand)) {
-						washed = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-					} else if (UtilsType.is_concrete_powder(hand)) {
-						washed = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(hand)), 1);
-					} else if (hand.equals(Material.RED_SAND)) {
-						washed = new ItemStack(Material.SAND, 1);
-					} else if (hand.equals(Material.RED_SANDSTONE)) {
-						washed = new ItemStack(Material.SANDSTONE, 1);
-					} else return;
-					event.setCancelled(true);
-					event.getItem().setAmount(event.getItem().getAmount()-1);
-					player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 
-					Utils.lower_cauldron_water(d.getBlock().getState());
-			}
-			
-			//grass from dirt
-			Material currentblock = event.getClickedBlock().getType();
-			if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
-				event.getClickedBlock().setType(Material.GRASS_BLOCK);
-				event.getItem().setAmount(event.getItem().getAmount() - 1);
-				event.setCancelled(true);
-				return;
-			} 
-			
-			if (UtilsType.is_dye(event.getItem().getType()) ) 
-			{
-				DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
-				DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
-				Material block_material = event.getClickedBlock().getType();
-				boolean is_wall_banner = UtilsType.is_wall_banner(block_material);
-				boolean is_banner = UtilsType.is_banner(block_material);
-				if ( (is_banner || is_wall_banner)
-						&& event.getItem().getAmount() > 5 )
+				if (!player.isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
 				{
-					Block banner_block = event.getClickedBlock();
-					Banner banner = (Banner) banner_block.getState();
-					BlockData old_banner_data = banner_block.getBlockData();
-					
-					if (banner.getBaseColor() != clicking_dye_color) {
-
-						if (is_wall_banner)
-							banner.setType(UtilsColor.fromColor_wall_banner(clicking_dye_color));
-						if (is_banner)
-							banner.setType(UtilsColor.fromColor_banner(clicking_dye_color));
-						//b.setBaseColor(clicking_dye_color);
-						banner.update(true);
-						
-						if (is_wall_banner) {
-							Directional banner_data = (Directional) banner_block.getBlockData();
-							banner_data.setFacing( ((Directional) old_banner_data).getFacing() );
-							banner_block.setBlockData(banner_data);
-						}
-						if (is_banner) {
-							Rotatable banner_data = (Rotatable) banner_block.getBlockData();
-							banner_data.setRotation( ((Rotatable) old_banner_data).getRotation() );
-							banner_block.setBlockData(banner_data);
-						}
-						
-						event.getItem().setAmount(event.getItem().getAmount() - 6);
-					}
-					return;
-					
+		                BlockState d = event.getClickedBlock().getState();
+						if (d.getData().getData() == 0)
+							return;
+						MaterialData hand_data = event.getItem().getData();
+						Material hand = Utils.from_legacy(hand_data);
+						ItemStack washed;
+						if (UtilsType.is_colored_terracotta(hand)) {
+							washed = new ItemStack(Material.TERRACOTTA, 1);
+						} else if (UtilsType.is_wool(hand)) {
+							washed = new ItemStack(Material.WHITE_WOOL, 1);
+						} else if (UtilsType.is_concrete(hand)) {
+							washed = new ItemStack(Material.WHITE_CONCRETE, 1);
+						} else if (UtilsType.is_carpet(hand)) {
+							washed = new ItemStack(Material.WHITE_CARPET, 1);
+						} else if (UtilsType.is_glazed_terracotta(hand)) {
+							washed = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
+						} else if (UtilsType.is_concrete_powder(hand)) {
+							washed = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(hand)), 1);
+						} else if (hand.equals(Material.RED_SAND)) {
+							washed = new ItemStack(Material.SAND, 1);
+						} else if (hand.equals(Material.RED_SANDSTONE)) {
+							washed = new ItemStack(Material.SANDSTONE, 1);
+						} else return;
+						event.setCancelled(true);
+						event.getItem().setAmount(event.getItem().getAmount()-1);
+						player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 
+						Utils.lower_cauldron_water(d.getBlock().getState());
 				}
 				
-				if (clicked_block_color == clicking_dye_color)
+				//grass from dirt
+				Material currentblock = event.getClickedBlock().getType();
+				if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
+					event.getClickedBlock().setType(Material.GRASS_BLOCK);
+					event.getItem().setAmount(event.getItem().getAmount() - 1);
+					event.setCancelled(true);
 					return;
-				if (UtilsType.is_terracotta(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
-				else if (UtilsType.is_wool(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_wool(clicking_dye_color));
-				else if (UtilsType.is_concrete_powder(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete_powder(clicking_dye_color));
-				else if (UtilsType.is_concrete(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete(clicking_dye_color));
-				else if (UtilsType.is_carpet(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_carpet(clicking_dye_color));
-				else return;
-				event.getItem().setAmount(event.getItem().getAmount()-1);
-				return;
+				} 
+				
+				if (UtilsType.is_dye(event.getItem().getType()) ) 
+				{
+					DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+					DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
+					Material block_material = event.getClickedBlock().getType();
+					boolean is_wall_banner = UtilsType.is_wall_banner(block_material);
+					boolean is_banner = UtilsType.is_banner(block_material);
+					if ( (is_banner || is_wall_banner)
+							&& event.getItem().getAmount() > 5 )
+					{
+						Block banner_block = event.getClickedBlock();
+						Banner banner = (Banner) banner_block.getState();
+						BlockData old_banner_data = banner_block.getBlockData();
+						
+						if (banner.getBaseColor() != clicking_dye_color) {
+
+							if (is_wall_banner)
+								banner.setType(UtilsColor.fromColor_wall_banner(clicking_dye_color));
+							if (is_banner)
+								banner.setType(UtilsColor.fromColor_banner(clicking_dye_color));
+							//b.setBaseColor(clicking_dye_color);
+							banner.update(true);
+							
+							if (is_wall_banner) {
+								Directional banner_data = (Directional) banner_block.getBlockData();
+								banner_data.setFacing( ((Directional) old_banner_data).getFacing() );
+								banner_block.setBlockData(banner_data);
+							}
+							if (is_banner) {
+								Rotatable banner_data = (Rotatable) banner_block.getBlockData();
+								banner_data.setRotation( ((Rotatable) old_banner_data).getRotation() );
+								banner_block.setBlockData(banner_data);
+							}
+							
+							event.getItem().setAmount(event.getItem().getAmount() - 6);
+						}
+						return;
+						
+					}
+					
+					if (clicked_block_color == clicking_dye_color)
+						return;
+					if (UtilsType.is_terracotta(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
+					else if (UtilsType.is_wool(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_wool(clicking_dye_color));
+					else if (UtilsType.is_concrete_powder(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete_powder(clicking_dye_color));
+					else if (UtilsType.is_concrete(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete(clicking_dye_color));
+					else if (UtilsType.is_carpet(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_carpet(clicking_dye_color));
+					else return;
+					event.getItem().setAmount(event.getItem().getAmount()-1);
+					return;
+				}
+
+				//change bed linen
+				if (!player.isSneaking() && UtilsType.is_carpet(handMaterial)
+						&& UtilsType.is_bed(event.getClickedBlock().getType())) {
+					DyeColor newColor = UtilsColor.colorFromMaterial(handMaterial);
+					DyeColor oldColor = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+					if (oldColor != newColor) {
+						Material newBedMaterial = UtilsColor.fromColor_bed(newColor); // TODO BlockType.BED - explicit (enum) argument
+						Material newCarpetMaterial = UtilsColor.fromColor_carpet(oldColor);
+						Material particleMaterial = UtilsColor.fromColor_wool(oldColor);
+						Block blockFoot = event.getClickedBlock();
+						Bed bedFoot = (Bed) blockFoot.getBlockData();
+						BlockFace face = bedFoot.getFacing();
+						Block blockHead;
+						Bed bedHead;
+						if (bedFoot.getPart() == Part.FOOT) {
+							blockHead = blockFoot.getRelative(face);
+						} else {
+							bedHead = bedFoot;
+							blockHead = blockFoot;
+							blockFoot = blockHead.getRelative(face.getOppositeFace());
+						}
+
+						Location blockCenter = blockFoot.getLocation().add(0.5, 0.5, 0.5);
+						blockFoot.setType(particleMaterial, false);
+						player.getWorld().spawnParticle(Particle.BLOCK_CRACK, blockCenter, 20, 0.2f, 0.0f, 0.2f, blockFoot.getBlockData());
+						player.getWorld().playSound(blockCenter, Sound.BLOCK_WOOL_BREAK, 1.0f, 0.8f);
+						
+						blockHead.setType(newBedMaterial, false);
+						blockFoot.setType(newBedMaterial, false);
+						bedFoot = (Bed) blockFoot.getBlockData();
+						bedFoot.setFacing(face);
+						bedHead = (Bed) blockHead.getBlockData();
+						bedHead.setPart(Part.HEAD);
+						bedHead.setFacing(face);
+						blockHead.setBlockData(bedHead, false);
+						blockFoot.setBlockData(bedFoot, false);
+						
+						if (event.getItem().getAmount() == 1) {
+							event.getItem().setType(newCarpetMaterial);
+						} else {
+							event.getItem().setAmount(event.getItem().getAmount() - 1);
+							ItemStack oldLinen = new ItemStack(newCarpetMaterial, 1);
+							Utils.giveOrDrop(player.getInventory(), oldLinen);
+						}
+						event.setCancelled(true);
+					}
+				}
 			}
 			
-			Material handMaterial = event.getItem().getType();
 			if (UtilsType.isHoe(handMaterial))
 			{
 				//ROTATE BLOCKS
@@ -437,54 +488,6 @@ public class InteractHandler implements Listener {
 						else
 							player.getInventory().setItemInOffHand(null);
 					}
-				}
-			}
-			
-			//change bed linen
-			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !player.isSneaking() && 
-					UtilsType.is_carpet(handMaterial) && UtilsType.is_bed(event.getClickedBlock().getType())) {
-				DyeColor newColor = UtilsColor.colorFromMaterial(handMaterial);
-				DyeColor oldColor = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
-				if (oldColor != newColor) {
-					Material newBedMaterial = UtilsColor.fromColor_bed(newColor); // TODO BlockType.BED - explicit (enum) argument
-					Material newCarpetMaterial = UtilsColor.fromColor_carpet(oldColor);
-					Material particleMaterial = UtilsColor.fromColor_wool(oldColor);
-					Block blockFoot = event.getClickedBlock();
-					Bed bedFoot = (Bed) blockFoot.getBlockData();
-					BlockFace face = bedFoot.getFacing();
-					Block blockHead;
-					Bed bedHead;
-					if (bedFoot.getPart() == Part.FOOT) {
-						blockHead = blockFoot.getRelative(face);
-					} else {
-						bedHead = bedFoot;
-						blockHead = blockFoot;
-						blockFoot = blockHead.getRelative(face.getOppositeFace());
-					}
-
-					Location blockCenter = blockFoot.getLocation().add(0.5, 0.5, 0.5);
-					blockFoot.setType(particleMaterial, false);
-					player.getWorld().spawnParticle(Particle.BLOCK_CRACK, blockCenter, 20, 0.2f, 0.0f, 0.2f, blockFoot.getBlockData());
-					player.getWorld().playSound(blockCenter, Sound.BLOCK_WOOL_BREAK, 1.0f, 0.8f);
-					
-					blockHead.setType(newBedMaterial, false);
-					blockFoot.setType(newBedMaterial, false);
-					bedFoot = (Bed) blockFoot.getBlockData();
-					bedFoot.setFacing(face);
-					bedHead = (Bed) blockHead.getBlockData();
-					bedHead.setPart(Part.HEAD);
-					bedHead.setFacing(face);
-					blockHead.setBlockData(bedHead, false);
-					blockFoot.setBlockData(bedFoot, false);
-					
-					if (event.getItem().getAmount() == 1) {
-						event.getItem().setType(newCarpetMaterial);
-					} else {
-						event.getItem().setAmount(event.getItem().getAmount() - 1);
-						ItemStack oldLinen = new ItemStack(newCarpetMaterial, 1);
-						Utils.giveOrDrop(player.getInventory(), oldLinen);
-					}
-					event.setCancelled(true);
 				}
 			}
 		} // has both block and item
