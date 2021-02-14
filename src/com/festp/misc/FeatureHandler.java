@@ -2,42 +2,38 @@ package com.festp.misc;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Random;
 
-import org.bukkit.EntityEffect;
+import org.bukkit.Axis;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.block.data.Orientable;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
 
 import com.festp.Config;
 import com.festp.Main;
-import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
 public class FeatureHandler implements Listener {
@@ -52,38 +48,38 @@ public class FeatureHandler implements Listener {
 	}
 	
 	public void onTick() {
-		for(World w : server.getWorlds())
+		for (World w : server.getWorlds())
 		{
-			for(Entity e : w.getEntitiesByClass(Damageable.class)) {
-				if(e.getVelocity().getY() >= 0d)
+			for (Entity e : w.getEntitiesByClass(Damageable.class)) {
+				if (e.getVelocity().getY() >= 0d)
 					e.setFallDistance(Math.min(e.getFallDistance(), 10f));
 			}
-			for(Entity e : w.getEntitiesByClass(Boat.class))
+			for (Entity e : w.getEntitiesByClass(Boat.class))
 			{
-				if(e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL)
+				if (e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL)
 					tp_entity_from_portal(e);
 			}
 		}
-		for(int i = test_spawn_in_portal.size()-1; i >= 0; i--) {
+		for (int i = test_spawn_in_portal.size()-1; i >= 0; i--) {
 			Player p = test_spawn_in_portal.get(i);
-			tp_entity_from_portal( p );
-			if(p.isInsideVehicle()/* && event.getPlayer().getVehicle().getType() != EntityType.PLAYER*/) {
+			if (p.isInsideVehicle()/* && event.getPlayer().getVehicle().getType() != EntityType.PLAYER*/) {
 				List<Entity> pass = p.getVehicle().getPassengers();
-				if(pass.size() > 0) {
+				if (pass.size() > 0) {
 					Entity e = pass.get(0);
-					if(e instanceof Bat && e.getCustomName().equals(" ")) {
+					if (e instanceof Bat && e.getCustomName().equals(" ")) {
 						e.remove();
 						//e.removePassenger(p);
 						//e.addPassenger(p);
 					}
 				}
 			}
+			tp_entity_from_portal(p);
 		}
 		test_spawn_in_portal.clear();
 	}
 	
 	@EventHandler
-	public void onPlayerLogin(PlayerLoginEvent event) {
+	public void onPlayerJoin(PlayerJoinEvent event) {
 		test_spawn_in_portal.add(event.getPlayer());
 	}
 	
@@ -163,85 +159,90 @@ public class FeatureHandler implements Listener {
 	}
 	
 	void tp_entity_from_portal(Entity e) {
-		if(e instanceof Player && !((Player)e).isOnline()) return;
+		if (e instanceof Player && !((Player)e).isOnline()) return;
 
 		Location l = e.getLocation();
-		double x0 = l.getX(), y0 = l.getY(), z0 = l.getZ();
+		double x0 = l.getX(), z0 = l.getZ();
 		int dx_prior = dir(x0), dz_prior = dir(z0);
-			
-		if(e.getLocation().getBlock().getType() == Material.NETHER_PORTAL || l.getBlock().getRelative(dx_prior, 0, dz_prior).getType() == Material.NETHER_PORTAL) {
-			//Block start_block = l.getBlock().getRelative(dx, 0, dz);
-			Block start_block = l.getBlock();
+
+		Block center = l.getBlock();
+		if (center.getType() == Material.NETHER_PORTAL || center.getRelative(dx_prior, 0, dz_prior).getType() == Material.NETHER_PORTAL
+				 || center.getRelative(dx_prior, 0, 0).getType() == Material.NETHER_PORTAL || center.getRelative(0, 0, dz_prior).getType() == Material.NETHER_PORTAL) {
 			Block b, tp_to = null;
 			searching:
 			{
-				int dx, dz;
-				if(dx_prior < 0)
-				for(int r = 0; r <= Config.portal_search_radius; r++) {
-					for(int dy = 0; dy <= r/2; dy++) {
-						int temp = r-dy;
-						for(dx = -temp; dx <= temp; dx++) {
-							dz = r-Math.abs(dx);
-							b = start_block.getRelative(dx, dy, dz);
+				int dxT, dx, dz;
+				int dxStep = 1;
+				if (dx_prior < 0)
+					dxStep = -1;
+				for (int r = 0; r <= Config.portal_search_radius; r++) {
+					for (int dy = 0; dy <= r/2; dy++) {
+						int temp = r - dy;
+						for (dxT = -temp; dxT <= temp; dxT++) {
+							dx = dxT * dxStep;
+							dz = r - Math.abs(dx);
+							b = center.getRelative(dx, dy, dz);
 							if(is_valid_portal_tp(b)) {
 								tp_to = b;
 								break searching;
 							}
-							b = start_block.getRelative(dx, dy, -dz);
-							if(is_valid_portal_tp(b)) {
+							b = center.getRelative(dx, dy, -dz);
+							if (is_valid_portal_tp(b)) {
 								tp_to = b;
 								break searching;
 							}
-							b = start_block.getRelative(dx, -dy, dz);
-							if(is_valid_portal_tp(b)) {
+							b = center.getRelative(dx, -dy, dz);
+							if (is_valid_portal_tp(b)) {
 								tp_to = b;
 								break searching;
 							}
-							b = start_block.getRelative(dx, -dy, -dz);
-							if(is_valid_portal_tp(b)) {
-								tp_to = b;
-								break searching;
-							}
-						}
-					}
-				}
-				else
-				for(int r = 0; r <= Config.portal_search_radius; r++) {
-					for(int dy = 0; dy <= r/2; dy++) {
-						int temp = r-dy;
-						for(dx = temp; dx >= -temp; dx--) {
-							b = start_block.getRelative(dx, dy, r-Math.abs(dx));
-							if(is_valid_portal_tp(b)) {
-								tp_to = b;
-								break searching;
-							}
-							b = start_block.getRelative(dx, dy, Math.abs(dx)-r);
-							if(is_valid_portal_tp(b)) {
-								tp_to = b;
-								break searching;
-							}
-							b = start_block.getRelative(dx, -dy, r-Math.abs(dx));
-							if(is_valid_portal_tp(b)) {
-								tp_to = b;
-								break searching;
-							}
-							b = start_block.getRelative(dx, -dy, Math.abs(dx)-r);
-							if(is_valid_portal_tp(b)) {
+							b = center.getRelative(dx, -dy, -dz);
+							if (is_valid_portal_tp(b)) {
 								tp_to = b;
 								break searching;
 							}
 						}
 					}
 				}
-			} //end of searching
-			if(tp_to != null) {
-				Location tp = new Location(start_block.getWorld(), tp_to.getX()+0.5, tp_to.getY()+0.5, tp_to.getZ()+0.5, l.getYaw(), l.getPitch());
+			} // end of searching
+			if (tp_to == null) {
+				// try paths from portal blocks - can't teleport on (.700, .701)
+			}
+			if (tp_to == null) {
+				tp_to = findFirstNonportal(center, BlockFace.UP);
+			}
+			if (tp_to == null) {
+				Orientable portal = (Orientable) center.getBlockData();
+				BlockFace dir = BlockFace.EAST;
+				if (portal.getAxis() == Axis.Z)
+					dir = BlockFace.SOUTH;
+				if (random.nextDouble() >= 0.5)
+					dir = dir.getOppositeFace();
+				tp_to = findFirstNonportal(center, dir);
+			}
+			if (tp_to != null) {
+				Location shift = tp_to.getLocation().subtract(center.getLocation()).multiply(-0.001);
+				shift.setY(0);
+				Location tp = tp_to.getLocation().add(shift).add(0.5, 0, 0.5);
+				tp.setYaw(l.getYaw());
+				tp.setPitch(l.getPitch());
 				e.teleport(tp);
 			}
 		}
 	}
 	
+	private static Block findFirstNonportal(Block start, BlockFace dir) {
+		while (start.getType() == Material.NETHER_PORTAL) {
+			start = start.getRelative(dir);
+		}
+		if (dir == BlockFace.UP) // skip obsidian
+			start = start.getRelative(dir);
+		if (start.getType() == Material.BEDROCK) // TODO all unbrekeable blocks
+			return null;
+		return start;
+	}
+	
 	private static boolean is_valid_portal_tp(Block b) {
-		return UtilsType.playerCanStay(b) && b.getType() != Material.NETHER_PORTAL;
+		return b.getType() != Material.NETHER_PORTAL && UtilsType.playerCanStay(b);
 	}
 }
