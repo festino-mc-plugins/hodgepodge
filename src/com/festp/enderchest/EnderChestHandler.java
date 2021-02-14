@@ -5,6 +5,7 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -15,18 +16,15 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.Inventory;
 
 import com.festp.Main;
 import com.festp.Pair;
 
 public class EnderChestHandler implements Listener {
 	private int ticks = 0;
-	private final int UPDATE_TICKS = 80, PACKET_TICKS = 1;
+	private final int PACKET_TICKS = 1;//, UPDATE_TICKS = 80;
 	
 	private Main pl;
 	private List<Pair<Player, Block>> opened_chests = new ArrayList<>(); 
@@ -81,6 +79,16 @@ public class EnderChestHandler implements Listener {
 		if (p != null) {
 			Block chest = getOpenedEnderchest(p);
 			if (chest != null) {
+				EnderChest ec = pl.ecgroup.getAdminByPlayer(p);
+				// TODO highlevel EnderChest, merge this code with aleave from ECCommandWorker
+				if (ec != null) {
+					for (int i = 0; i < pl.admin_ecplayers.size(); i++)
+						if(pl.admin_ecplayers.get(i).p == p) {
+							pl.admin_ecplayers.remove(i);
+							ECCommandWorker.sendGroupLeaveSound(p);
+						}
+					p.sendMessage(ChatColor.GREEN+"You successfully left the admin ecgroup.");
+				}
 				removeOpenedEnderchest(p);
 				playCloseAnimation(p, chest);
 				sendEnderchestCloseSound(p);
