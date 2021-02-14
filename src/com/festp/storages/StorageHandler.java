@@ -30,6 +30,8 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
@@ -674,7 +676,7 @@ public class StorageHandler implements Listener {
 			return;
 		}
 		
-		// TO DO: Inventory Utils: from(), to(), enum(CURSOR, TOP, BOTTOM, OUTSIDE)
+		// TO DO: Optimize using Inventory Utils: from(), to(), enum(CURSOR, TOP, BOTTOM, OUTSIDE)
 		delayedGrab(event.getView().getTopInventory());
 		delayedGrab(event.getView().getBottomInventory());
 	}
@@ -685,6 +687,18 @@ public class StorageHandler implements Listener {
 		if (event.isCancelled())
 			return;
 		delayedGrab(event.getView().getBottomInventory());		
+	}
+	
+	// TODO Mark bucket in order to Grab.NEW
+	@EventHandler
+	public void onBucketFill(PlayerBucketFillEvent event)
+	{
+		delayedGrab(event.getPlayer().getInventory());
+	}
+	@EventHandler
+	public void onBucketEmpty(PlayerBucketEmptyEvent event)
+	{
+		delayedGrab(event.getPlayer().getInventory());
 	}
 	
 	@EventHandler
