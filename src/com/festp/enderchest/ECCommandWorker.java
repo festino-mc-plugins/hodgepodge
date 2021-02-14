@@ -223,6 +223,7 @@ public class ECCommandWorker implements CommandExecutor {
 			if(pl.admin_ecplayers.get(i).p == p) {
 				pl.admin_ecplayers.remove(i);
 				//p.getEnderChest().setContents(new ItemStack[27]);
+				sendGroupLeaveSound(p);
 			}
 		return (ChatColor.GREEN+"You successfully left the admin ecgroup.");
 	}
@@ -234,6 +235,7 @@ public class ECCommandWorker implements CommandExecutor {
 		if( sender.equalsIgnoreCase(ec.getOwner()) ) return (ChatColor.RED+"You are owner of this ecgroup. Use \"/ec leave <new owner nickname>\" or \"/enderchest leave <new owner nickname>\".");
 		pl.getServer().getPlayer(sender).getEnderChest().setContents(new ItemStack[27]);
 		ec.group.remove(sender);
+		// TODO sendGroupLeaveSound(p);
 		return (ChatColor.GREEN+"You successfully left the ecgroup.");
 	}
 
@@ -247,6 +249,7 @@ public class ECCommandWorker implements CommandExecutor {
 		pl.getServer().getPlayer(sender).getEnderChest().setContents(new ItemStack[27]);
 		ec.setOwner(newowner);
 		ec.group.remove(sender);
+		// TODO sendGroupLeaveSound(p);
 		return (ChatColor.GREEN+"You successfully left the ecgroup.");
 	}
 
@@ -427,5 +430,9 @@ public class ECCommandWorker implements CommandExecutor {
 	
 	public static void sendGroupjoinSound(Player p) {
 		p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1F);	
+	}
+	
+	public static void sendGroupLeaveSound(Player p) {
+		p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 1F);	
 	}
 }
