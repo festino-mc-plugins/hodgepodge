@@ -273,6 +273,8 @@ public class MapCraftHandler implements Listener {
 					ItemMeta pre_map_meta = pre_map.getItemMeta();
 					pre_map_meta.setLore(Arrays.asList(new String[] {"", ChatColor.GRAY+"Finished"}));
 					pre_map.setItemMeta(pre_map_meta);
+				} else {
+					pre_map = null;
 				}
 				if (inv.contains(Material.PAPER) || inv.contains(Material.GLASS_PANE)) {
 					inv.setItem(2, pre_map);
@@ -298,9 +300,11 @@ public class MapCraftHandler implements Listener {
 				|| event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY
 					&& MapUtils.getEmptySlot(event.getWhoClicked().getInventory()) >= 0) )
 		{
+			event.setCancelled(true);
 			ItemStack mapItem = inv.getItem(2);
 			if (inv.contains(Material.PAPER)) { // extending
 				mapItem = null;
+				return;
 			} else if (inv.contains(Material.GLASS_PANE)) { // locking
 				MapView view = MapUtils.getView(map);
 				copyPixels(map, view);
@@ -321,9 +325,11 @@ public class MapCraftHandler implements Listener {
 					}
 				}
 				mapItem = MapUtils.getMap(view.getId());
+			} else {
+				mapItem = null;
+				return;
 			}
 
-			event.setCancelled(true);
 			item0.setAmount(item0.getAmount() - 1);
 			item1.setAmount(item1.getAmount() - 1);
 			// TODO: try to stack
