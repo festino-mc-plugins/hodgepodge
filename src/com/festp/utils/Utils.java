@@ -139,6 +139,10 @@ public class Utils {
 		if (l == null) return toString((Vector)null);
 		return toString(new Vector(l.getX(), l.getY(), l.getZ()));
 	}
+	public static String toString(Block b) {
+		if (b == null) return toString((Location)null);
+		return toString(b.getLocation());
+	}
 	
 	// TODO UtilsNBT
 	public static ItemStack setData(ItemStack i, String field, Object data) {
