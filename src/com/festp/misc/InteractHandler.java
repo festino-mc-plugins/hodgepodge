@@ -130,24 +130,10 @@ public class InteractHandler implements Listener {
 						continue;
 					}
 					Material m = item.getItemStack().getType();
-					ItemStack drop = null;
-					if (UtilsType.is_concrete_powder(m))
-						drop = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(m)));
-					else if (UtilsType.is_colored_terracotta(m))
-						drop = new ItemStack(Material.TERRACOTTA);
-					else if (UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
-						 if (UtilsType.is_wool(m)) 
-							 drop = new ItemStack(Material.WHITE_WOOL, 1);
-						 else if (UtilsType.is_carpet(m)) 
-							 drop = new ItemStack(Material.WHITE_CARPET, 1);
-					}
-					else if (m.equals(Material.RED_SAND))
-						drop = new ItemStack(Material.SAND);
-					else if (m.equals(Material.RED_SANDSTONE))
-						drop = new ItemStack(Material.SANDSTONE,1);
-					if (drop != null) {
-						item.getItemStack().setAmount(item.getItemStack().getAmount()-1);
-						w.dropItem(item.getLocation(), new ItemStack(drop));
+					Material dropMaterial = getCauldroned(m);
+					if (dropMaterial != null) {
+						item.getItemStack().setAmount(item.getItemStack().getAmount() - 1);
+						w.dropItem(item.getLocation(), new ItemStack(dropMaterial, 1));
 						Utils.lower_cauldron_water(b.getState());
 						CooldownedCauldron coolCauldron = new CooldownedCauldron(CAULDRON_COOLDOWN, b);
 						cauls.add(coolCauldron);
@@ -197,30 +183,37 @@ public class InteractHandler implements Listener {
 		// System.out.print(world_beacons.size() +"   " + world_items.size());
 	}
 	
-	// TODO: getCauldroned(): concrete powder -> concrete; dirt -> null
-	// 		 isWashable(): getCauldroned() != null
-	public boolean isWashable(Item dropped_item) {
-		Material material = dropped_item.getItemStack().getType();
-		if (UtilsType.is_concrete_powder(material))
-			return true;
-		if (UtilsType.is_colored_terracotta(material))
-			return true;
-		if (material == Material.RED_SAND)
-			return true;
-		if (material == Material.RED_SANDSTONE)
-			return true;
-		if (UtilsColor.colorFromMaterial(material) != DyeColor.WHITE)
-		{
-			if (UtilsType.is_glazed_terracotta(material))
-				return true;
-			if (UtilsType.is_concrete(material))
-				return true;
-			if (UtilsType.is_wool(material))
-				return true;
-			if (UtilsType.is_carpet(material))
-				return true;
+	public Material getCauldroned(Material m)
+	{
+		if (UtilsType.is_concrete_powder(m))
+			return UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(m));
+		else if (UtilsType.is_colored_terracotta(m))
+			return Material.TERRACOTTA;
+		else if (UtilsColor.colorFromMaterial(m) != DyeColor.WHITE) {
+			 if (UtilsType.is_wool(m)) 
+				 return Material.WHITE_WOOL;
+			 else if (UtilsType.is_carpet(m)) 
+				 return Material.WHITE_CARPET;
+			 /*else if (UtilsType.is_glazed_terracotta(m))
+				 return Material.WHITE_GLAZED_TERRACOTTA;
+			 else if (UtilsType.is_concrete(m))
+				 return Material.WHITE_CONCRETE;*/
 		}
-		return false;
+		else if (m.equals(Material.RED_SAND))
+			return Material.SAND;
+		else if (m.equals(Material.RED_SANDSTONE))
+			return Material.SANDSTONE;
+		return null;
+	}
+	
+	public boolean isWashable(Material m)
+	{
+		return getCauldroned(m) != null;
+	}
+	public boolean isWashable(Item dropped_item)
+	{
+		Material m = dropped_item.getItemStack().getType();
+		return isWashable(m);
 	}
 	
 	// loading new items(for cauldrons) and beacons(saddle/leash)
