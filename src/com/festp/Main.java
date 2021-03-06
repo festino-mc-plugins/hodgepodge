@@ -79,6 +79,8 @@ public class Main extends JavaPlugin implements Listener
 	public StorageHandler sthandler = new StorageHandler(this);
 	public StorageCraftManager stcraft = new StorageCraftManager(this, getServer());
 	
+	public AmethystManager amethyst_manager;
+	
 	public World mainworld = null;
 	
 	ExpHoppers exp_hop; 
@@ -187,7 +189,7 @@ public class Main extends JavaPlugin implements Listener
     	GlassItemFrameHandler glassItemFrames = new GlassItemFrameHandler();
     	pm.registerEvents(glassItemFrames, this);
 
-    	AmethystManager amethyst_manager = new AmethystManager();
+    	amethyst_manager = new AmethystManager();
     	pm.registerEvents(amethyst_manager, this);
 
     	exp_hop = new ExpHoppers(getServer());

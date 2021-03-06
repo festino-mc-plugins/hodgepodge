@@ -4,14 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import com.festp.Config;
 import com.festp.Main;
+import com.festp.misc.AmethystChunk;
+import com.festp.utils.Utils;
 
 public class CommandWorker implements Listener, CommandExecutor {
 	private Main plugin;
@@ -76,6 +80,30 @@ public class CommandWorker implements Listener, CommandExecutor {
 					sender.sendMessage(ChatColor.GREEN + "Конфиги обновлены.");
 				}
 				return true;
+			}
+			else if (args[0].equalsIgnoreCase("amethyst"))
+			{
+				if (args.length == 2 && args[1].equalsIgnoreCase("world"))
+				{
+					if (sender instanceof Player) {
+						sender.sendMessage(ChatColor.GREEN + plugin.amethyst_manager.getInfo(((Player)sender).getWorld()));
+						return true;
+					}
+				}
+				if (args.length == 2 && args[1].equalsIgnoreCase("chunk"))
+				{
+					if (sender instanceof Player) {
+						AmethystChunk chunk = plugin.amethyst_manager.get(((Player)sender).getLocation());
+						if (chunk == null) {
+							sender.sendMessage(ChatColor.GREEN + "Chunk isn't loaded");
+						} else {
+							sender.sendMessage(ChatColor.GREEN + "Loaded " + chunk.antispawnBlocks.size() + " blocks:");
+							for (Block b : chunk.antispawnBlocks)
+								sender.sendMessage(ChatColor.GREEN + "(" + b.getType() + ") " + Utils.toString(b.getLocation()));
+						}
+						return true;
+					}
+				}
 			}
 		}
 		else

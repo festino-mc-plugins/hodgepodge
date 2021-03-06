@@ -3,12 +3,16 @@ package com.festp.misc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
+import com.festp.DelayedTask;
+import com.festp.TaskList;
 import com.festp.utils.TimeUtils;
+import com.festp.utils.Utils;
 
 public class AmethystWorld {
 	private static final int MAX_RADIUS = Math.max(AmethystManager.DIAMOND_RADIUS, AmethystManager.NETHERITE_RADIUS);
@@ -21,16 +25,27 @@ public class AmethystWorld {
 		origWorld = world;
 	}
 	
+	public String getInfo() {
+		String res = "Loaded x(" + chunks.size() + "): ";
+		for (int i = 0; i < chunks.size(); i++) {
+			if (i > 0)
+				res += ", ";
+			res += chunks.get(i).get(0).chunk.getX();
+			res += "(" + chunks.get(i).size() + ")";
+		}
+		return res;
+	}
+	
 	public boolean cancelSpawn(Location l)
 	{
 		int chunkX = l.getChunk().getX();
 		int chunkZ = l.getChunk().getZ();
 		int offsetX = l.getBlockX() - chunkX * 16;
 		int offsetZ = l.getBlockZ() - chunkZ * 16;
-		int minChunkX = chunkX + (MAX_RADIUS - offsetX + 15) / 16;
-		int maxChunkX = chunkX + (MAX_RADIUS + offsetX - 1) / 16;
-		int minChunkZ = chunkZ + (MAX_RADIUS - offsetZ + 15) / 16;
-		int maxChunkZ = chunkZ + (MAX_RADIUS + offsetZ - 1) / 16;
+		int minChunkX = getMinChunk(chunkX, offsetX, MAX_RADIUS);
+		int maxChunkX = getMaxChunk(chunkX, offsetX, MAX_RADIUS);
+		int minChunkZ = getMinChunk(chunkZ, offsetZ, MAX_RADIUS);
+		int maxChunkZ = getMaxChunk(chunkZ, offsetZ, MAX_RADIUS);
 		int maxR = (MAX_RADIUS + 15) / 16;
 		for (int r = 0; r < maxR; r++) {
 			for (int dx = -r; dx <= 0; dx++) {
@@ -81,16 +96,51 @@ public class AmethystWorld {
 		return false;
 	}
 	
+	public void delayUpdate(Block center, int radius, int delay)
+	{
+		Runnable task = new Runnable() {
+			@Override
+			public void run() {
+				System.out.println(center.getType()+" " + Utils.toString(center.getLocation()));
+				Chunk c = center.getChunk();
+				int offsetX = center.getX() - c.getX() * 16;
+				int offsetZ = center.getZ() - c.getZ() * 16;
+				int minX = getMinChunk(c.getX(), offsetX, radius);
+				int maxX = getMaxChunk(c.getX(), offsetX, radius);
+				int minZ = getMinChunk(c.getZ(), offsetZ, radius);
+				int maxZ = getMaxChunk(c.getZ(), offsetZ, radius);
+				for (int chunkX = minX; chunkX <= maxX; chunkX++)
+					for (int chunkZ = minZ; chunkZ <= maxZ; chunkZ++)
+					{
+						AmethystChunk chunk = getOrAdd(chunkX, chunkZ);
+						chunk.update(center.getY() - radius, center.getY() + radius);
+					}
+			}
+		};
+		TaskList.add(new DelayedTask(delay, task));
+	}
+	
+	private static int getMinChunk(int chunkX, int offsetX, int radius) {
+		return chunkX + (radius - offsetX + 15) / 16;
+	}
+	
+	private static int getMaxChunk(int chunkX, int offsetX, int radius) {
+		return chunkX + (radius + offsetX - 1) / 16;
+	}
+	
 	private boolean hasCancelling(int chunkX, int chunkZ, Location spawn)
 	{
 		AmethystChunk chunk = getOrAdd(chunkX, chunkZ);
 		List<Block> blocks = chunk.get(spawn.getBlockY() - MAX_RADIUS, spawn.getBlockY() + MAX_RADIUS);
 		for (int i = blocks.size() - 1; i >= 0; i--) {
 			Block b = blocks.get(i);
-			if (!AmethystManager.isCancelling(b)) {
+			if (!AmethystManager.isCancelling(b.getType())) {
 				blocks.remove(i);
+				// TODO Delayed scan?
 				continue;
 			}
+			if (!AmethystManager.isCancelling(b))
+				continue;
 			int dist = getDist(spawn, b);
 			if (b.getType() == Material.DIAMOND_BLOCK && dist <= AmethystManager.DIAMOND_RADIUS
 					|| b.getType() == Material.NETHERITE_BLOCK && dist <= AmethystManager.NETHERITE_RADIUS)
@@ -105,6 +155,19 @@ public class AmethystWorld {
 		int dy = Math.abs(l.getBlockY() - b.getY());
 		int dz = Math.abs(l.getBlockZ() - b.getZ());
 		return Math.max(Math.max(dx, dy), dz);
+	}
+	
+	public AmethystChunk getIfLoaded(int chunkX, int chunkZ)
+	{
+		int xIndex = getByX(chunkX);
+		if (xIndex == -1)
+			return null;
+		if (chunkX != chunks.get(xIndex).get(0).chunk.getX())
+			return null;
+		int zIndex = getByZ(xIndex, chunkZ);
+		if (chunkZ != chunks.get(xIndex).get(zIndex).chunk.getX())
+			return null;
+		return chunks.get(xIndex).get(zIndex);
 	}
 	
 	private AmethystChunk getOrAdd(int chunkX, int chunkZ)

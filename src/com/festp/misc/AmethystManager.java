@@ -4,16 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPistonEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.world.ChunkPopulateEvent;
 
 import com.google.common.collect.Lists;
 
@@ -35,6 +42,16 @@ public class AmethystManager implements Listener {
 		}
 	}
 	
+	public AmethystChunk get(Location l)
+	{
+		Chunk chunk = l.getChunk();
+		return getWorld(l).getIfLoaded(chunk.getX(), chunk.getZ());
+	}
+	
+	public String getInfo(World w) {
+		return getWorld(w).getInfo();
+	}
+	
 	// cancel spawn
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onEntitySpawn(EntitySpawnEvent event)
@@ -53,10 +70,58 @@ public class AmethystManager implements Listener {
 				e.getVehicle().remove();
 		}
 	}
+
+	public void onChunkGenerate(ChunkPopulateEvent event)
+	{
+		// add empty
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST)
+	public void onBlockPlace(BlockPlaceEvent event)
+	{
+		if (event.isCancelled())
+			return;
+		
+		if (isCancelling(event.getItemInHand().getType())) {
+			Block block = event.getBlock();
+			getWorld(block.getWorld()).delayUpdate(block, 0, 1);
+		}
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST)
+	public void onPistonRetract(BlockPistonRetractEvent event) {
+		onBlockPiston(event, true);
+	}
+	@EventHandler(priority=EventPriority.LOWEST)
+	public void onPistonExtract(BlockPistonExtendEvent event) {
+		onBlockPiston(event, false);
+	}
+	private void onBlockPiston(BlockPistonEvent event, boolean retraction)
+	{
+		if (event.isCancelled())
+			return;
+		BlockFace dir = event.getDirection();
+		if (retraction)
+			dir = dir.getOppositeFace();
+		Block bNear = event.getBlock().getRelative(dir);
+		Block bFar = bNear.getRelative(dir);
+		Block bFrom = bNear, bTo = bFar;
+		if (retraction) {
+			bFrom = bFar;
+			bTo = bNear;
+		}
+		if (isCancelling(bFrom.getType())) {
+			getWorld(bTo.getWorld()).delayUpdate(bTo, 12, 3);
+		}
+	}
 	
 	private AmethystWorld getWorld(Location l)
 	{
-		World w = l.getWorld();
+		return getWorld(l.getWorld());
+	}
+	
+	private AmethystWorld getWorld(World w)
+	{
 		for (AmethystWorld world : worlds)
 			if (world.origWorld == w)
 				return world;
