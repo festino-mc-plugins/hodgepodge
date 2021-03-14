@@ -12,7 +12,6 @@ import org.bukkit.block.Block;
 import com.festp.DelayedTask;
 import com.festp.TaskList;
 import com.festp.utils.TimeUtils;
-import com.festp.utils.Utils;
 
 public class AmethystWorld {
 	private static final int MAX_RADIUS = Math.max(AmethystManager.DIAMOND_RADIUS, AmethystManager.NETHERITE_RADIUS);
@@ -25,14 +24,36 @@ public class AmethystWorld {
 		origWorld = world;
 	}
 	
-	public String getInfo() {
-		String res = "Loaded x(" + chunks.size() + "): ";
-		for (int i = 0; i < chunks.size(); i++) {
-			if (i > 0)
-				res += ", ";
-			res += chunks.get(i).get(0).chunk.getX();
-			res += "(" + chunks.get(i).size() + ")";
+	public void tryUnload()
+	{
+		long time = TimeUtils.getTicks();
+		for (int i = chunks.size() - 1; i >= 0; i--) {
+			List<AmethystChunk> zChunks = chunks.get(i);
+			for (int j = zChunks.size() - 1; j >= 0; j--) {
+				if (zChunks.get(j).canUnload(time))
+					zChunks.remove(j);
+			}
+			if (zChunks.size() == 0)
+				chunks.remove(i);
 		}
+	}
+	
+	public String getInfo(boolean reduced) {
+		String res = origWorld.getName() + ": loaded x(" + chunks.size() + "): ";
+		int chunkCount = 0;
+		for (int i = 0; i < chunks.size(); i++) {
+			chunkCount += chunks.get(i).size();
+			if (!reduced) {
+				if (i > 0)
+					res += ", ";
+				res += chunks.get(i).get(0).chunk.getX();
+				res += "(" + chunks.get(i).size() + ")";
+			}
+		}
+		if (reduced)
+			res += "total " + chunkCount + " chunks";
+		else
+			res += " (total " + chunkCount + " chunks)";
 		return res;
 	}
 	
@@ -47,7 +68,7 @@ public class AmethystWorld {
 		int minChunkZ = getMinChunk(chunkZ, offsetZ, MAX_RADIUS);
 		int maxChunkZ = getMaxChunk(chunkZ, offsetZ, MAX_RADIUS);
 		int maxR = (MAX_RADIUS + 15) / 16;
-		for (int r = 0; r < maxR; r++) {
+		for (int r = 0; r <= maxR; r++) {
 			for (int dx = -r; dx <= 0; dx++) {
 				int x = chunkX + dx;
 				if (x < minChunkX)
@@ -56,7 +77,7 @@ public class AmethystWorld {
 				int z = chunkZ + dz;
 				if (z < minChunkZ)
 					continue;
-				if (hasCancelling(chunkX, chunkZ, l))
+				if (hasCancelling(x, z, l))
 					return true;
 			}
 			for (int dx = -r + 1; dx <= 0; dx++) {
@@ -67,7 +88,7 @@ public class AmethystWorld {
 				int z = chunkZ + dz;
 				if (z > maxChunkZ)
 					break;
-				if (hasCancelling(chunkX, chunkZ, l))
+				if (hasCancelling(x, z, l))
 					return true;
 			}
 			for (int dx = 1; dx <= r; dx++) {
@@ -78,7 +99,7 @@ public class AmethystWorld {
 				int z = chunkZ + dz;
 				if (z < minChunkZ)
 					continue;
-				if (hasCancelling(chunkX, chunkZ, l))
+				if (hasCancelling(x, z, l))
 					return true;
 			}
 			for (int dx = 1; dx < r; dx++) {
@@ -89,7 +110,7 @@ public class AmethystWorld {
 				int z = chunkZ + dz;
 				if (z > maxChunkZ)
 					continue;
-				if (hasCancelling(chunkX, chunkZ, l))
+				if (hasCancelling(x, z, l))
 					return true;
 			}
 		}
@@ -101,7 +122,6 @@ public class AmethystWorld {
 		Runnable task = new Runnable() {
 			@Override
 			public void run() {
-				System.out.println(center.getType()+" " + Utils.toString(center.getLocation()));
 				Chunk c = center.getChunk();
 				int offsetX = center.getX() - c.getX() * 16;
 				int offsetZ = center.getZ() - c.getZ() * 16;
@@ -112,7 +132,7 @@ public class AmethystWorld {
 				for (int chunkX = minX; chunkX <= maxX; chunkX++)
 					for (int chunkZ = minZ; chunkZ <= maxZ; chunkZ++)
 					{
-						AmethystChunk chunk = getOrAdd(chunkX, chunkZ);
+						AmethystChunk chunk = getOrAdd(chunkX, chunkZ, false);
 						chunk.update(center.getY() - radius, center.getY() + radius);
 					}
 			}
@@ -121,7 +141,7 @@ public class AmethystWorld {
 	}
 	
 	private static int getMinChunk(int chunkX, int offsetX, int radius) {
-		return chunkX + (radius - offsetX + 15) / 16;
+		return chunkX - (radius - offsetX + 15) / 16;
 	}
 	
 	private static int getMaxChunk(int chunkX, int offsetX, int radius) {
@@ -130,7 +150,7 @@ public class AmethystWorld {
 	
 	private boolean hasCancelling(int chunkX, int chunkZ, Location spawn)
 	{
-		AmethystChunk chunk = getOrAdd(chunkX, chunkZ);
+		AmethystChunk chunk = getOrAdd(chunkX, chunkZ, false);
 		List<Block> blocks = chunk.get(spawn.getBlockY() - MAX_RADIUS, spawn.getBlockY() + MAX_RADIUS);
 		for (int i = blocks.size() - 1; i >= 0; i--) {
 			Block b = blocks.get(i);
@@ -165,16 +185,16 @@ public class AmethystWorld {
 		if (chunkX != chunks.get(xIndex).get(0).chunk.getX())
 			return null;
 		int zIndex = getByZ(xIndex, chunkZ);
-		if (chunkZ != chunks.get(xIndex).get(zIndex).chunk.getX())
+		if (chunkZ != chunks.get(xIndex).get(zIndex).chunk.getZ())
 			return null;
 		return chunks.get(xIndex).get(zIndex);
 	}
 	
-	private AmethystChunk getOrAdd(int chunkX, int chunkZ)
+	public AmethystChunk getOrAdd(int chunkX, int chunkZ, boolean isEmpty)
 	{
 		int xIndex = getByX(chunkX);
 		if (xIndex == -1) {
-			AmethystChunk res = createOld(chunkX, chunkZ);
+			AmethystChunk res = create(chunkX, chunkZ, isEmpty);
 			List<AmethystChunk> zChunks = new ArrayList<>();
 			zChunks.add(res);
 			chunks.add(zChunks);
@@ -184,7 +204,7 @@ public class AmethystWorld {
 		if (chunkX != foundX) {
 			if (foundX < chunkX)
 				xIndex++;
-			AmethystChunk res = createOld(chunkX, chunkZ);
+			AmethystChunk res = create(chunkX, chunkZ, isEmpty);
 			List<AmethystChunk> zChunks = new ArrayList<>();
 			zChunks.add(res);
 			chunks.add(xIndex, zChunks);
@@ -192,11 +212,11 @@ public class AmethystWorld {
 		}
 		List<AmethystChunk> zChunks = chunks.get(xIndex);
 		int zIndex = getByZ(xIndex, chunkZ);
-		int foundZ = zChunks.get(zIndex).chunk.getX();
+		int foundZ = zChunks.get(zIndex).chunk.getZ();
 		if (chunkZ != foundZ) {
 			if (foundZ < chunkZ)
 				zIndex++;
-			AmethystChunk res = createOld(chunkX, chunkZ);
+			AmethystChunk res = create(chunkX, chunkZ, isEmpty);
 			zChunks.add(zIndex, res);
 			return res;
 		}
@@ -246,8 +266,8 @@ public class AmethystWorld {
 		return low;
 	}
 	
-	private AmethystChunk createOld(int chunkX, int chunkZ)
+	private AmethystChunk create(int chunkX, int chunkZ, boolean isEmpty)
 	{
-		return new AmethystChunk(origWorld.getChunkAt(chunkX, chunkZ), worldHeight, TimeUtils.getTicks(), false);
+		return new AmethystChunk(origWorld.getChunkAt(chunkX, chunkZ), worldHeight, TimeUtils.getTicks(), isEmpty);
 	}
 }

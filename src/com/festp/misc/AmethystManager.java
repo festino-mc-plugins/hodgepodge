@@ -26,9 +26,11 @@ import com.google.common.collect.Lists;
 
 public class AmethystManager implements Listener {
 	private static final int MAX_HOR = 10, MAX_VERT = 10, MAX_DIAG = 140;
+	private static final int UNLOAD_COOLDOWN = 20*60*10;
 	public static final int DIAMOND_RADIUS = 10, NETHERITE_RADIUS = 25;
 	private List<EntityType> AFRAIDABLE_TYPES = new ArrayList<>();
 	private List<AmethystWorld> worlds = new ArrayList<>();
+	private int unloadTicks = 0;
 
 	public AmethystManager() {
 		AFRAIDABLE_TYPES = Lists.newArrayList(
@@ -42,14 +44,40 @@ public class AmethystManager implements Listener {
 		}
 	}
 	
+	public void tick()
+	{
+		unloadTicks++;
+		if (unloadTicks >= UNLOAD_COOLDOWN) {
+			unloadTicks -= UNLOAD_COOLDOWN;
+			tryUnload();
+		}
+	}
+	
+	public void tryUnload()
+	{
+		for (AmethystWorld world : worlds) {
+			world.tryUnload();
+		}
+	}
+	
 	public AmethystChunk get(Location l)
 	{
 		Chunk chunk = l.getChunk();
 		return getWorld(l).getIfLoaded(chunk.getX(), chunk.getZ());
 	}
 	
+	public String getInfo() {
+		String res = "";
+		for (int i = 0; i < worlds.size(); i++) {
+			if (i > 0)
+				res += "\n";
+			res += worlds.get(i).getInfo(true);
+		}
+		return res;
+	}
+	
 	public String getInfo(World w) {
-		return getWorld(w).getInfo();
+		return getWorld(w).getInfo(false);
 	}
 	
 	// cancel spawn
@@ -73,7 +101,9 @@ public class AmethystManager implements Listener {
 
 	public void onChunkGenerate(ChunkPopulateEvent event)
 	{
-		// add empty
+		Chunk chunk = event.getChunk();
+		AmethystWorld world = getWorld(event.getWorld());
+		world.getOrAdd(chunk.getX(), chunk.getZ(), true);
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST)

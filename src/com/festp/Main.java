@@ -72,7 +72,7 @@ public class Main extends JavaPlugin implements Listener
 	//TODO: metrics class, no public
 	public int metrics_ticks = 0;
 	public int max_metrics_ticks = 60*20; //3 minutes
-	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	public StoragesList stlist = new StoragesList();
 	public StoragesFileManager ststorage = new StoragesFileManager(this);
@@ -330,6 +330,12 @@ public class Main extends JavaPlugin implements Listener
 					
 					t2 = System.nanoTime();
 					metrics[14] += t2 - t1;
+					t1 = t2;
+					
+					amethyst_manager.tick();
+					
+					t2 = System.nanoTime();
+					metrics[15] += t2 - t1;
 					t1 = t2;
 				}
 			}, 0L, 1L);

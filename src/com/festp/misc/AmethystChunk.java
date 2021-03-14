@@ -8,6 +8,8 @@ import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
+import com.festp.utils.TimeUtils;
+
 public class AmethystChunk {
 	private static final int PART_BITS = Integer.SIZE; // int is 32-bit
 	private static final int PART_SIZE = PART_BITS * 16; // int is 32-bit
@@ -38,6 +40,8 @@ public class AmethystChunk {
 	 * @return All <b>chunk</b> antispawn blocks*/
 	public List<Block> get(int yBegin, int yEnd)
 	{
+		lastUpdate = TimeUtils.getTicks();
+
 		int indexBegin = getMinSection(yBegin);
 		int indexEnd = getMaxSection(yEnd);
 		ChunkSnapshot snap = null;
