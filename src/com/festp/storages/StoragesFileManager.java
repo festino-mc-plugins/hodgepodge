@@ -7,10 +7,9 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 import com.festp.Main;
+import com.festp.inventory.ItemFileManager;
 import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 
@@ -107,15 +106,7 @@ public class StoragesFileManager {
 				int lvl = ymlFormat.getInt("level");
 				StorageMultitype st = new StorageMultitype(ID, TimeUtils.getTicks(), lvl);
 				
-				int slots = ymlFormat.getInt("slots");
-				ArrayList<ItemStack> items = new ArrayList<ItemStack>();
-				for (int i = 0; i < slots; i++) {
-					ItemStack item = ymlFormat.getItemStack("s." + i);
-					items.add(item);
-				}
-				ItemStack[] itemsList = (ItemStack[])items.toArray(new ItemStack[items.size()]);
-				st.getInventory().setContents(itemsList);
-				items.clear();
+				st.getInventory().setContents(ItemFileManager.load(ymlFormat));
 
 				String grab = ymlFormat.getString("grab_mode"); // TO DO: pick out strings, create function
 				if (grab == null)
@@ -190,15 +181,7 @@ public class StoragesFileManager {
 		File dataFile = new File(Main.getPath() + Main.storagesdir,
 				storage.getID() + ".yml");
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
-		
-		Inventory inv = storage.getInventory();
-		for (int i = 0; i < inv.getContents().length; i++) {
-			ItemStack item = inv.getContents()[i];
-
-			ymlFormat.set("s." + i, item);
-		}
 		ymlFormat.set("type", "multitype");
-		ymlFormat.set("slots", inv.getContents().length);
 		ymlFormat.set("level", storage.getLvl());
 		ymlFormat.set("grab_mode", storage.canGrab().toString());
 		ymlFormat.set("grab_filter", storage.getGrabFilter().toString());
@@ -206,6 +189,9 @@ public class StoragesFileManager {
 		ymlFormat.set("sort_mode", storage.getSortMode().toString());
 		ymlFormat.set("sort_time", storage.getSortTime().toString());
 		ymlFormat.set("stack_time", storage.getStackTime().toString());
+		
+		ItemFileManager.save(ymlFormat, storage.getInventory().getContents());
+		
 		ymlFormat.save(dataFile);
 	}
 }
