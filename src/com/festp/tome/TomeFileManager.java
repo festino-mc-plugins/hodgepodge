@@ -7,6 +7,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
+import com.festp.inventory.ItemFileManager;
+
 public class TomeFileManager {
 	
 	public static ItemStack[] loadInventory(String ymlStr)
@@ -18,27 +20,14 @@ public class TomeFileManager {
 		} catch (InvalidConfigurationException e) {
 			e.printStackTrace();
 		}
-		
-		int slots = ymlFormat.getInt("slots");
-		ItemStack[] items = new ItemStack[slots];
-		for (int i = 0; i < slots; i++) {
-			ItemStack item = ymlFormat.getItemStack("s." + i);
-			items[i] = item;
-		}
-		return items;
+		return ItemFileManager.load(ymlFormat).contents;
 	}
 
 	public static String saveInventory(ItemStack[] inv) {
 		String data = "";
 		Reader reader = new StringReader(data);
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(reader);
-		
-		for (int i = 0; i < inv.length; i++) {
-			ItemStack item = inv[i];
-
-			ymlFormat.set("s." + i, item);
-		}
-		ymlFormat.set("slots", inv.length);
+		ItemFileManager.save(ymlFormat, inv);;
 		return ymlFormat.saveToString();
 	}
 }

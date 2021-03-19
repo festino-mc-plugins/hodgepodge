@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.festp.Main;
 import com.festp.inventory.ItemFileManager;
+import com.festp.inventory.ItemLoadResult;
 import com.festp.utils.TimeUtils;
 import com.festp.utils.Utils;
 
@@ -106,7 +107,10 @@ public class StoragesFileManager {
 				int lvl = ymlFormat.getInt("level");
 				StorageMultitype st = new StorageMultitype(ID, TimeUtils.getTicks(), lvl);
 				
-				st.getInventory().setContents(ItemFileManager.load(ymlFormat));
+				ItemLoadResult res = ItemFileManager.load(ymlFormat);
+				if (!res.valid)
+					ItemFileManager.backup(dataFile);
+				st.getInventory().setContents(res.contents);
 
 				String grab = ymlFormat.getString("grab_mode"); // TO DO: pick out strings, create function
 				if (grab == null)

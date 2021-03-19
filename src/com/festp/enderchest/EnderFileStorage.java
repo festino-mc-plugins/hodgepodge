@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.Main;
 import com.festp.inventory.ItemFileManager;
+import com.festp.inventory.ItemLoadResult;
 
 public class EnderFileStorage {
     private Main pl;
@@ -63,14 +64,11 @@ public class EnderFileStorage {
 	}
 	
 	public boolean loadEnderChest(String groupname){
-		Inventory inv = pl.getServer().createInventory(null, InventoryType.ENDER_CHEST, groupname);
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
 		File dataFile = getFile(groupname);
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//System.out.println(dataFile.getAbsolutePath());
 		boolean admingroup = ymlFormat.getBoolean("admin", false);
 		EnderChest ec;
-		inv.setContents(ItemFileManager.loadEC(ymlFormat));
 		if(admingroup) {
 			ec = new EnderChest(groupname);
 			pl.ecgroup.admingroups.add(ec);
@@ -87,14 +85,18 @@ public class EnderFileStorage {
 			}
 			pl.ecgroup.groups.add(ec);
 		}
+		Inventory inv = pl.getServer().createInventory(null, InventoryType.ENDER_CHEST, groupname);
+		ItemLoadResult res = ItemFileManager.loadEC(ymlFormat);
+		if (!res.valid)
+			ItemFileManager.backup(dataFile);
+		inv.setContents(res.contents);
 		ec.setInventory(inv);
-		items.clear();
 		return true;
 	}
 
 	public boolean deleteDataFile(String groupname) {
 		try {
-			File dataFile = new File(Main.getPath() + Main.enderdir, groupname + ".yml");
+			File dataFile = getFile(groupname);
 			if (dataFile.exists())
 			{
 				dataFile.delete();
@@ -102,7 +104,7 @@ public class EnderFileStorage {
 			}
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("["+pl.getName()+"] Could not delete data file " + groupname + "!");
+			pl.getLogger().severe("["+pl.getName()+"] Could not delete EC data file " + groupname + "!");
 			e.printStackTrace();
 		}
 		return false;
