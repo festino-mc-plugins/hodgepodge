@@ -31,7 +31,7 @@ public class ItemFileManager {
 	@Deprecated
 	public static ItemStack[] loadEC(FileConfiguration ymlFormat)
 	{
-		if (!ymlFormat.contains("EnderChestSlot.0"))
+		if (!ymlFormat.contains("EnderChestSlot"))
 			return load(ymlFormat);
 		int slots = ymlFormat.getInt("slots");
 		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
