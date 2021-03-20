@@ -4,11 +4,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class ItemLoadResult {
 	public final ItemStack[] contents;
-	public final boolean valid;
+	public final boolean invalid;
 	
-	public ItemLoadResult(ItemStack[] contents, boolean valid)
+	public ItemLoadResult(ItemStack[] contents, boolean invalid)
 	{
 		this.contents = contents;
-		this.valid = valid;
+		this.invalid = invalid;
 	}
 }

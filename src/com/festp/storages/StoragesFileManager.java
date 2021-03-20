@@ -8,23 +8,17 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import com.festp.Logger;
 import com.festp.Main;
 import com.festp.inventory.ItemFileManager;
 import com.festp.inventory.ItemLoadResult;
 import com.festp.utils.TimeUtils;
-import com.festp.utils.Utils;
+import com.festp.utils.YamlFilenameFilter;
 
 public class StoragesFileManager {
 	
 	public static int nextID = 1;
 	private static final String SEP = System.getProperty("file.separator");
-	
-	private Main pl;
-	
-	
-	public StoragesFileManager(Main pl) {
-		this.pl = pl;
-	}
 
 	public static boolean hasDataFile(int ID) {
 		return (new File(Main.getPath() + Main.storagesdir + SEP + ID + ".yml")).exists();
@@ -37,14 +31,13 @@ public class StoragesFileManager {
     		STpluginFolder.mkdir();
     	}
 		List<Integer> list = new ArrayList<>();
-		for(String s : STpluginFolder.list()) {
-			if(s.length() < 5) continue;
-			s = s.substring(0, s.length()-4);
+		for (String s : STpluginFolder.list(new YamlFilenameFilter())) {
+			String idStr = s.substring(0, s.length() - 4);
 			try {
-				int ID = Integer.parseInt(s);
+				int ID = Integer.parseInt(idStr);
 				list.add(ID);
 			} catch (Exception ex) {
-				Utils.printError("Storages: Wrong file in directory: " + s);
+				Logger.severe("Storages: Wrong file in directory: " + s);
 			}
 		}
 		return list;
@@ -63,7 +56,7 @@ public class StoragesFileManager {
 			}
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("Could not create data file with ID " + ID + "!");
+			Logger.severe("Could not create data file with ID " + ID + "!");
 			e.printStackTrace();
 		}
 		return false;
@@ -79,7 +72,7 @@ public class StoragesFileManager {
 			}
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("Could not delete data file with ID " + ID + "!");
+			Logger.severe("Could not delete data file with ID " + ID + "!");
 			e.printStackTrace();
 		}
 		return false;
@@ -87,6 +80,7 @@ public class StoragesFileManager {
 	
 	public Storage loadStorage(int ID){
 		File dataFile = new File(Main.getPath() + Main.storagesdir, ID + ".yml");
+		ItemFileManager.backupIfUpdateVersion(dataFile);
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//type
 		String stype = ymlFormat.getString("type");
@@ -108,7 +102,7 @@ public class StoragesFileManager {
 				StorageMultitype st = new StorageMultitype(ID, TimeUtils.getTicks(), lvl);
 				
 				ItemLoadResult res = ItemFileManager.load(ymlFormat);
-				if (!res.valid)
+				if (res.invalid)
 					ItemFileManager.backup(dataFile);
 				st.getInventory().setContents(res.contents);
 
@@ -146,7 +140,7 @@ public class StoragesFileManager {
 			else return null;
 			
 		} catch (Exception e) {
-			pl.getLogger().severe("Could not load inventory of ID "+ID+"!");
+			Logger.severe("Could not load inventory of ID "+ID+"!");
 			return null;
 		}
 	}
@@ -161,7 +155,7 @@ public class StoragesFileManager {
 			
 			return true;
 		} catch (Exception e) {
-			pl.getLogger().severe("Could not save inventory of ID "+st.ID+"!");
+			Logger.severe("Could not save inventory of ID "+st.ID+"!");
 			e.printStackTrace();
 		}
 		return false;

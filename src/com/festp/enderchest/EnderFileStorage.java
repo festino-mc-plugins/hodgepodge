@@ -1,13 +1,11 @@
 package com.festp.enderchest;
 
 import java.io.File;
-import java.util.ArrayList;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 import com.festp.Main;
 import com.festp.inventory.ItemFileManager;
@@ -65,6 +63,7 @@ public class EnderFileStorage {
 	
 	public boolean loadEnderChest(String groupname){
 		File dataFile = getFile(groupname);
+		ItemFileManager.backupIfUpdateVersion(dataFile);
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(dataFile);
 		//System.out.println(dataFile.getAbsolutePath());
 		boolean admingroup = ymlFormat.getBoolean("admin", false);
@@ -87,7 +86,7 @@ public class EnderFileStorage {
 		}
 		Inventory inv = pl.getServer().createInventory(null, InventoryType.ENDER_CHEST, groupname);
 		ItemLoadResult res = ItemFileManager.loadEC(ymlFormat);
-		if (!res.valid)
+		if (res.invalid)
 			ItemFileManager.backup(dataFile);
 		inv.setContents(res.contents);
 		ec.setInventory(inv);

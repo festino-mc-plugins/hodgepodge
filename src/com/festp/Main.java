@@ -75,7 +75,7 @@ public class Main extends JavaPlugin implements Listener
 	public long metrics[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	public StoragesList stlist = new StoragesList();
-	public StoragesFileManager ststorage = new StoragesFileManager(this);
+	public StoragesFileManager ststorage = new StoragesFileManager();
 	public StorageHandler sthandler = new StorageHandler(this);
 	public StorageCraftManager stcraft = new StorageCraftManager(this, getServer());
 	
@@ -92,6 +92,7 @@ public class Main extends JavaPlugin implements Listener
 	
 	long t1;
 	public void onEnable() {
+		Logger.setLogger(getLogger());
 		pluginname = getName();
 		PATH = "plugins" + System.getProperty("file.separator") + pluginname + System.getProperty("file.separator");
     	PluginManager pm = getServer().getPluginManager();
@@ -147,7 +148,7 @@ public class Main extends JavaPlugin implements Listener
     	ECTabCompleter ectc = new ECTabCompleter(this);
     	getCommand("enderchest").setTabCompleter(ectc);
     	getCommand("ec").setTabCompleter(ectc);
-    	ecgroup.loadEnderChests(ecstorage, ECpluginFolder.list());
+    	ecgroup.loadEnderChests(ecstorage, ECpluginFolder);
     	
     	Sleeping sleep = new Sleeping(this);
     	pm.registerEvents(sleep, this);

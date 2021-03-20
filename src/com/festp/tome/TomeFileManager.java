@@ -13,6 +13,7 @@ public class TomeFileManager {
 	
 	public static ItemStack[] loadInventory(String ymlStr)
 	{
+		ymlStr = ItemFileManager.updateVersion(ymlStr);
 		Reader reader = new StringReader(ymlStr);
 		FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(reader);
 		try {

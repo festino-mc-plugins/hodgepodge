@@ -1,15 +1,14 @@
-package com.festp.enderchest;
+ package com.festp.enderchest;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
 import com.festp.Main;
-
-import net.md_5.bungee.api.ChatColor;
+import com.festp.utils.YamlFilenameFilter;
 
 public class EnderChestGroup {
 	private Main pl;
@@ -22,23 +21,21 @@ public class EnderChestGroup {
 
 	public void saveEnderChests(EnderFileStorage storage)
 	{
-		/*for(int i=0; i<groups.size(); i++)
-			groups.get(i).saveEnderChest();*/
-		for(int i=0; i<admingroups.size(); i++) {
+		for (int i = 0; i < admingroups.size(); i++) {
 			storage.saveEnderChest(admingroups.get(i));
 		}
-		for(int i=0; i<groups.size(); i++) {
+		for (int i = 0; i < groups.size(); i++) {
 			storage.saveEnderChest(groups.get(i));
 		}
 	}
 
-	public void loadEnderChests(EnderFileStorage storage, String[] groupnames)
+	public void loadEnderChests(EnderFileStorage storage, File ECdir)
 	{
+		String[] groupnames = ECdir.list(new YamlFilenameFilter());
 		//load directory
 		//add chests in loop
 		for(int i = 0; i < groupnames.length; i++) {
-			if(groupnames[i].length() < 5) continue;
-			groupnames[i] = groupnames[i].substring(0, groupnames[i].length()-4);
+			groupnames[i] = groupnames[i].substring(0, groupnames[i].length() - 4);
 			/*if(ecstorage.hasDataFile(groupnames[i])) ecstorage.deleteDataFile(groupnames[i]);
 			else */storage.loadEnderChest(groupnames[i]);
 		}

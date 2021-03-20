@@ -1,10 +1,14 @@
 package com.festp.inventory;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.nio.file.FileAlreadyExistsException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 
@@ -15,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class ItemFileManager {
 
+	private static final String VALUE_STR = "v: ";
 	private static final String SEP = System.getProperty("file.separator");
 	private static boolean init = false;
 	private static int version = 0;
@@ -26,7 +31,17 @@ public class ItemFileManager {
 			Reader reader = new StringReader(data);
 			FileConfiguration ymlFormat = YamlConfiguration.loadConfiguration(reader);
 			ymlFormat.set("a", new ItemStack(Material.APPLE));
-			version = ymlFormat.getInt("a.v");
+			String res = ymlFormat.saveToString();
+			int startIndex = res.indexOf(VALUE_STR) + VALUE_STR.length();
+			int endIndex = res.indexOf('\n', startIndex);
+			int index = res.indexOf('\r', startIndex);
+			if (index >= 0 && index < endIndex || endIndex < 0)
+				endIndex = index;
+			index = res.length();
+			if (index >= 0 && index < endIndex || endIndex < 0)
+				endIndex = index;
+			version = Integer.parseInt(res.substring(startIndex, endIndex));
+			init = true;
 		}
 		return version;
 	}
@@ -39,6 +54,57 @@ public class ItemFileManager {
 		}
 	}
 	
+	public static String updateVersion(String yamlStr)
+	{
+		// reader and writer
+	}
+	
+	public static void backupIfUpdateVersion(File file)
+	{
+		File backupFile = getBackupPath(file);
+		file.renameTo(backupFile);
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		boolean changed = false;
+		try (BufferedReader br = new BufferedReader(new FileReader(backupFile))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+		        String line;
+		        boolean checkVer = false;
+		        while ((line = br.readLine()) != null) {
+		        	if (line.endsWith("==: org.bukkit.inventory.ItemStack")) {
+		        		checkVer = true;
+		        	} else if (checkVer) {
+			        	checkVer = false;
+		        		int index = line.indexOf(VALUE_STR);
+		        		if (index < 0) {
+		        			// invalid format
+		        		}
+		        		index += VALUE_STR.length();
+		        		int version = Integer.parseInt(line.substring(index));
+		        		if (version > getItemVersion()) {
+		        			changed = true;
+		        			line = line.substring(0, index) + getItemVersion();
+		        		}
+		        	}
+		        	bw.write(line);
+		        	bw.newLine();
+		        }
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (!changed)
+			backupFile.delete();
+	}
+	
+	public static boolean updateVersion(Reader src, Writer dst)
+	{
+		
+	}
+	
 	public static ItemLoadResult load(FileConfiguration ymlFormat)
 	{
 		int slots = ymlFormat.getInt("slots");
@@ -46,13 +112,6 @@ public class ItemFileManager {
 		boolean errored = false;
 		for (int i = 0; i < slots; i++) {
 			try {
-				if (ymlFormat.contains("s." + i)) {
-					int version = ymlFormat.getInt("s." + i + ".v");
-					if (version > getItemVersion()) {
-						ymlFormat.set("s." + i + ".v", getItemVersion());
-						errored = true;
-					}
-				}
 				ItemStack item = ymlFormat.getItemStack("s." + i);
 				items.add(item);
 			} catch(Exception ex) {
@@ -75,13 +134,6 @@ public class ItemFileManager {
 		boolean errored = false;
 		for (int i = 0; i < slots; i++) {
 			try {
-				if (ymlFormat.contains("EnderChestSlot." + i)) {
-					int version = ymlFormat.getInt("EnderChestSlot." + i + ".v");
-					if (version > getItemVersion()) {
-						ymlFormat.set("EnderChestSlot." + i + ".v", getItemVersion());
-						errored = true;
-					}
-				}
 				ItemStack item = ymlFormat.getItemStack("EnderChestSlot." + i);
 				items.add(item);
 			} catch(Exception ex) {
@@ -92,25 +144,33 @@ public class ItemFileManager {
 		return new ItemLoadResult(inv, errored);
 	}
 	
-	public static void backup(File dataFile) {
+	/** no backup */
+	public static File getBackupPath(File dataFile) {
 		String dataDir = dataFile.getParent();
 		String backupDir = dataDir + SEP + "backup";
 		new File(backupDir).mkdir();
-		try {
-			boolean notCreated = true;
-			String prefix = "";
-			while (notCreated) {
-				notCreated = false;
-				prefix += "_";
-				File backupFile = new File(backupDir + SEP + prefix + dataFile.getName());
-				try {
-					Files.copy(dataFile.toPath(), backupFile.toPath());
-				} catch (FileAlreadyExistsException e) {
-					notCreated = true;
-				}
+		String prefix = "";
+		int i = 0;
+		File backupFile;
+		while (true) {
+			backupFile = new File(backupDir + SEP + prefix + dataFile.getName());
+			if (!backupFile.exists()) {
+				break;
 			}
+			i++;
+			prefix = "(" + i + ")";
+		}
+		return backupFile;
+	}
+	
+	public static File backup(File dataFile) {
+		try {
+			File backupFile = getBackupPath(dataFile);
+			Files.copy(dataFile.toPath(), backupFile.toPath());
+			return backupFile;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 }
