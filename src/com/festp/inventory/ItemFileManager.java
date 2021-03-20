@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
+
+import com.festp.Logger;
 
 public class ItemFileManager {
 
@@ -56,7 +59,15 @@ public class ItemFileManager {
 	
 	public static String updateVersion(String yamlStr)
 	{
-		// reader and writer
+		try (StringReader reader = new StringReader(yamlStr)) {
+			try (StringWriter writer = new StringWriter()) {
+				updateVersion(reader, writer);
+				return writer.toString();
+			} catch (IOException e) {
+				Logger.severe("Couldn't update String version:\n" + "\"" + yamlStr + "\"");
+			}
+		}
+		return yamlStr;
 	}
 	
 	public static void backupIfUpdateVersion(File file)
@@ -65,12 +76,23 @@ public class ItemFileManager {
 		file.renameTo(backupFile);
 		try {
 			file.createNewFile();
+			FileReader reader = new FileReader(backupFile);
+			FileWriter writer = new FileWriter(file);
+			boolean changed = updateVersion(reader, writer);
+			if (!changed) {
+				file.delete();
+				backupFile.renameTo(file);
+			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+	}
+	
+	public static boolean updateVersion(Reader src, Writer dst)
+	{
 		boolean changed = false;
-		try (BufferedReader br = new BufferedReader(new FileReader(backupFile))) {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+		try (BufferedReader br = new BufferedReader(src)) {
+			try (BufferedWriter bw = new BufferedWriter(dst)) {
 		        String line;
 		        boolean checkVer = false;
 		        while ((line = br.readLine()) != null) {
@@ -96,13 +118,7 @@ public class ItemFileManager {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (!changed)
-			backupFile.delete();
-	}
-	
-	public static boolean updateVersion(Reader src, Writer dst)
-	{
-		
+		return changed;
 	}
 	
 	public static ItemLoadResult load(FileConfiguration ymlFormat)
