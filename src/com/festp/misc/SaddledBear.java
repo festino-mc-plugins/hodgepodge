@@ -98,7 +98,8 @@ public class SaddledBear {
 			cooldown--;
 		if (!main.isValid() || main.isDead()) {
 			remove();
-			main.getWorld().dropItemNaturally(main.getLocation(), new ItemStack(Material.SADDLE));
+			if (main.isDead())
+				main.getWorld().dropItemNaturally(main.getLocation(), new ItemStack(Material.SADDLE));
 			return false;
 		}
 		if (controller != null) {
@@ -177,6 +178,16 @@ public class SaddledBear {
 	public static boolean isSaddled(PolarBear bear) {
 		return bear.getEquipment().getChestplate().getType() == Material.SADDLE;
 	}
+
+	private static boolean isLinked(Entity entity) {
+		if (!(entity instanceof LivingEntity))
+			return false;
+		ItemStack helmet = ((LivingEntity) entity).getEquipment().getHelmet();
+		return helmet != null && helmet.hasItemMeta()
+				&& helmet.getItemMeta().getLore() != null
+				&& helmet.getItemMeta().getLore().size() >= 1
+				&& helmet.getItemMeta().getLore().get(0).equals(LINK_LORE);
+	}
 	
 	private void link(LivingEntity le) {
 		ItemStack helmet = new ItemStack(Material.OAK_BUTTON);
@@ -194,14 +205,8 @@ public class SaddledBear {
 		}
 	}
 	public static void removeIfLinkedEntity(Entity entity) {
-		if (entity instanceof LivingEntity) {
-			ItemStack helmet = ((LivingEntity) entity).getEquipment().getHelmet();
-			if (helmet != null && helmet.hasItemMeta()
-					&& helmet.getItemMeta().getLore() != null
-					&& helmet.getItemMeta().getLore().size() >= 1
-					&& helmet.getItemMeta().getLore().get(0).equals(LINK_LORE)) {
-				entity.remove();
-			}
+		if (isLinked(entity)) {
+			entity.remove();
 		}
 	}
 }
