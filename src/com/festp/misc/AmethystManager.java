@@ -88,7 +88,7 @@ public class AmethystManager implements Listener {
 			return;
 		
 		Entity e = event.getEntity();
-		//if (!AFRAIDABLE_TYPES.contains(event.getEntityType())) return;
+		if (!isCancellable(event.getEntityType())) return;
 		
 		Location l = event.getLocation();
 		AmethystWorld world = getWorld(l);
@@ -97,6 +97,16 @@ public class AmethystManager implements Listener {
 			if (e.getVehicle() != null)
 				e.getVehicle().remove();
 		}
+	}
+	
+	public boolean isAfraidable(EntityType type)
+	{
+		return AFRAIDABLE_TYPES.contains(type);
+	}
+	public boolean isCancellable(EntityType type)
+	{
+		//if (isAfraidable(type)) return true;
+		return type.isAlive();
 	}
 
 	public void onChunkGenerate(ChunkPopulateEvent event)
