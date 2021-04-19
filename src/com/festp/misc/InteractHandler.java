@@ -36,10 +36,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -357,17 +353,23 @@ public class InteractHandler implements Listener {
 				
 				//grass from dirt
 				Material currentblock = event.getClickedBlock().getType();
-				if (currentblock.equals(Material.DIRT) && event.getItem().getType().equals(Material.BONE_MEAL)) {
+				if (UtilsType.isLog(currentblock) || UtilsType.isWoodBark(currentblock))
+				{
+					if (UtilsType.isAxe(handMaterial) && !player.isSneaking())
+						event.setCancelled(true);
+					return;
+				}
+				if (currentblock.equals(Material.DIRT) && handMaterial.equals(Material.BONE_MEAL)) {
 					event.getClickedBlock().setType(Material.GRASS_BLOCK);
 					event.getItem().setAmount(event.getItem().getAmount() - 1);
 					event.setCancelled(true);
 					return;
 				} 
 				
-				if (UtilsType.is_dye(event.getItem().getType()) ) 
+				if (UtilsType.is_dye(handMaterial) ) 
 				{
-					DyeColor clicked_block_color = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
-					DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(event.getItem().getType());
+					DyeColor clicked_block_color = UtilsColor.colorFromMaterial(currentblock);
+					DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(handMaterial);
 					Material block_material = event.getClickedBlock().getType();
 					boolean is_wall_banner = UtilsType.is_wall_banner(block_material);
 					boolean is_banner = UtilsType.is_banner(block_material);
@@ -412,7 +414,7 @@ public class InteractHandler implements Listener {
 					else if (UtilsType.is_concrete(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete(clicking_dye_color));
 					else if (UtilsType.is_carpet(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_carpet(clicking_dye_color));
 					else return;
-					event.getItem().setAmount(event.getItem().getAmount()-1);
+					event.getItem().setAmount(event.getItem().getAmount() - 1);
 					return;
 				}
 

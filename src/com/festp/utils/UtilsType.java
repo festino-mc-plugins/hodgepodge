@@ -67,6 +67,22 @@ public class UtilsType {
 		case JUNGLE_LOG: return true;
 		case OAK_LOG: return true;
 		case SPRUCE_LOG: return true;
+		case CRIMSON_STEM: return true;
+		case WARPED_STEM: return true;
+		}
+		return false;
+	}
+	
+	public static boolean isWoodBark(Material m) {
+		switch(m) {
+		case ACACIA_WOOD: return true;
+		case BIRCH_WOOD: return true;
+		case DARK_OAK_WOOD: return true;
+		case JUNGLE_WOOD: return true;
+		case OAK_WOOD: return true;
+		case SPRUCE_WOOD: return true;
+		case CRIMSON_HYPHAE: return true;
+		case WARPED_HYPHAE: return true;
 		}
 		return false;
 	}
