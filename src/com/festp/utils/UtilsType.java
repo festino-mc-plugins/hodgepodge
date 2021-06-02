@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.block.data.type.BubbleColumn;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 public class UtilsType {
@@ -774,5 +775,17 @@ public class UtilsType {
 		case DIAMOND_SWORD: return true;
 		case NETHERITE_SWORD: return true;
 		default: return false; }
+	}
+	
+	public static boolean isFish(EntityType entityType) {
+		switch (entityType) {
+		case COD:
+		case SALMON:
+		case PUFFERFISH:
+		case TROPICAL_FISH:
+			return true;
+		default:
+			return false;
+		}
 	}
 }
