@@ -12,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,6 +23,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
 
+import com.festp.tome.SummonUtils;
+import com.festp.utils.UtilsType;
 import com.google.common.collect.Lists;
 
 public class AmethystManager implements Listener {
@@ -90,6 +93,8 @@ public class AmethystManager implements Listener {
 		Entity e = event.getEntity();
 		if (!isCancellable(event.getEntityType())) return;
 		
+		if (isActuallyNoSpawning(event)) return;
+		
 		Location l = event.getLocation();
 		AmethystWorld world = getWorld(l);
 		if (world.cancelSpawn(l)) {
@@ -106,7 +111,25 @@ public class AmethystManager implements Listener {
 	public boolean isCancellable(EntityType type)
 	{
 		//if (isAfraidable(type)) return true;
-		return type.isAlive();
+		return type.isAlive() && type != EntityType.PLAYER;
+	}
+	public boolean isActuallyNoSpawning(EntitySpawnEvent event)
+	{
+		if (UtilsType.isFish(event.getEntityType()))
+			return arePlayersNearby(event.getLocation(), 6);
+		if (SummonUtils.wasSummoned(event.getEntity()))
+			return true;
+		return false;
+	}
+	public boolean arePlayersNearby(Location l, double radius)
+	{
+		double radius2 = radius * radius;
+		for (Player p : l.getWorld().getPlayers())
+		{
+			if (p.getLocation().distanceSquared(l) < radius2)
+				return true;
+		}
+		return false;
 	}
 
 	public void onChunkGenerate(ChunkPopulateEvent event)
