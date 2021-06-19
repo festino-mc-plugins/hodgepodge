@@ -9,8 +9,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LeashHitch;
@@ -25,10 +25,9 @@ import org.bukkit.util.Vector;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
 
-import net.minecraft.server.v1_16_R3.BlockPosition;
-import net.minecraft.server.v1_16_R3.EntityLeash;
-import net.minecraft.server.v1_16_R3.EnumDirection;
-import net.minecraft.server.v1_16_R3.WorldServer;
+import net.minecraft.core.BlockPosition;
+import net.minecraft.server.level.WorldServer;
+import net.minecraft.world.entity.decoration.EntityLeash;
 
 public class LeashManager {
 	private JavaPlugin plugin;

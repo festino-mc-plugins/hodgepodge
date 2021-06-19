@@ -1,6 +1,6 @@
 package com.festp.enderchest;
 
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +21,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import com.festp.Main;
 import com.festp.Pair;
+
+import net.minecraft.core.BlockPosition;
+import net.minecraft.network.protocol.game.PacketPlayOutBlockAction;
 
 public class EnderChestHandler implements Listener {
 	private int ticks = 0;
@@ -133,23 +136,23 @@ public class EnderChestHandler implements Listener {
 	
 
 	void playOpenAnimation(Player p, Block chest) {
-		net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction packet =
-				new net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction(
-					new net.minecraft.server.v1_16_R3.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers.getBlock(chest.getType()),
+		PacketPlayOutBlockAction packet =
+				new PacketPlayOutBlockAction(
+					new BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
+					org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers.getBlock(chest.getType()),
 	                1, // Action ID, always 1 to opening chests
 	                3); // Action param, number of players (> 0 to open)
-		((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+		((CraftPlayer) p).getHandle().b.sendPacket(packet);
 	}
 	
 	void playCloseAnimation(Player p, Block chest) {
-		net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction packet =
-				new net.minecraft.server.v1_16_R3.PacketPlayOutBlockAction(
-					new net.minecraft.server.v1_16_R3.BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_16_R3.util.CraftMagicNumbers.getBlock(chest.getType()),
+		PacketPlayOutBlockAction packet =
+				new PacketPlayOutBlockAction(
+					new BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
+					org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers.getBlock(chest.getType()),
 					1, // Action ID, always 1 to close chests
 					0); // Action param, number of players (0 to close)
-		((CraftPlayer) p).getHandle().playerConnection.sendPacket(packet);
+		((CraftPlayer) p).getHandle().b.sendPacket(packet);
 	}
 	
 	public static void sendEnderchestCloseSound(Player p) {

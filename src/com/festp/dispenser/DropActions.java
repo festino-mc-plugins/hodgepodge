@@ -11,8 +11,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftAnimals;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftAgeable;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftAnimals;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -29,8 +29,7 @@ import com.festp.utils.Vector3i;
 import com.festp.dispenser.PumpManager.PumpState;
 import com.festp.dispenser.PumpManager.PumpType;
 
-import net.minecraft.server.v1_16_R3.EntityAgeable;
-import net.minecraft.server.v1_16_R3.EntityAnimal;
+import net.minecraft.world.entity.EntityAgeable;
 
 public class DropActions implements Listener {
 	Main pl;
@@ -98,7 +97,7 @@ public class DropActions implements Listener {
 			
 			
 			
-			if(event.getItem().getType().equals(Material.WATER_BUCKET))
+			if(event.getItem().getType().equals(Material.WATER_BUCKET)) // TODO REFACTOR
 			{
 				if(block.getType() == Material.CAULDRON)
 				{

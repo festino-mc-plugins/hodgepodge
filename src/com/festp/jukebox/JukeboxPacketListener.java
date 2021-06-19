@@ -4,10 +4,8 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.block.Jukebox;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,25 +17,8 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
-import net.minecraft.server.v1_16_R3.BlockPosition;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntity.PacketPlayOutRelEntityMove;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityMetadata;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityTeleport;
-import net.minecraft.server.v1_16_R3.PacketPlayOutEntityVelocity;
-import net.minecraft.server.v1_16_R3.PacketPlayOutKeepAlive;
-import net.minecraft.server.v1_16_R3.PacketPlayOutLightUpdate;
-import net.minecraft.server.v1_16_R3.PacketPlayOutMap;
-import net.minecraft.server.v1_16_R3.PacketPlayOutMapChunk;
-import net.minecraft.server.v1_16_R3.PacketPlayOutNamedSoundEffect;
-import net.minecraft.server.v1_16_R3.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardDisplayObjective;
-import net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardObjective;
-import net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardScore;
-import net.minecraft.server.v1_16_R3.PacketPlayOutSpawnEntity;
-import net.minecraft.server.v1_16_R3.PacketPlayOutSpawnPosition;
-import net.minecraft.server.v1_16_R3.PacketPlayOutStopSound;
-import net.minecraft.server.v1_16_R3.PacketPlayOutUpdateTime;
-import net.minecraft.server.v1_16_R3.PacketPlayOutWorldEvent;
+import net.minecraft.core.BlockPosition;
+import net.minecraft.network.protocol.game.PacketPlayOutWorldEvent;
 
 public class JukeboxPacketListener implements Listener {
 	final JukeboxHandler handler;
@@ -56,7 +37,7 @@ public class JukeboxPacketListener implements Listener {
         removePlayer(event.getPlayer());
     }
     private void removePlayer(Player player) {
-        Channel channel = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel;
+        Channel channel = ((CraftPlayer) player).getHandle().b.a.k; // .playerConnection.networkManager.channel
         channel.eventLoop().submit(() -> {
             channel.pipeline().remove(player.getName());
             return null;
@@ -130,7 +111,7 @@ public class JukeboxPacketListener implements Listener {
 
         };
 
-        ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().playerConnection.networkManager.channel.pipeline();
+        ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.a.k.pipeline();
         pipeline.addBefore("packet_handler", player.getName(), channelDuplexHandler);
 
     }

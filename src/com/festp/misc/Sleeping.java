@@ -152,10 +152,10 @@ public class Sleeping implements Listener {
 					sleepingPlayersCount++;
 				
 				//compass
-				if (p.getBedSpawnLocation() != null)
+				/*if (p.getBedSpawnLocation() != null)
 					p.setCompassTarget(p.getBedSpawnLocation());
 				else
-					p.setCompassTarget(p.getWorld().getSpawnLocation());
+					p.setCompassTarget(p.getWorld().getSpawnLocation());*/
 			}
 		}
 		update_resting();

@@ -7,8 +7,8 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_16_R3.map.CraftMapCanvas;
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_17_R1.map.CraftMapCanvas;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,7 +35,7 @@ import com.festp.utils.UtilsWorld;
 import com.google.common.collect.Lists;
 
 import net.md_5.bungee.api.ChatColor;
-import net.minecraft.server.v1_16_R3.WorldMap;
+import net.minecraft.world.level.saveddata.maps.WorldMap;
 
 public class MapCraftHandler implements Listener {
 
@@ -167,7 +167,7 @@ public class MapCraftHandler implements Listener {
 							colors[x + 128*z] = canvas.getPixel(x, z);
 					break;
 				}
-			mapImage.colors = colors;
+			mapImage.g = colors; // .colors
 		} catch (Exception e) {
 			Utils.printError("Error while creating copy of map #" + mapFrom.getId());
 			e.printStackTrace();

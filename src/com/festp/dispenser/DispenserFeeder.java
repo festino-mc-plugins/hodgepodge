@@ -5,10 +5,7 @@ import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftAnimals;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -17,9 +14,6 @@ import org.bukkit.inventory.ItemStack;
 
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsRandom;
-
-import net.minecraft.server.v1_16_R3.EntityAgeable;
-import net.minecraft.server.v1_16_R3.EntityAnimal;
 
 public class DispenserFeeder {
 	public static final int LOVE_TICKS = 600;
