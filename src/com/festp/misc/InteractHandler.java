@@ -351,14 +351,20 @@ public class InteractHandler implements Listener {
 						Utils.lower_cauldron_water(d.getBlock().getState());
 				}
 				
-				//grass from dirt
 				Material currentblock = event.getClickedBlock().getType();
-				if (UtilsType.isLog(currentblock) || UtilsType.isWoodBark(currentblock))
+				// tool shift rightclicks
+				if (!player.isSneaking())
 				{
-					if (UtilsType.isAxe(handMaterial) && !player.isSneaking())
+					boolean axeCond = UtilsType.isAxe(handMaterial) && (UtilsType.isLog(currentblock) || UtilsType.isWoodBark(currentblock));
+					boolean shovelCond = UtilsType.isShovel(handMaterial) && (currentblock == Material.COARSE_DIRT
+							|| currentblock == Material.PODZOL || currentblock == Material.ROOTED_DIRT);
+					if (axeCond || shovelCond)
+					{
 						event.setCancelled(true);
-					return;
+						return;
+					}
 				}
+				//grass from dirt
 				if (currentblock.equals(Material.DIRT) && handMaterial.equals(Material.BONE_MEAL)) {
 					event.getClickedBlock().setType(Material.GRASS_BLOCK);
 					event.getItem().setAmount(event.getItem().getAmount() - 1);

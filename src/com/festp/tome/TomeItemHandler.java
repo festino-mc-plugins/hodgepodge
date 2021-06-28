@@ -375,6 +375,7 @@ public class TomeItemHandler implements Listener {
 		
 		if (type == TomeType.BOAT) {
 			cur_result = TomeFormatter.set_boat(cur_result, event.getInventory().getMatrix()[4]); //central cell
+	    	event.getInventory().setResult(cur_result);
 		}
 	}
 }

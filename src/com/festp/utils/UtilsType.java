@@ -50,8 +50,8 @@ public class UtilsType {
 		case SPRUCE_TRAPDOOR: return true;
 		case CRIMSON_TRAPDOOR: return true;
 		case WARPED_TRAPDOOR: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isTrapdoor(Material m) {
@@ -70,8 +70,8 @@ public class UtilsType {
 		case SPRUCE_LOG: return true;
 		case CRIMSON_STEM: return true;
 		case WARPED_STEM: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isWoodBark(Material m) {
@@ -84,8 +84,8 @@ public class UtilsType {
 		case SPRUCE_WOOD: return true;
 		case CRIMSON_HYPHAE: return true;
 		case WARPED_HYPHAE: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isSign(Material m) {
@@ -98,8 +98,8 @@ public class UtilsType {
 		case SPRUCE_SIGN: return true;
 		case CRIMSON_SIGN: return true;
 		case WARPED_SIGN: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isWallSign(Material m) {
@@ -112,8 +112,8 @@ public class UtilsType {
 		case SPRUCE_WALL_SIGN: return true;
 		case CRIMSON_WALL_SIGN: return true;
 		case WARPED_WALL_SIGN: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isWoodenDoor(Material m) {
@@ -126,8 +126,8 @@ public class UtilsType {
 		case SPRUCE_DOOR: return true;
 		case CRIMSON_DOOR: return true;
 		case WARPED_DOOR: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isDoor(Material m) {
@@ -146,12 +146,13 @@ public class UtilsType {
 		case SPRUCE_PRESSURE_PLATE: return true;
 		case CRIMSON_PRESSURE_PLATE: return true;
 		case WARPED_PRESSURE_PLATE: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isPlate(Material m) {
-		if(isWoodenDoor(m) || m == Material.LIGHT_WEIGHTED_PRESSURE_PLATE || m == Material.HEAVY_WEIGHTED_PRESSURE_PLATE)
+		if(isWoodenDoor(m) || m == Material.LIGHT_WEIGHTED_PRESSURE_PLATE || m == Material.HEAVY_WEIGHTED_PRESSURE_PLATE
+				|| m == Material.STONE_PRESSURE_PLATE || m == Material.POLISHED_BLACKSTONE_PRESSURE_PLATE)
 			return true;
 		return false;
 	}
@@ -166,11 +167,11 @@ public class UtilsType {
 		case SPRUCE_BUTTON: return true;
 		case CRIMSON_BUTTON: return true;
 		case WARPED_BUTTON: return true;
+		default: return false;
 		}
-		return false;
 	}
 	public static boolean isButton(Material m) {
-		 return isWoodenButton(m) || m == Material.STONE_BUTTON;
+		 return isWoodenButton(m) || m == Material.STONE_BUTTON || m == Material.POLISHED_BLACKSTONE_BUTTON;
 	}
 	
 	public static boolean isWoodenFence(Material m) {
@@ -183,8 +184,8 @@ public class UtilsType {
 		case SPRUCE_FENCE: return true;
 		case CRIMSON_FENCE: return true;
 		case WARPED_FENCE: return true;
+		default: return false;
 		}
-		return false;
 	}
 	public static boolean isFence(Material m) {
 		return isWoodenFence(m) || m == Material.NETHER_BRICK_FENCE;
@@ -199,8 +200,8 @@ public class UtilsType {
 		case SPRUCE_FENCE_GATE: return true;
 		case CRIMSON_FENCE_GATE: return true;
 		case WARPED_FENCE_GATE: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isSapling(Material m) {
@@ -213,8 +214,8 @@ public class UtilsType {
 		case SPRUCE_SAPLING: return true;
 		case CRIMSON_FUNGUS: return true;
 		case WARPED_FUNGUS: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isMushroom(Material m) {
@@ -223,8 +224,8 @@ public class UtilsType {
 		case RED_MUSHROOM: return true;
 		case CRIMSON_FUNGUS: return true;
 		case WARPED_FUNGUS: return true;
+		default: return false;
 		}
-		return false;
 	}
 	
 	public static boolean isFlowingLiquid(Block b) {
