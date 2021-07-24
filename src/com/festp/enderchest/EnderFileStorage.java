@@ -53,6 +53,7 @@ public class EnderFileStorage {
 				ymlFormat.set("ecgroup", ingroup);
 				ymlFormat.set("invited", invited);
 			}
+			ymlFormat.save(dataFile);
 			return true;
 		} catch (Exception e) {
 			pl.getLogger().severe("["+pl.getName()+"] Could not save inventory of "+ groupName +"!");

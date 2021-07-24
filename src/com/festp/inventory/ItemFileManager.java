@@ -181,6 +181,7 @@ public class ItemFileManager {
 	
 	public static File backup(File dataFile) {
 		try {
+			Logger.warning("Backing up file " + dataFile);
 			File backupFile = getBackupPath(dataFile);
 			Files.copy(dataFile.toPath(), backupFile.toPath());
 			return backupFile;
