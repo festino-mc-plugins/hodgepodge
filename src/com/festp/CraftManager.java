@@ -612,7 +612,7 @@ public class CraftManager implements Listener {
     	for (int i = 0; i < slabs_to_blocks.length; i++) {
     		if ( slabs_to_blocks[i] != Material.STONE_BRICK_SLAB && slabs_to_blocks[i] != Material.QUARTZ_SLAB
     				&& slabs_to_blocks[i] != Material.SANDSTONE_SLAB && slabs_to_blocks[i] != Material.RED_SANDSTONE_SLAB
-    				&& slabs_to_blocks[i] != Material.PURPUR_SLAB) {
+    				&& slabs_to_blocks[i] != Material.PURPUR_SLAB && slabs_to_blocks[i] != Material.NETHER_BRICK_SLAB) {
             	NamespacedKey temp_key = new NamespacedKey(plugin, "2slab-"+gen_key_from_material(slabs_to_blocks[i]));
             	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 1) );
             	temp_recipe.addIngredient(2, slabs_to_blocks[i]);
