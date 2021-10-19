@@ -20,12 +20,15 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Damageable;
+import org.bukkit.entity.Egg;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
@@ -244,5 +247,20 @@ public class FeatureHandler implements Listener {
 	
 	private static boolean is_valid_portal_tp(Block b) {
 		return b.getType() != Material.NETHER_PORTAL && UtilsType.playerCanStay(b);
+	}
+	
+	@EventHandler
+	public void onEntityDamageByEntity(EntityDamageByEntityEvent event)
+	{
+		if (event.getDamager() instanceof Snowball || event.getDamager() instanceof Egg)
+		{
+			if (event.getEntity() instanceof Player)
+			{
+				if (event.getDamage() < 1E-10)
+					event.setDamage(1E-10);
+				if (event.isCancelled())
+					event.setCancelled(false);
+			}
+		}
 	}
 }
