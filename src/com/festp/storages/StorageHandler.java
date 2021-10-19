@@ -8,7 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.ShulkerBox;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftItem;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
@@ -40,7 +39,9 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import com.festp.Config;
+import com.festp.DelayedTask;
 import com.festp.Pair;
+import com.festp.TaskList;
 import com.festp.Main;
 import com.festp.storages.Storage.Grab;
 import com.festp.storages.StorageMultitype.HandleTime;
@@ -587,16 +588,16 @@ public class StorageHandler implements Listener {
 				{
 				case RIGHT:
 					if (st instanceof StorageMultitype) {
-						event.getWhoClicked().openInventory(st.getInventory());
+						openInventoryDelayed(event.getWhoClicked(), st.getInventory());
 					}
 					else if (st instanceof StorageBottomless) {
-						event.getWhoClicked().openInventory(((StorageBottomless) st).getMenu());
+						openInventoryDelayed(event.getWhoClicked(), ((StorageBottomless) st).getMenu());
 					}
 					event.setCancelled(true);
 					break;
 				case SHIFT_RIGHT:
 					if (st instanceof StorageMultitype) {
-						event.getWhoClicked().openInventory(((StorageMultitype)st).getMenu());
+						openInventoryDelayed(event.getWhoClicked(), ((StorageMultitype) st).getMenu());
 					}
 					return;
 				case CONTROL_DROP:
@@ -680,6 +681,17 @@ public class StorageHandler implements Listener {
 		// TO DO: Optimize using Inventory Utils: from(), to(), enum(CURSOR, TOP, BOTTOM, OUTSIDE)
 		delayedGrab(event.getView().getTopInventory());
 		delayedGrab(event.getView().getBottomInventory());
+	}
+	
+	// fixing 1.17 glitch: (after closing storage/menu) player inventory stop updating, and opening inventory has initial storage on cursor
+	private void openInventoryDelayed(HumanEntity humanEntity, Inventory inv)
+	{
+		//event.getWhoClicked().closeInventory();
+		TaskList.add(new DelayedTask(0, new Runnable() { @Override
+			public void run() {
+				humanEntity.openInventory(inv);
+			}
+		}));
 	}
 
 	@EventHandler
