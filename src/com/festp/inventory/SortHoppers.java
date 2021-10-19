@@ -1,11 +1,7 @@
 package com.festp.inventory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.Material;
 import org.bukkit.block.Container;
-import org.bukkit.block.Hopper;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
@@ -17,7 +13,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
-import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 
 public class SortHoppers implements Listener {
