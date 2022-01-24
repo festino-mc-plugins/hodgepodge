@@ -1,7 +1,7 @@
 package com.festp.storages;
 
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import com.festp.DelayedTask;
 import com.festp.Pair;
 import com.festp.TaskList;
+import com.festp.utils.NBTUtils;
 import com.festp.utils.Utils;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -172,25 +173,25 @@ public abstract class Storage
 		if(storage == null)
 			return -1;
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(storage);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null)
         	return -1;
-        if( compound.hasKey(NBT_KEY) )
-        	return compound.getInt(NBT_KEY);
+        if (NBTUtils.hasKey(compound, NBT_KEY))
+        	return NBTUtils.getInt(compound, NBT_KEY);
 		return -1;
 	}
 	
 	public static ItemStack setID(ItemStack i, int ID) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null) {
-           compound = new NBTTagCompound();
-            nmsStack.setTag(compound);
-            compound = nmsStack.getTag();
+            compound = new NBTTagCompound();
+            NBTUtils.setTag(nmsStack, compound);
+            compound = NBTUtils.getTag(nmsStack);
         }
         //it guarantee not to stack
-        compound.setInt(NBT_KEY, ID);
-        nmsStack.setTag(compound);
+        NBTUtils.setInt(compound, NBT_KEY, ID);
+        NBTUtils.setTag(nmsStack, compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
 	}

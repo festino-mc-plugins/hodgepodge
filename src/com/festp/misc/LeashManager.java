@@ -8,9 +8,8 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftLeash;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LeashHitch;
@@ -22,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import com.festp.utils.NBTUtils;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
 
@@ -242,7 +242,7 @@ public class LeashManager {
 		if (lead == null || lead.getType() != Material.LEAD)
 			return 0;
 		
-		String len = Utils.getString(lead, LENGTH_KEY);
+		String len = NBTUtils.getString(lead, LENGTH_KEY);
 		if (len == null)
 			return DEFAULT_R;
 		
@@ -299,7 +299,7 @@ public class LeashManager {
 
 		EntityLeash nmsLeashHitch = new EntityLeash(world,
 				new BlockPosition(hitch_loc.getX(), hitch_loc.getY(), hitch_loc.getZ()));
-		world.addEntity(nmsLeashHitch);
+		world.b(nmsLeashHitch); // is equal to addFreshEntity using SpawnReason.DEFAULT
 		LeashHitch hitch = (LeashHitch) nmsLeashHitch.getBukkitEntity();
 		
 		return hitch;

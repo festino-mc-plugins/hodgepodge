@@ -8,7 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
-import com.festp.utils.Utils;
+import com.festp.utils.NBTUtils;
 import com.google.common.collect.Lists;
 
 public class MapUtils {
@@ -65,7 +65,7 @@ public class MapUtils {
 	public static ItemStack getMap(int id, boolean scale_name)
 	{
 		ItemStack item = new ItemStack(Material.FILLED_MAP, 1);
-		item = Utils.setData(item, "map", id);
+		item = NBTUtils.setData(item, "map", id);
 		if (SmallMapUtils.isSmallMap(item)) {
 			ItemMeta meta = item.getItemMeta();
 			
@@ -84,6 +84,6 @@ public class MapUtils {
 	{
 		if (item == null || item.getType() != Material.FILLED_MAP)
 			return null;
-		return Utils.getInt(item, "map");
+		return NBTUtils.getInt(item, "map");
 	}
 }

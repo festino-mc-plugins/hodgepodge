@@ -327,24 +327,10 @@ public class InteractHandler implements Listener {
 							return;
 						MaterialData hand_data = event.getItem().getData();
 						Material hand = Utils.from_legacy(hand_data);
-						ItemStack washed;
-						if (UtilsType.is_colored_terracotta(hand)) {
-							washed = new ItemStack(Material.TERRACOTTA, 1);
-						} else if (UtilsType.is_wool(hand)) {
-							washed = new ItemStack(Material.WHITE_WOOL, 1);
-						} else if (UtilsType.is_concrete(hand)) {
-							washed = new ItemStack(Material.WHITE_CONCRETE, 1);
-						} else if (UtilsType.is_carpet(hand)) {
-							washed = new ItemStack(Material.WHITE_CARPET, 1);
-						} else if (UtilsType.is_glazed_terracotta(hand)) {
-							washed = new ItemStack(Material.WHITE_GLAZED_TERRACOTTA, 1);
-						} else if (UtilsType.is_concrete_powder(hand)) {
-							washed = new ItemStack(UtilsColor.fromColor_concrete(UtilsColor.colorFromMaterial(hand)), 1);
-						} else if (hand.equals(Material.RED_SAND)) {
-							washed = new ItemStack(Material.SAND, 1);
-						} else if (hand.equals(Material.RED_SANDSTONE)) {
-							washed = new ItemStack(Material.SANDSTONE, 1);
-						} else return;
+						Material washedMaterial = getCauldroned(hand);
+						if (washedMaterial == null)
+							return;
+						ItemStack washed = new ItemStack(washedMaterial, 1);
 						event.setCancelled(true);
 						event.getItem().setAmount(event.getItem().getAmount()-1);
 						player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 

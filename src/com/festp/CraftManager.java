@@ -35,8 +35,8 @@ import com.festp.dispenser.PumpManager;
 import com.festp.jukebox.NoteDiscCrafter;
 import com.festp.maps.MapCraftHandler;
 import com.festp.misc.LeashManager;
-import com.festp.misc.SoulStone;
 import com.festp.storages.Storage;
+import com.festp.utils.NBTUtils;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.storages.StorageBottomless;
@@ -61,7 +61,6 @@ public class CraftManager implements Listener {
 		addFurnaceCrafts();
 		addSomeCrafts();
 		addStairsAndSlabsCrafts();
-		SoulStone.addSoulStoneCrafts(plugin);
 		TomeItemHandler.addTomeCrafts(plugin);
 		MapCraftHandler.addCrafts(plugin);
 		NoteDiscCrafter.addCrafts(plugin);
@@ -210,7 +209,7 @@ public class CraftManager implements Listener {
     	
     	// long lead
     	ItemStack lead_3 = new ItemStack(Material.LEAD, 1);
-    	lead_3 = Utils.setData(lead_3, LeashManager.LENGTH_KEY, 30+""); // magic value
+    	lead_3 = NBTUtils.setData(lead_3, LeashManager.LENGTH_KEY, 30+""); // magic value
     	ItemMeta lead_3_meta = lead_3.getItemMeta();
     	lead_3_meta.setDisplayName("Long lead");
     	lead_3.setItemMeta(lead_3_meta);
@@ -280,12 +279,12 @@ public class CraftManager implements Listener {
 	
 	public static ItemStack applyTag(ItemStack item, CraftTag tag)
 	{
-		return Utils.setData(item, tag.toString().toLowerCase(), "true");
+		return NBTUtils.setData(item, tag.toString().toLowerCase(), "true");
 	}
 	
 	public static boolean hasTag(ItemStack item, CraftTag tag)
 	{
-		return Utils.hasDataField(item, tag.toString().toLowerCase());
+		return NBTUtils.hasDataField(item, tag.toString().toLowerCase());
 	}
 	
 	public static ItemStack moveSpecificTags(ItemStack to, ItemStack from)
@@ -491,30 +490,6 @@ public class CraftManager implements Listener {
 					event.setCancelled(true);
 				}
 			}
-		}
-		else if(SoulStone.isSoulStone(craft_result)) {
-			if(event.isShiftClick()) {
-				ItemStack[] player_inv = event.getWhoClicked().getInventory().getStorageContents();
-				System.out.println("CRAFT COUNT: "+craft_result.getAmount());
-				int max_crafts = 64;
-				for(ItemStack is : matrix)
-					if(is.getAmount() < max_crafts)
-						max_crafts = is.getAmount();
-				int empty_count = 0;
-				craft_result.setAmount(1);
-				for(int i = 0; i < player_inv.length; i++) {
-					if(player_inv[i] == null) {
-						player_inv[i] = SoulStone.setSoulStoneMeta(new ItemStack(craft_result));
-						empty_count++;
-						if(empty_count >= max_crafts)
-							break;
-					}
-				}
-				event.getWhoClicked().getInventory().setStorageContents(player_inv);
-				event.getInventory().setResult(new ItemStack(Material.AIR));
-			}
-			else
-				event.getInventory().setResult(SoulStone.setSoulStoneMeta(event.getInventory().getResult()));
 		}
 	}
 	

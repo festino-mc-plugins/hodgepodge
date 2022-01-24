@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.Entity;
@@ -15,6 +15,7 @@ import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.festp.utils.NBTUtils;
 import com.festp.utils.UtilsWorld;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -203,28 +204,28 @@ public class SummonUtils {
 	}
 	public static ItemStack setHasSummoned(ItemStack tome, UUID entity_uuid) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null) {
-           compound = new NBTTagCompound();
-            nmsStack.setTag(compound);
-            compound = nmsStack.getTag();
+            compound = new NBTTagCompound();
+            NBTUtils.setTag(nmsStack, compound);
+            compound = NBTUtils.getTag(nmsStack);
         }
         
-        if(entity_uuid == null) compound.remove("hassummoned");
-        else compound.setString("hassummoned", entity_uuid.toString());
-        nmsStack.setTag(compound);
+        if (entity_uuid == null) NBTUtils.remove(compound, "hassummoned");
+        else NBTUtils.setString(compound, "hassummoned", entity_uuid.toString());
+        NBTUtils.setTag(nmsStack, compound);
         tome = CraftItemStack.asBukkitCopy(nmsStack);
         return tome;
 	}
 	public static Entity getHasSummoned(ItemStack tome) {
-		if(tome == null)
+		if (tome == null)
 			return null;
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null)
         	return null;
-        if( compound.hasKey("hassummoned") ) {
-        	UUID entity_uuid = UUID.fromString(compound.getString("hassummoned"));
+        if ( NBTUtils.hasKey(compound, "hassummoned") ) {
+        	UUID entity_uuid = UUID.fromString(NBTUtils.getString(compound, "hassummoned"));
         	return Bukkit.getEntity(entity_uuid);
         }
 		return null;

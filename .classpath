@@ -2,7 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="E:/projects Java/spigot.jar"/>
 	<classpathentry kind="lib" path="E:/projects Java/PermissionsEx-1.23.4.jar"/>
+	<classpathentry kind="lib" path="E:/projects Java/spigot-api-1.18.1-R0.1-20220122.221546-49-shaded.jar"/>
+	<classpathentry kind="lib" path="E:/projects Java/spigot-1.18.1-R0.1-SNAPSHOT-remapped.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

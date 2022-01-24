@@ -7,8 +7,8 @@ import java.util.Map;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_17_R1.map.CraftMapCanvas;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.map.CraftMapCanvas;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,6 +30,7 @@ import com.festp.CraftManager;
 import com.festp.DelayedTask;
 import com.festp.Main;
 import com.festp.TaskList;
+import com.festp.utils.NBTUtils;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsWorld;
 import com.google.common.collect.Lists;
@@ -55,9 +56,9 @@ public class MapCraftHandler implements Listener {
 					if (item.getType() == Material.PAPER) {
 						info.paperCount++;
 					} else if (item.getType() == Material.MAP) {
-						if (Utils.hasDataField(item, MapUtils.SCALE_FIELD)) {
+						if (NBTUtils.hasDataField(item, MapUtils.SCALE_FIELD)) {
 							info.emptySmallCount++;
-						} else if (Utils.hasDataField(item, MapUtils.IS_DRAWING_FIELD)) {
+						} else if (NBTUtils.hasDataField(item, MapUtils.IS_DRAWING_FIELD)) {
 							info.emptyDrawingCount++;
 						}
 					} else if (SmallMapUtils.isSmallMap(item)) {
@@ -354,7 +355,7 @@ public class MapCraftHandler implements Listener {
 		ItemMeta meta = result_8.getItemMeta();
 		meta.setDisplayName("Map (8:1)");
 		result_8.setItemMeta(meta);
-		result_8 = Utils.setData(result_8, MapUtils.SCALE_FIELD, 8);
+		result_8 = NBTUtils.setData(result_8, MapUtils.SCALE_FIELD, 8);
 		
 		NamespacedKey key_8 = new NamespacedKey(plugin, "map_8");
     	ShapedRecipe map_8 = new ShapedRecipe(key_8, result_8);
@@ -368,7 +369,7 @@ public class MapCraftHandler implements Listener {
     	
 
 		ItemStack result_draw = new ItemStack(Material.MAP, 1);
-		result_draw = Utils.setData(result_draw, MapUtils.IS_DRAWING_FIELD, 8);
+		result_draw = NBTUtils.setData(result_draw, MapUtils.IS_DRAWING_FIELD, 8);
 		meta = result_draw.getItemMeta();
 		meta.setLore(Arrays.asList(new String[] { "Drawing" }));
 		result_draw.setItemMeta(meta);

@@ -3,16 +3,18 @@ package com.festp.tome;
 
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.tome.TomeItemHandler.TomeType;
+import com.festp.utils.NBTUtils;
 
 import net.minecraft.nbt.NBTTagCompound;
 
 public class TomeFormatter {
 	
-	public static ItemStack setType(ItemStack tome, TomeType type) {
+	public static ItemStack setType(ItemStack tome, TomeType type)
+	{
     	switch (type) {
     	case MINECART:
     		tome = TomeFormatter.setTome(tome, 'm', " "); break;
@@ -30,17 +32,18 @@ public class TomeFormatter {
     	return tome;
 	}
 
-	public static ItemStack set_boat_type(ItemStack tome, TreeSpecies type) {
+	public static ItemStack set_boat_type(ItemStack tome, TreeSpecies type)
+	{
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null) {
             compound = new NBTTagCompound();
-             nmsStack.setTag(compound);
-             compound = nmsStack.getTag();
-         }
+            NBTUtils.setTag(nmsStack, compound);
+            compound = NBTUtils.getTag(nmsStack);
+        }
         
-        if(compound.hasKey(TomeItemHandler.TOME_NBT_KEY)) {
-    		char[] info = compound.getString(TomeItemHandler.TOME_NBT_KEY).toCharArray();
+        if (NBTUtils.hasKey(compound, TomeItemHandler.TOME_NBT_KEY)) {
+    		char[] info = NBTUtils.getString(compound, TomeItemHandler.TOME_NBT_KEY).toCharArray();
         	switch(type)
         	{
         	case ACACIA: info[1] = 'a'; break;
@@ -50,8 +53,8 @@ public class TomeFormatter {
         	case GENERIC: info[1] = 'o'; break;
         	case REDWOOD: info[1] = 's'; break;
 			}
-	        compound.setString(TomeItemHandler.TOME_NBT_KEY, new String(info));
-	        nmsStack.setTag(compound);
+        	NBTUtils.setString(compound, TomeItemHandler.TOME_NBT_KEY, new String(info));
+        	NBTUtils.setTag(nmsStack, compound);
         }
         tome = CraftItemStack.asBukkitCopy(nmsStack);
 		return tome;
@@ -59,11 +62,11 @@ public class TomeFormatter {
 	
 	public static TreeSpecies get_boat_type(ItemStack tome) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if(compound == null)
         	return null;
-        if(compound != null && compound.hasKey(TomeItemHandler.TOME_NBT_KEY)) {
-        	String info = compound.getString(TomeItemHandler.TOME_NBT_KEY);
+        if(compound != null && NBTUtils.hasKey(compound, TomeItemHandler.TOME_NBT_KEY)) {
+        	String info = NBTUtils.getString(compound, TomeItemHandler.TOME_NBT_KEY);
         	switch(info.charAt(1))
         	{
         	case 'a': return TreeSpecies.ACACIA;
@@ -81,9 +84,9 @@ public class TomeFormatter {
 	
 	public static HorseFormat get_horse_data(ItemStack tome) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-	    NBTTagCompound compound = nmsStack.getTag();
-	    if (compound != null && compound.hasKey(TomeItemHandler.TOME_NBT_KEY)) {
-	    	String info = compound.getString(TomeItemHandler.TOME_NBT_KEY);
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
+	    if (compound != null && NBTUtils.hasKey(compound, TomeItemHandler.TOME_NBT_KEY)) {
+	    	String info = NBTUtils.getString(compound, TomeItemHandler.TOME_NBT_KEY);
 	    	if (info.length() > 2) {
 	    		return HorseFormat.fromString(info.substring(2));
 	    	}
@@ -93,15 +96,15 @@ public class TomeFormatter {
 
 	public static ItemStack set_horse_data(ItemStack tome, HorseFormat data) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(tome);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null) {
         	compound = new NBTTagCompound();
-        	nmsStack.setTag(compound);
-        	compound = nmsStack.getTag();
+            NBTUtils.setTag(nmsStack, compound);
+            compound = NBTUtils.getTag(nmsStack);
         }
         
-        compound.setString(TomeItemHandler.TOME_NBT_KEY, compound.getString(TomeItemHandler.TOME_NBT_KEY).substring(0, 2) + data.toString());
-        nmsStack.setTag(compound);
+        NBTUtils.setString(compound, TomeItemHandler.TOME_NBT_KEY, NBTUtils.getString(compound, TomeItemHandler.TOME_NBT_KEY).substring(0, 2) + data.toString());
+        NBTUtils.setTag(nmsStack, compound);
     	
 		return CraftItemStack.asBukkitCopy(nmsStack);
 	}
@@ -125,11 +128,11 @@ public class TomeFormatter {
 		if(item == null)
 			return null;
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if(compound == null)
         	return null;
-        if(compound != null && compound.hasKey(TomeItemHandler.TOME_NBT_KEY)) {
-        	String info = compound.getString(TomeItemHandler.TOME_NBT_KEY);
+        if(compound != null && NBTUtils.hasKey(compound, TomeItemHandler.TOME_NBT_KEY)) {
+        	String info = NBTUtils.getString(compound, TomeItemHandler.TOME_NBT_KEY);
         	if(info.startsWith("m")) {
 				return TomeType.MINECART;
 			}
@@ -153,16 +156,28 @@ public class TomeFormatter {
 	}
 	public static ItemStack setTome(ItemStack i, char data, String metadata) {
 		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
         if (compound == null) {
            compound = new NBTTagCompound();
-            nmsStack.setTag(compound);
-            compound = nmsStack.getTag();
+           NBTUtils.setTag(nmsStack, compound);
+            compound = NBTUtils.getTag(nmsStack);
         }
         
-        compound.setString(TomeItemHandler.TOME_NBT_KEY, data+metadata);
-        nmsStack.setTag(compound);
+        NBTUtils.setString(compound, TomeItemHandler.TOME_NBT_KEY, data + metadata);
+        NBTUtils.setTag(nmsStack, compound);
         i = CraftItemStack.asBukkitCopy(nmsStack);
         return i;
+	}
+	
+	public static boolean isTome(ItemStack item) {
+		if(item == null)
+			return false;
+		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+        NBTTagCompound compound = NBTUtils.getTag(nmsStack);
+        if (compound == null)
+        	return false;
+        if ( NBTUtils.hasKey(compound, TomeItemHandler.TOME_NBT_KEY) )
+        	return true;
+		return false;
 	}
 }

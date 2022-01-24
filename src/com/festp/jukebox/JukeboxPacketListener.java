@@ -5,29 +5,33 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.block.Jukebox;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import io.netty.channel.Channel;
+import com.festp.Logger;
+
+/*import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import net.minecraft.core.BlockPosition;
-import net.minecraft.network.protocol.game.PacketPlayOutWorldEvent;
+import net.minecraft.network.protocol.game.PacketPlayOutWorldEvent;*/
 
 public class JukeboxPacketListener implements Listener {
 	final JukeboxHandler handler;
 	
 	public JukeboxPacketListener(JukeboxHandler handler) {
 		this.handler = handler;
+		Logger.warning("Hodgepodge JukeboxPacketListener is broken!");
 	}
 	
-	@EventHandler
+	// TODO fix 1.18 improvements
+	/*@EventHandler
     public void onJoin(PlayerJoinEvent event){
         injectPlayer(event.getPlayer());
     }
@@ -55,38 +59,6 @@ public class JukeboxPacketListener implements Listener {
 
             @Override
             public void write(ChannelHandlerContext channelHandlerContext, Object packet, ChannelPromise channelPromise) throws Exception {
-
-
-            	//PacketPlayOutAnimation
-            	//PacketPlayOutBlockChange
-            	//PacketPlayOutWorldEvent
-                /*if (!(packet instanceof PacketPlayOutEntityMetadata
-                		|| packet instanceof PacketPlayOutEntityVelocity
-                		|| packet instanceof PacketPlayOutMap
-                		|| packet instanceof PacketPlayOutEntityTeleport
-                		|| packet instanceof PacketPlayOutRelEntityMove
-                		|| packet instanceof PacketPlayOutPlayerInfo
-                		|| packet instanceof PacketPlayOutScoreboardScore
-                		|| packet instanceof PacketPlayOutScoreboardObjective
-                		|| packet instanceof PacketPlayOutScoreboardDisplayObjective
-                		|| packet instanceof PacketPlayOutUpdateTime
-                		|| packet instanceof PacketPlayOutSpawnEntity
-                		|| packet instanceof PacketPlayOutSpawnPosition
-                		|| packet instanceof PacketPlayOutKeepAlive
-                		|| packet instanceof PacketPlayOutLightUpdate
-                		|| packet instanceof PacketPlayOutMapChunk))
-                    Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "PACKET WRITE: " + ChatColor.GREEN + packet.toString());*/
-                /*if(packet instanceof PacketPlayOutStopSound){
-                	PacketPlayOutStopSound packetPlayOutStopSound = (PacketPlayOutStopSound) packet;
-                    Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "PACKET BLOCKED: " + ChatColor.GREEN + packetPlayOutStopSound.toString());
-                    return;
-                }*/
-                /*if(packet instanceof PacketPlayOutNamedSoundEffect){
-                	PacketPlayOutNamedSoundEffect packetPlayOutStopSound = (PacketPlayOutNamedSoundEffect) packet;
-                	
-                    Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "PACKET BLOCKED: " + ChatColor.GREEN + packetPlayOutStopSound.toString());
-                    return;
-                }*/
                 if (packet instanceof PacketPlayOutWorldEvent) {
                 	Object obj = getField(packet, "b");
                 	if (!(obj instanceof BlockPosition)) {
@@ -114,7 +86,7 @@ public class JukeboxPacketListener implements Listener {
         ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.a.k.pipeline();
         pipeline.addBefore("packet_handler", player.getName(), channelDuplexHandler);
 
-    }
+    }*/
 
     
     // https://github.com/frengor/PacketInjectorAPI/blob/master/src/main/java/com/fren_gor/packetInjectorAPI/ReflectionUtil.java

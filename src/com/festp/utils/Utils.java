@@ -2,22 +2,18 @@ package com.festp.utils;
 
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
-import java.util.Random;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.UnsafeValues;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
@@ -31,7 +27,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.Cauldron;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -45,8 +40,6 @@ import com.festp.TaskList;
 import com.festp.storages.Storage;
 import com.festp.storages.StorageBottomless;
 import com.festp.storages.StorageMultitype;
-
-import net.minecraft.nbt.NBTTagCompound;
 
 public class Utils {
 	private static Main plugin;
@@ -104,23 +97,19 @@ public class Utils {
 	public static Material from_legacy(MaterialData md) {
 		return legacy.fromLegacy(md);
 	}
-	
+
 	public static boolean lower_cauldron_water(BlockState cauldron) {
-		Cauldron caul = (Cauldron)cauldron.getData();
-		if(caul.getData() == 0)
+		Levelled caul = (Levelled)cauldron.getBlockData();
+		if (caul.getLevel() == caul.getMaximumLevel()) // level = 0
 			return false;
-		Cauldron caul2 = new Cauldron((byte) (caul.getData()-1));
-		cauldron.setData(caul2);
-		cauldron.update();
+		caul.setLevel(caul.getLevel() + 1);
 		return true;
 	}
 	public static boolean full_cauldron_water(BlockState cauldron) {
-		Cauldron caul = (Cauldron)cauldron.getData();
-		if(caul.getData() == 3)
+		Levelled caul = (Levelled)cauldron.getBlockData();
+		if (caul.getLevel() == 0) // level = MAX
 			return false;
-		Cauldron caul2 = new Cauldron((byte) 3);
-		cauldron.setData(caul2);
-		cauldron.update();
+		caul.setLevel(0);
 		return false;
 	}
 	
@@ -142,84 +131,6 @@ public class Utils {
 		return toString(b.getLocation());
 	}
 	
-	// TODO UtilsNBT
-	public static ItemStack setData(ItemStack i, String field, Object data) {
-        if (data == null || field == null || i == null)
-            return i;
-		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
-        if (compound == null) {
-        	compound = new NBTTagCompound();
-        	nmsStack.setTag(compound);
-        	compound = nmsStack.getTag();
-        }
-        
-        if (data instanceof String)
-        	compound.setString(field, (String)data);
-        else if (data instanceof Integer)
-        	compound.setInt(field, (Integer)data);
-        else if (data instanceof Boolean)
-        	compound.setBoolean(field, (Boolean)data);
-        else if (data instanceof byte[])
-        	compound.setByteArray(field, (byte[])data);
-        
-        nmsStack.setTag(compound);
-        i = CraftItemStack.asBukkitCopy(nmsStack);
-        return i;
-	}
-	
-	public static String getString(ItemStack i, String field) {
-        if (field == null || i == null)
-            return null;
-		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
-        if (compound == null || !compound.hasKey(field))
-            return null;
-        return compound.getString(field);
-	}
-	
-	private static NBTTagCompound get(ItemStack i, String field) {
-        if (field == null || i == null)
-            return null;
-		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(i);
-        NBTTagCompound compound = nmsStack.getTag();
-        return compound;
-	}
-	public static Integer getInt(ItemStack i, String field) {
-		NBTTagCompound compound = get(i, field);
-        if (compound == null || !compound.hasKey(field))
-            return null;
-        return compound.getInt(field);
-	}
-	
-	public static Boolean getBoolean(ItemStack i, String field) {
-		NBTTagCompound compound = get(i, field);
-        if (compound == null || !compound.hasKey(field))
-            return null;
-        return compound.getBoolean(field);
-	}
-	
-	public static byte[] getByteArray(ItemStack i, String field) {
-		NBTTagCompound compound = get(i, field);
-        if (compound == null || !compound.hasKey(field))
-            return null;
-        return compound.getByteArray(field);
-	}
-	
-	public static boolean hasDataField(ItemStack i, String field) {
-		NBTTagCompound compound = get(i, field);
-        if(compound != null && compound.hasKey(field))
-        	return true;
-        return false;
-	}
-	
-	public static boolean hasData(ItemStack i, String field, String data) {
-		NBTTagCompound compound = get(i, field);
-        if(data != null && compound != null && compound.hasKey(field) && data.equalsIgnoreCase(compound.getString(field)))
-        	return true;
-        return false;
-	}
-	
 	@SuppressWarnings("deprecation")
 	public static ItemStack getHead(String headName, String texture_url) {
 		ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
@@ -231,7 +142,7 @@ public class Utils {
 		return stack;
 	}
 	
-	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_17_R1.entity.CraftHorse" */
+	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_18_R1.entity.CraftHorse" */
 	public static Class<?> getBukkitClass(String name) {
 		if (!name.startsWith(BUKKIT_PACKAGE)) {
 			String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
@@ -287,7 +198,7 @@ public class Utils {
 	public static void setBeaconData(LivingEntity beacon, String beacon_id)
 	{
 		ItemStack identificator = new ItemStack(Material.BARRIER); //to identify issues
-	 	identificator = setData(identificator, beacon_id, "+");
+	 	identificator = NBTUtils.setData(identificator, beacon_id, "+");
  		//if(beacon instanceof ArmorStand)
  		beacon.getEquipment().setChestplate(identificator);
  		//else
@@ -296,7 +207,7 @@ public class Utils {
 	public static boolean hasBeaconData(LivingEntity beacon, String beacon_id)
 	{
 		ItemStack identificator = beacon.getEquipment().getChestplate();
-	 	return hasDataField(identificator, beacon_id);
+	 	return NBTUtils.hasDataField(identificator, beacon_id);
 	}
 	
 	public static boolean contains_all_of(String str, String... args) {
@@ -322,6 +233,7 @@ public class Utils {
 		
 	}
 	
+	// TODO REMOVE
 	public static Class getNMSClass(String className) {
 		String version = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
 

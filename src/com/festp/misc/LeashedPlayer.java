@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLeash;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftLeash;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LeashHitch;

@@ -6,14 +6,11 @@ import java.util.Locale;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Dispenser;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftAgeable;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftAnimals;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -28,8 +25,6 @@ import com.festp.utils.UtilsType;
 import com.festp.utils.Vector3i;
 import com.festp.dispenser.PumpManager.PumpState;
 import com.festp.dispenser.PumpManager.PumpType;
-
-import net.minecraft.world.entity.EntityAgeable;
 
 public class DropActions implements Listener {
 	Main pl;
@@ -120,44 +115,44 @@ public class DropActions implements Listener {
 			
 			
 			
-			else if(event.getItem().getType().equals(Material.WHEAT))
+			else if (event.getItem().getType().equals(Material.WHEAT))
 			{
-				for(Entity e : event.getBlock().getWorld().getNearbyEntities(block.getLocation(), 1, 1, 1))
-						if((e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP) && ((CraftAnimals) e).isAdult()
-								&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
+				for (Entity e : event.getBlock().getWorld().getNearbyEntities(block.getLocation(), 1, 1, 1))
+						if (e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP)
 						{
-							breed = true;
-							break;
-						} else if((e.getType() == EntityType.COW || e.getType() == EntityType.SHEEP) && !((CraftAnimals) e).isAdult()) {
-							breed = true;
-							break;
+							Animals animal = (Animals) e;
+							if (!animal.isAdult() || !(animal.isLoveMode() || !animal.canBreed()))
+							{
+								breed = true;
+								break;
+							}
 						}
 			}
-			else if(event.getItem().getType().equals(Material.CARROT) || event.getItem().getType().equals(Material.POTATO) || event.getItem().getType().equals(Material.BEETROOT))
+			else if (event.getItem().getType().equals(Material.CARROT) || event.getItem().getType().equals(Material.POTATO) || event.getItem().getType().equals(Material.BEETROOT))
 			{
 				for(Entity e : event.getBlock().getWorld().getNearbyEntities(block.getLocation(), 1, 1, 1))
-						if(e.getType() == EntityType.PIG && ((CraftAnimals) e).isAdult()
-						&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
+					if (e.getType() == EntityType.PIG)
+					{
+						Animals animal = (Animals) e;
+						if (!animal.isAdult() || !(animal.isLoveMode() || !animal.canBreed()))
 						{
 							breed = true;
 							break;
-						} else if(e.getType() == EntityType.PIG && !((CraftAnimals) e).isAdult()) {
-							breed = true;
-							break;
 						}
+					}
 			}
 			else if(event.getItem().getType().equals(Material.WHEAT_SEEDS) || event.getItem().getType().equals(Material.MELON_SEEDS) || event.getItem().getType().equals(Material.PUMPKIN_SEEDS) || event.getItem().getType().equals(Material.BEETROOT_SEEDS))
 			{
 				for(Entity e : event.getBlock().getWorld().getNearbyEntities(block.getLocation(), 1, 1, 1))
-						if(e.getType() == EntityType.CHICKEN && ((CraftAnimals) e).isAdult()
-						&& !(((CraftAnimals) e).getHandle()).isInLove() && !((Integer)( Utils.getPrivateField("b", EntityAgeable.class, (((CraftAnimals) e).getHandle())) ) > 0))
+					if (e.getType() == EntityType.CHICKEN)
+					{
+						Animals animal = (Animals) e;
+						if (!animal.isAdult() || !(animal.isLoveMode() || !animal.canBreed()))
 						{
 							breed = true;
 							break;
-						} else if(e.getType() == EntityType.CHICKEN && !((CraftAnimals) e).isAdult()) {
-							breed = true;
-							break;
 						}
+					}
 			}
 			
 			if (breed)

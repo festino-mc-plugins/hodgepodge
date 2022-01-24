@@ -24,6 +24,7 @@ import com.festp.DelayedTask;
 import com.festp.Main;
 import com.festp.Pair;
 import com.festp.TaskList;
+import com.festp.utils.NBTUtils;
 import com.festp.utils.Utils;
 
 public class NoteDiscCrafter implements Listener {
@@ -35,7 +36,6 @@ public class NoteDiscCrafter implements Listener {
 		boolean isNoteCraft = true; // TODO avoid code copy
 		int coalCount = 0;
 		ItemStack book = null;
-		int bookIndex = -1;
 		for (int i = 0; i < event.getInventory().getMatrix().length; i++) {
 			ItemStack ingredient = event.getInventory().getMatrix()[i];
 			if (ingredient == null)
@@ -47,7 +47,6 @@ public class NoteDiscCrafter implements Listener {
 					isNoteCraft = false;
 				} else {
 					book = ingredient;
-					bookIndex = i;
 				}
 			}
 		}
@@ -123,7 +122,7 @@ public class NoteDiscCrafter implements Listener {
 				event.setCancelled(true);
 				return;
 			}
-			resultDisc = Utils.setData(resultDisc, NoteDisc.NBT_TAG, data);
+			resultDisc = NBTUtils.setData(resultDisc, NoteDisc.NBT_TAG, data);
 			event.getInventory().setResult(resultDisc);
 			
 			final int finalIndex = bookIndex + 1;

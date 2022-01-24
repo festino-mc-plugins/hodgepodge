@@ -15,12 +15,12 @@ import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
 import org.bukkit.inventory.AbstractHorseInventory;
 import org.bukkit.inventory.ItemStack;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.festp.tome.SummonUtils.HorseSetter;
 import com.festp.utils.Utils;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 public class HorseFormat {
 	double max_health;
@@ -37,40 +37,23 @@ public class HorseFormat {
 	// CHESTED
 	boolean chested_is_carrying;
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public String toString()
 	{
-		JSONObject json = new JSONObject();
-		json.put("type", Utils.getShortBukkitClass(type));
-		json.put("max_health", max_health);
-		json.put("movement_speed", speed);
-		json.put("jump_strength", jump_strength);
-		json.put("is_adult", is_adult);
-		/*List<Object> inv = new ArrayList<>();
-		for (ItemStack item : inventory)
-			if (item != null) {
-				HashMap<String, Object> map = new HashMap<>();
-				for (Entry<String, Object> entry : item.serialize().entrySet()) {
-					if (entry.getKey().equalsIgnoreCase("meta")) {
-						map.put(entry.getKey(), entry.getValue().toString());
-					} else {
-						map.put(entry.getKey(), entry.getValue());
-					}
-				}
-				inv.add(map);
-				//inv.add(item.serialize());
-			} else
-				inv.add(null);
-		json.put("inventory", inv);*/
-		json.put("inventory", TomeFileManager.saveInventory(inventory));
+		JsonObject json = new JsonObject();
+		json.addProperty("type", Utils.getShortBukkitClass(type));
+		json.addProperty("max_health", max_health);
+		json.addProperty("movement_speed", speed);
+		json.addProperty("jump_strength", jump_strength);
+		json.addProperty("is_adult", is_adult);
+		json.addProperty("inventory", TomeFileManager.saveInventory(inventory));
 		if (Horse.class.isAssignableFrom(type)) {
-			json.put("color", horse_color.name());
-			json.put("style", horse_style.name());
+			json.addProperty("color", horse_color.name());
+			json.addProperty("style", horse_style.name());
 		} else if (ChestedHorse.class.isAssignableFrom(type)) {
-			json.put("is_chested", chested_is_carrying);
+			json.addProperty("is_chested", chested_is_carrying);
 		}
-		return json.toJSONString();
+		return json.toString();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -80,28 +63,27 @@ public class HorseFormat {
 			return null;
 		}
 		
-		JSONParser parser = new JSONParser();
-		JSONObject json;
+		JsonObject json;
 		try {
-			Object parsed = parser.parse(s);
-			json = (JSONObject) parsed;
-		} catch (ParseException e) {
+			Object parsed = JsonParser.parseString(s);
+			json = (JsonObject) parsed;
+		} catch (JsonParseException e) {
 			System.out.print("[] SummonerTome JSON parse error: " + s);
 			e.printStackTrace();
 			return null;
 		}
 		
 		HorseFormat res = new HorseFormat();
-		Class<?> resClass = Utils.getBukkitClass((String) json.get("type"));
+		Class<?> resClass = Utils.getBukkitClass(json.get("type").getAsString());
 		if (resClass == null) {
 			System.out.print("[] SummonerTome horse class parse error: " + s);
 			return null;
 		}
 		res.type = (Class<? extends AbstractHorse>) resClass;
-		res.max_health = (double) json.get("max_health");
-		res.speed = (double) json.get("movement_speed");
-		res.jump_strength = (double) json.get("jump_strength");
-		res.is_adult = (boolean) json.get("is_adult");
+		res.max_health = json.get("max_health").getAsDouble();
+		res.speed = json.get("movement_speed").getAsDouble();
+		res.jump_strength = json.get("jump_strength").getAsDouble();
+		res.is_adult = json.get("is_adult").getAsBoolean();
 		
 		/*List<Map<String, Object>> inv = (List<Map<String, Object>>) json.get("inventory");
 		res.inventory = new ItemStack[inv.size()];
@@ -111,14 +93,14 @@ public class HorseFormat {
 				res.inventory[i] = ItemStack.deserialize(item);
 			i++;
 		}*/
-		String inv = (String) json.get("inventory");
+		String inv = json.get("inventory").getAsString();
 		res.inventory = TomeFileManager.loadInventory(inv);
 
 		if (Horse.class.isAssignableFrom(res.type)) {
-			res.horse_color = Color.valueOf((String) json.get("color"));
-			res.horse_style = Style.valueOf((String) json.get("style"));
+			res.horse_color = Color.valueOf(json.get("color").getAsString());
+			res.horse_style = Style.valueOf(json.get("style").getAsString());
 		} else if (ChestedHorse.class.isAssignableFrom(res.type)) {
-			res.chested_is_carrying = (boolean) json.get("is_chested");
+			res.chested_is_carrying = json.get("is_chested").getAsBoolean();
 		}
 
 		return res;

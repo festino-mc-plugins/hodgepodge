@@ -302,7 +302,7 @@ public class UtilsType {
 		return b.getTemperature() < 0.05;
 	}
 	public static boolean husk_biome(Biome biome) {
-		return biome == Biome.DESERT || biome == Biome.DESERT_HILLS || biome == Biome.DESERT_LAKES;
+		return biome == Biome.DESERT;
 	}
 	public static boolean husk_biome(Block b) {
 		return husk_biome(b.getBiome());

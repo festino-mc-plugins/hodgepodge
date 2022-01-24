@@ -1,7 +1,5 @@
 package com.festp.enderchest;
 
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +9,8 @@ import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_18_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -139,20 +139,20 @@ public class EnderChestHandler implements Listener {
 		PacketPlayOutBlockAction packet =
 				new PacketPlayOutBlockAction(
 					new BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers.getBlock(chest.getType()),
+					CraftMagicNumbers.getBlock(chest.getType()),
 	                1, // Action ID, always 1 to opening chests
 	                3); // Action param, number of players (> 0 to open)
-		((CraftPlayer) p).getHandle().b.sendPacket(packet);
+		((CraftPlayer) p).getHandle().b.a(packet);
 	}
 	
 	void playCloseAnimation(Player p, Block chest) {
 		PacketPlayOutBlockAction packet =
 				new PacketPlayOutBlockAction(
 					new BlockPosition(chest.getX(), chest.getY(), chest.getZ()),
-					org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers.getBlock(chest.getType()),
+					CraftMagicNumbers.getBlock(chest.getType()),
 					1, // Action ID, always 1 to close chests
 					0); // Action param, number of players (0 to close)
-		((CraftPlayer) p).getHandle().b.sendPacket(packet);
+		((CraftPlayer) p).getHandle().b.a(packet);
 	}
 	
 	public static void sendEnderchestCloseSound(Player p) {

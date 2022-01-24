@@ -36,7 +36,6 @@ import com.festp.misc.MountManager;
 import com.festp.misc.AmethystManager;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.Sleeping;
-import com.festp.misc.SoulStone;
 import com.festp.storages.StorageCraftManager;
 import com.festp.storages.StorageHandler;
 import com.festp.storages.StoragesFileManager;
@@ -168,9 +167,6 @@ public class Main extends JavaPlugin implements Listener
 
     	FeatureHandler features = new FeatureHandler(this);
     	pm.registerEvents(features, this);
-    	
-    	SoulStone ss = new SoulStone();
-    	pm.registerEvents(ss, this);
     	
     	TomeItemHandler summoner_tomes = new TomeItemHandler();
     	pm.registerEvents(summoner_tomes, this);

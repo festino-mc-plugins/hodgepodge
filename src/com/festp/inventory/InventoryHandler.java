@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_17_R1.potion.CraftPotionBrewer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -218,6 +217,8 @@ public class InventoryHandler implements Listener {
 			}
 			
 			if(po != null) {
+				/* pre 1.18? // TODO test
+				 * po.
 				Collection<PotionEffect> pes = ( new CraftPotionBrewer() ).getEffects(po.getBasePotionData().getType(), po.getBasePotionData().isUpgraded(), po.getBasePotionData().isExtended());
 				for(PotionEffect penew : pes) {
 					PotionEffectType pecur = penew.getType();
@@ -228,7 +229,7 @@ public class InventoryHandler implements Listener {
 						}
 					}
 				}
-				event.getPlayer().addPotionEffects( pes );
+				event.getPlayer().addPotionEffects( pes );*/
 				event.getPlayer().addPotionEffects( po.getCustomEffects() );
 				event.setItem(new ItemStack(Material.AIR));
 			}

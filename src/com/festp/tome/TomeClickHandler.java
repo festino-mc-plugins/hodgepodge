@@ -6,7 +6,7 @@ import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.TreeSpecies;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Boat;
 import org.bukkit.entity.ChestedHorse;
@@ -26,6 +26,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import com.festp.tome.TomeItemHandler.TomeType;
+import com.festp.utils.NBTUtils;
 import com.festp.utils.UtilsType;
 import com.festp.utils.UtilsWorld;
 
@@ -240,22 +241,10 @@ public class TomeClickHandler implements Listener {
 			event.setCancelled(true);
 	}
 	
-	public static boolean isTome(ItemStack item) {
-		if(item == null)
-			return false;
-		net.minecraft.world.item.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound compound = nmsStack.getTag();
-        if (compound == null)
-        	return false;
-        if( compound.hasKey(TomeItemHandler.TOME_NBT_KEY) )
-        	return true;
-		return false;
-	}
-	
 	private static int find_tome_slot(ItemStack[] inv, Entity entity) {
 		for (int i = 0; i < inv.length; i++) {
 			if (inv[i] != null && inv[i].getType() == Material.ENCHANTED_BOOK) {
-				if (isTome(inv[i]) && SummonUtils.getHasSummoned(inv[i]) == entity) {
+				if (TomeFormatter.isTome(inv[i]) && SummonUtils.getHasSummoned(inv[i]) == entity) {
 					return i;
 				}
 			}
