@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 
 import com.festp.utils.TimeUtils;
@@ -14,17 +15,22 @@ public class AmethystChunk {
 	private static final int PART_BITS = Integer.SIZE; // int is 32-bit
 	private static final int PART_SIZE = PART_BITS * 16; // int is 32-bit
 	private final int sectionCount;
+	private final int minY; // if no negative sections
 	public static final long UNLOAD_TIME = 20 * 60 * 10;
 	public final Chunk chunk;
 	public long lastUpdate;
 	public int[] verticalChunks;
 	public List<Block> antispawnBlocks;
 	
+	// TODO Fix below y=0
 	/** Newly generated chunks are empty. */
-	public AmethystChunk(Chunk chunk, int worldHeight, long time, boolean empty)
+	public AmethystChunk(Chunk chunk, long time, boolean empty)
 	{
 		this.chunk = chunk;
 		lastUpdate = time;
+		World world = chunk.getWorld();
+		minY = world.getMinHeight();
+		int worldHeight = world.getMaxHeight() - world.getMinHeight();
 		sectionCount = (worldHeight + 15) / 16;
 		int size = (worldHeight + PART_SIZE - 1) / PART_SIZE;
 		verticalChunks = new int[size];
@@ -79,21 +85,31 @@ public class AmethystChunk {
 
 	public void update(int yBegin, int yEnd)
 	{
+		//yBegin -= minY;
+		//yEnd -= minY;
 		clear(yBegin, yEnd);
 		get(yBegin, yEnd);
 	}
 	
+	/** @return -16..-1 -> -1 <br> 0..15 -> 0 <br> 16..31 -> 1 <br>*/
+	private static int yToSection(int x) {
+		if (x >= 0 || x % 16 == 0) {
+			return x / 16;
+		}
+		return x / 16 - 1;
+	}
+	
 	private int getMinSection(int y) {
-		return Math.max(y / 16, 0);
+		return Math.max(yToSection(y), 0);
 	}
 	
 	private int getMaxSection(int y) {
-		return Math.min((y - 1) / 16 + 1, sectionCount);
+		return Math.min(yToSection(y - 1) + 1, sectionCount);
 	}
 	
 	private void load(int part, int bitN, ChunkSnapshot snap)
 	{
-		if (!snap.isSectionEmpty(part * 32 + bitN)) { // TODO check negative sections on 1.17
+		if (!snap.isSectionEmpty(part * 32 + bitN)) {
 			int yBegin = 0 + (part * 32 + bitN) * 16;
 			int yEnd = yBegin + 16;
 			for (int y = yBegin; y < yEnd; y++) {

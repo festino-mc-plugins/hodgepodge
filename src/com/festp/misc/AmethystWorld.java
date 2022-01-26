@@ -15,7 +15,6 @@ import com.festp.utils.TimeUtils;
 
 public class AmethystWorld {
 	private static final int MAX_RADIUS = Math.max(AmethystManager.DIAMOND_RADIUS, AmethystManager.NETHERITE_RADIUS);
-	private final int worldHeight = 256;
 	private List<List<AmethystChunk>> chunks = new ArrayList<>();
 	public final World origWorld;
 	
@@ -268,6 +267,6 @@ public class AmethystWorld {
 	
 	private AmethystChunk create(int chunkX, int chunkZ, boolean isEmpty)
 	{
-		return new AmethystChunk(origWorld.getChunkAt(chunkX, chunkZ), worldHeight, TimeUtils.getTicks(), isEmpty);
+		return new AmethystChunk(origWorld.getChunkAt(chunkX, chunkZ), TimeUtils.getTicks(), isEmpty);
 	}
 }

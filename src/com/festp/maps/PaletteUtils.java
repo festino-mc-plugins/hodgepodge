@@ -55,7 +55,7 @@ public class PaletteUtils {
 	/** Ignores height difference (shadows)*/
 	public static byte getColor(World world, int x, int z, BlockContainer lastColorBlock)
 	{
-		Block b = world.getBlockAt(x, 255, z);
+		Block b = world.getBlockAt(x, world.getMaxHeight(), z);
 		Block next = b.getRelative(BlockFace.DOWN);
 		while (next.getY() > 0 && UtilsType.isAir(next.getType())) {
 			b = next;

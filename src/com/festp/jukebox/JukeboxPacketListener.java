@@ -12,26 +12,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import com.festp.Logger;
-
-/*import io.netty.channel.Channel;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import net.minecraft.core.BlockPosition;
-import net.minecraft.network.protocol.game.PacketPlayOutWorldEvent;*/
+import net.minecraft.network.protocol.game.PacketPlayOutWorldEvent;
 
 public class JukeboxPacketListener implements Listener {
 	final JukeboxHandler handler;
 	
 	public JukeboxPacketListener(JukeboxHandler handler) {
 		this.handler = handler;
-		Logger.warning("Hodgepodge JukeboxPacketListener is broken!");
 	}
 	
-	// TODO fix 1.18 improvements
-	/*@EventHandler
+	@EventHandler
     public void onJoin(PlayerJoinEvent event){
         injectPlayer(event.getPlayer());
     }
@@ -65,9 +61,9 @@ public class JukeboxPacketListener implements Listener {
                 		// vanilla obfuscation has changed
                 	}
                 	BlockPosition pos = (BlockPosition) obj;
-                	int x = pos.getX();
-                	int y = pos.getY();
-                	int z = pos.getZ();
+                	int x = pos.u(); // .getX()
+                	int y = pos.v(); // .getY()
+                	int z = pos.w(); // .getZ()
                 	// world?
                 	for (Jukebox jukebox : handler.getClickedJukeboxes()) {
                 		if (jukebox.getX() == x && jukebox.getY() == y && jukebox.getZ() == z) {
@@ -86,7 +82,7 @@ public class JukeboxPacketListener implements Listener {
         ChannelPipeline pipeline = ((CraftPlayer) player).getHandle().b.a.k.pipeline();
         pipeline.addBefore("packet_handler", player.getName(), channelDuplexHandler);
 
-    }*/
+    }
 
     
     // https://github.com/frengor/PacketInjectorAPI/blob/master/src/main/java/com/fren_gor/packetInjectorAPI/ReflectionUtil.java
