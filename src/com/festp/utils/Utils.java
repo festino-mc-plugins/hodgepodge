@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.ShulkerBox;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -98,19 +99,42 @@ public class Utils {
 		return legacy.fromLegacy(md);
 	}
 
-	public static boolean lower_cauldron_water(BlockState cauldron) {
+	
+	/** @return 3 if full, 0 if empty or invalid bd*/
+	public static double getCauldronLevel(BlockData bd) {
+		if (bd == null || bd.getMaterial() != Material.WATER_CAULDRON) {
+			return 0;
+		}
+		Levelled cauldron = (Levelled) bd;
+		return cauldron.getLevel();
+	}
+	public static double getCauldronWater(Block cauldron) {
 		Levelled caul = (Levelled)cauldron.getBlockData();
-		if (caul.getLevel() == caul.getMaximumLevel()) // level = 0
+		return caul.getLevel() / (double)caul.getMaximumLevel();
+	}
+	public static boolean lowerCauldronWater(Block cauldron) {
+		Levelled caul = (Levelled)cauldron.getBlockData();
+		if (caul.getLevel() == 0)
 			return false;
-		caul.setLevel(caul.getLevel() + 1);
+		if (caul.getLevel() == 1)
+		{
+			cauldron.setType(Material.CAULDRON);
+			return true;
+		}
+		caul.setLevel(caul.getLevel() - 1);
+		cauldron.setBlockData(caul);
 		return true;
 	}
-	public static boolean full_cauldron_water(BlockState cauldron) {
+	public static boolean fullCauldronWater(Block cauldron) {
+		if (cauldron.getType() == Material.CAULDRON) {
+			cauldron.setType(Material.WATER_CAULDRON);
+		}
 		Levelled caul = (Levelled)cauldron.getBlockData();
-		if (caul.getLevel() == 0) // level = MAX
+		if (caul.getLevel() == caul.getMaximumLevel())
 			return false;
-		caul.setLevel(0);
-		return false;
+		caul.setLevel(caul.getMaximumLevel());
+		cauldron.setBlockData(caul);
+		return true;
 	}
 	
 	public static String toString(Vector v) {

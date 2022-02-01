@@ -62,13 +62,15 @@ public class DropActions implements Listener {
 				if (j < disps.get(i/2).size() && slot != disps.get(i/2).get(j) || j >= disps.get(i/2).size()) {
 					if (inv.getItem(slot) != null && inv.getItem(slot).getType() == Material.WATER_BUCKET) {
 	                	inv.setItem(slot,new ItemStack(Material.BUCKET));
-	                    Utils.full_cauldron_water(disp_caul.get(i+1));
+	                	Block cauldron = disp_caul.get(i+1).getBlock();
+	                	if (cauldron.getType() == Material.CAULDRON || cauldron.getType() == Material.WATER_CAULDRON && Utils.getCauldronWater(cauldron) < 1.0)
+	                		Utils.fullCauldronWater(cauldron);
 		                break;
 					}
 				} else j++;
 		}
-		disp_caul = new ArrayList<>();
-		disps = new ArrayList<ArrayList<Integer>>();
+		disp_caul.clear();
+		disps.clear();
 		
 		for(int i = disps_pump.size()-1; i >= 0; i--) {
 			dispenserPump(disps_pump.get(i));
@@ -92,23 +94,20 @@ public class DropActions implements Listener {
 			
 			
 			
-			if(event.getItem().getType().equals(Material.WATER_BUCKET)) // TODO REFACTOR
+			if (event.getItem().getType().equals(Material.WATER_BUCKET)) // TODO REFACTOR
 			{
-				if(block.getType() == Material.CAULDRON)
+				if (block.getType() == Material.CAULDRON || block.getType() == Material.WATER_CAULDRON && Utils.getCauldronWater(block) < 1.0)
 				{
-	                BlockState cauldron = block.getState();
-	                if(cauldron.getData().getData() < 3) {
-	                    event.setCancelled(true);
-	                    //int i = disp_caul.size()/2;
-	                    disp_caul.add(dispenser);
-	                    disp_caul.add(cauldron);
-	                    Inventory inv = ((Dispenser)dispenser).getInventory();
-	                    ArrayList<Integer> e = new ArrayList<>();
-						for(int slot=0;slot<9;slot++)
-							if(inv.getItem(slot) != null && inv.getItem(slot).getType() == Material.WATER_BUCKET)
-								e.add(slot);
-						disps.add(e);
-	                }
+                    event.setCancelled(true);
+                    //int i = disp_caul.size()/2;
+                    disp_caul.add(dispenser);
+                    disp_caul.add(block.getState());
+                    Inventory inv = ((Dispenser)dispenser).getInventory();
+                    ArrayList<Integer> e = new ArrayList<>();
+					for(int slot=0;slot<9;slot++)
+						if(inv.getItem(slot) != null && inv.getItem(slot).getType() == Material.WATER_BUCKET)
+							e.add(slot);
+					disps.add(e);
 	                return;
 				}
 			}

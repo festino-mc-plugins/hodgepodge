@@ -3,14 +3,8 @@ package com.festp.utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 public class UtilsWorld {
@@ -355,14 +349,5 @@ public class UtilsWorld {
 			if (i == 2)cells = new int[]{4, 4-x_priority, 4-z_priority, 4-x_priority-z_priority};
 		}
 		return null;
-	}
-	
-	/** @return 3 if full, 0 if empty or invalid bd*/
-	public static int getCauldronLevel(BlockData bd) {
-		if (bd == null || bd.getMaterial() != Material.CAULDRON) {
-			return 0;
-		}
-		Levelled cauldron = (Levelled) bd;
-		return cauldron.getLevel();
 	}
 }

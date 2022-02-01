@@ -16,7 +16,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
@@ -43,8 +42,6 @@ import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Dye;
-import org.bukkit.material.MaterialData;
 
 import com.festp.Config;
 import com.festp.CooldownPlayer;
@@ -52,7 +49,6 @@ import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;
 import com.festp.utils.UtilsType;
-import com.festp.utils.UtilsWorld;
 
 public class InteractHandler implements Listener {
 
@@ -115,9 +111,9 @@ public class InteractHandler implements Listener {
 			}
 			World w = item.getWorld();
 			Block b = item.getLocation().getBlock();
-			if(b.getType() == Material.CAULDRON) {
+			if (b.getType() == Material.WATER_CAULDRON) {
 				BlockData cauldron = b.getBlockData();
-				if (UtilsWorld.getCauldronLevel(cauldron) > 0) {
+				if (Utils.getCauldronLevel(cauldron) > 0) {
 					boolean found = false;
 					for (CooldownedCauldron cooldowned : cauls)
 						if (cooldowned.cauldron.equals(b))
@@ -130,7 +126,7 @@ public class InteractHandler implements Listener {
 					if (dropMaterial != null) {
 						item.getItemStack().setAmount(item.getItemStack().getAmount() - 1);
 						w.dropItem(item.getLocation(), new ItemStack(dropMaterial, 1));
-						Utils.lower_cauldron_water(b.getState());
+						Utils.lowerCauldronWater(b);
 						CooldownedCauldron coolCauldron = new CooldownedCauldron(CAULDRON_COOLDOWN, b);
 						cauls.add(coolCauldron);
 		                
@@ -316,28 +312,27 @@ public class InteractHandler implements Listener {
 				return;
 			}
 		}
-		if (event.hasBlock() && event.getItem() != null) {
+		if (event.hasBlock() && event.getItem() != null)
+		{
 			Material handMaterial = event.getItem().getType();
+			Block clicked = event.getClickedBlock();
 			if (event.getAction() == Action.RIGHT_CLICK_BLOCK)
 			{
-				if (!player.isSneaking() && event.getClickedBlock().getType() == Material.CAULDRON)
+				if (!player.isSneaking() && clicked.getType() == Material.WATER_CAULDRON)
 				{
-		                BlockState d = event.getClickedBlock().getState();
-						if (d.getData().getData() == 0)
-							return;
-						MaterialData hand_data = event.getItem().getData();
-						Material hand = Utils.from_legacy(hand_data);
-						Material washedMaterial = getCauldroned(hand);
-						if (washedMaterial == null)
-							return;
-						ItemStack washed = new ItemStack(washedMaterial, 1);
-						event.setCancelled(true);
-						event.getItem().setAmount(event.getItem().getAmount()-1);
-						player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 
-						Utils.lower_cauldron_water(d.getBlock().getState());
+					if (Utils.getCauldronWater(clicked) == 0.0)
+						return;
+					Material washedMaterial = getCauldroned(event.getItem().getType());
+					if (washedMaterial == null)
+						return;
+					ItemStack washed = new ItemStack(washedMaterial, 1);
+					event.setCancelled(true);
+					event.getItem().setAmount(event.getItem().getAmount() - 1);
+					player.getInventory().addItem(washed); // TODO: replace all of "Inventory.addItem()" with working function(Utils.giveOrDrop) #thx1.13 
+					Utils.lowerCauldronWater(clicked);
 				}
 				
-				Material currentblock = event.getClickedBlock().getType();
+				Material currentblock = clicked.getType();
 				// tool shift rightclicks
 				if (!player.isSneaking())
 				{
@@ -352,7 +347,7 @@ public class InteractHandler implements Listener {
 				}
 				//grass from dirt
 				if (currentblock.equals(Material.DIRT) && handMaterial.equals(Material.BONE_MEAL)) {
-					event.getClickedBlock().setType(Material.GRASS_BLOCK);
+					clicked.setType(Material.GRASS_BLOCK);
 					event.getItem().setAmount(event.getItem().getAmount() - 1);
 					event.setCancelled(true);
 					return;
@@ -362,13 +357,13 @@ public class InteractHandler implements Listener {
 				{
 					DyeColor clicked_block_color = UtilsColor.colorFromMaterial(currentblock);
 					DyeColor clicking_dye_color = UtilsColor.colorFromMaterial(handMaterial);
-					Material block_material = event.getClickedBlock().getType();
+					Material block_material = clicked.getType();
 					boolean is_wall_banner = UtilsType.is_wall_banner(block_material);
 					boolean is_banner = UtilsType.is_banner(block_material);
 					if ( (is_banner || is_wall_banner)
 							&& event.getItem().getAmount() > 5 )
 					{
-						Block banner_block = event.getClickedBlock();
+						Block banner_block = clicked;
 						Banner banner = (Banner) banner_block.getState();
 						BlockData old_banner_data = banner_block.getBlockData();
 						
@@ -391,8 +386,9 @@ public class InteractHandler implements Listener {
 								banner_data.setRotation( ((Rotatable) old_banner_data).getRotation() );
 								banner_block.setBlockData(banner_data);
 							}
-							
-							event.getItem().setAmount(event.getItem().getAmount() - 6);
+
+							if (player.getGameMode() != GameMode.CREATIVE)
+								event.getItem().setAmount(event.getItem().getAmount() - 6);
 						}
 						return;
 						
@@ -400,26 +396,29 @@ public class InteractHandler implements Listener {
 					
 					if (clicked_block_color == clicking_dye_color)
 						return;
-					if (UtilsType.is_terracotta(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
-					else if (UtilsType.is_wool(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_wool(clicking_dye_color));
-					else if (UtilsType.is_concrete_powder(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete_powder(clicking_dye_color));
-					else if (UtilsType.is_concrete(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_concrete(clicking_dye_color));
-					else if (UtilsType.is_carpet(currentblock)) event.getClickedBlock().setType(UtilsColor.fromColor_carpet(clicking_dye_color));
+					if (UtilsType.is_terracotta(currentblock)) clicked.setType(UtilsColor.fromColor_terracotta(clicking_dye_color));
+					else if (UtilsType.is_wool(currentblock)) clicked.setType(UtilsColor.fromColor_wool(clicking_dye_color));
+					else if (UtilsType.is_concrete_powder(currentblock)) clicked.setType(UtilsColor.fromColor_concrete_powder(clicking_dye_color));
+					else if (UtilsType.is_concrete(currentblock)) clicked.setType(UtilsColor.fromColor_concrete(clicking_dye_color));
+					else if (UtilsType.is_carpet(currentblock)) clicked.setType(UtilsColor.fromColor_carpet(clicking_dye_color));
 					else return;
-					event.getItem().setAmount(event.getItem().getAmount() - 1);
+					
+					if (player.getGameMode() != GameMode.CREATIVE)
+						event.getItem().setAmount(event.getItem().getAmount() - 1);
+					
 					return;
 				}
 
 				//change bed linen
 				if (!player.isSneaking() && UtilsType.is_carpet(handMaterial)
-						&& UtilsType.is_bed(event.getClickedBlock().getType())) {
+						&& UtilsType.is_bed(clicked.getType())) {
 					DyeColor newColor = UtilsColor.colorFromMaterial(handMaterial);
-					DyeColor oldColor = UtilsColor.colorFromMaterial(event.getClickedBlock().getType());
+					DyeColor oldColor = UtilsColor.colorFromMaterial(clicked.getType());
 					if (oldColor != newColor) {
 						Material newBedMaterial = UtilsColor.fromColor_bed(newColor); // TODO BlockType.BED - explicit (enum) argument
 						Material newCarpetMaterial = UtilsColor.fromColor_carpet(oldColor);
 						Material particleMaterial = UtilsColor.fromColor_wool(oldColor);
-						Block blockFoot = event.getClickedBlock();
+						Block blockFoot = clicked;
 						Bed bedFoot = (Bed) blockFoot.getBlockData();
 						BlockFace face = bedFoot.getFacing();
 						Block blockHead;
@@ -462,8 +461,8 @@ public class InteractHandler implements Listener {
 			if (UtilsType.isHoe(handMaterial))
 			{
 				//ROTATE BLOCKS
-				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(event.getClickedBlock(), player.isSneaking())
-						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(event.getClickedBlock(), player.isSneaking())) {
+				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(clicked, player.isSneaking())
+						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(clicked, player.isSneaking())) {
 					if (event.getAction() == Action.LEFT_CLICK_BLOCK)
 						left_rotate_cooldown.add(new CooldownPlayer(player, Config.LEFT_ROTATE_COOLDOWN));
 					int dur_lvl = event.getItem().getEnchantmentLevel(Enchantment.DURABILITY);
