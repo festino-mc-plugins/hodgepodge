@@ -8,6 +8,8 @@ import org.bukkit.block.data.Bisected;
 import org.bukkit.block.data.Bisected.Half;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.FaceAttachable;
+import org.bukkit.block.data.FaceAttachable.AttachedFace;
 import org.bukkit.block.data.Orientable;
 import org.bukkit.block.data.Rail;
 import org.bukkit.block.data.Rail.Shape;
@@ -31,18 +33,18 @@ public class RotatableBlock {
 	
 	public static boolean left_click_rotate_attempt(Block b, boolean sneaking) {
 		//double chest
-		Material block_type = b.getType();
+		Material blockType = b.getType();
 		BlockData data = b.getBlockData();
-		if(sneaking) {
-			if(block_type == Material.CHEST || block_type == Material.TRAPPED_CHEST)
+		if (sneaking) {
+			if (blockType == Material.CHEST || blockType == Material.TRAPPED_CHEST)
 				return remerge_chest(b, (Chest) data);
+			if (data instanceof FaceAttachable)
+				rotate_faceAttachable_circle(b);
 		}
 		return false;
 	}
 	
 	public static boolean rotate_attempt(Block b, boolean sneaking) {
-		//single chest and furnace(4), comparator and repeater(4+4), dispenser and (dropper) and observer and piston(6), door, EC, gate, hopper, sign and banner, slab and trapdoor, stairs 
-		//+old pumpkin, +jack latern, (anvil???), 
 		Material block = b.getType();
 		BlockData data = b.getBlockData();
 		
@@ -298,6 +300,33 @@ public class RotatableBlock {
 			door = (Door)b.getBlockData();
 			door.setHinge(Hinge.LEFT);
 			b.setBlockData(door);
+		}
+	}
+	public static void rotate_faceAttachable_circle(Block b)
+	{
+		FaceAttachable attac = (FaceAttachable)b.getBlockData();
+		boolean rot180 = false;
+		
+		AttachedFace face = attac.getAttachedFace();
+		if (face == AttachedFace.FLOOR) {
+			face = AttachedFace.WALL;
+		} else if (face == AttachedFace.WALL) {
+			BlockFace dirFace = ((Directional)b.getBlockData()).getFacing();
+			if (dirFace == BlockFace.WEST || dirFace == BlockFace.SOUTH)
+				face = AttachedFace.CEILING;
+			else
+				face = AttachedFace.FLOOR;
+			rot180 = true;
+		} else if (face == AttachedFace.CEILING) {
+			face = AttachedFace.WALL;
+		}
+		attac.setAttachedFace(face);
+		b.setBlockData(attac);
+		
+		if (rot180)
+		{
+			rotate_directional_4(b);
+			rotate_directional_4(b);
 		}
 	}
 }
