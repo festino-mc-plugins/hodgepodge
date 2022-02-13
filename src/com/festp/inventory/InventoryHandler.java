@@ -85,8 +85,11 @@ public class InventoryHandler implements Listener {
 	@EventHandler
 	public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event)
 	{
+		if (!event.getPlayer().isSneaking()) // [Shift] + [F] only
+			return;
+		
 		ClosedInventory cinv = null;
-		for (int i=0; i < closed_invs.size(); i++)
+		for (int i = 0; i < closed_invs.size(); i++)
 			if (closed_invs.get(i).matchUUID(event.getPlayer().getUniqueId())) {
 				if (closed_invs.get(i).getTicks() != Config.max_closed_inv_ticks) {
 					cinv = closed_invs.get(i);
@@ -103,7 +106,11 @@ public class InventoryHandler implements Listener {
 			ItemStack[] items = inv.getContents();
 			for (int i = 0; i < items.length; i++) {
 				ItemStack stack = items[i];
-				InventoryClickEvent dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ALL_SLOT);
+				InventoryClickEvent dropEvent;
+				if (stack.getAmount() == 1) // for storages
+					dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ONE_SLOT);
+				else
+					dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ALL_SLOT);
 				Bukkit.getPluginManager().callEvent(dropEvent);
 				if (!dropEvent.isCancelled()) {
 					UtilsWorld.drop(p.getEyeLocation(), stack, 1);
