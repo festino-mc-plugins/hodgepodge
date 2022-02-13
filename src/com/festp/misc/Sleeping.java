@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Statistic;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -28,11 +30,14 @@ import com.festp.utils.UtilsType;
 public class Sleeping implements Listener {
 	int ticks = 0;
 	int info_ticks = 0;
-	public static final int SLEEP_TICKS = 100;
+	public static final int SLEEP_TICKS = 99; // not 100 to be before the vanilla
 	public static final int INFO_TICKS = 10;
 	private static Random mob_spawn_random = new Random();
 	private enum Skip {day, night};
 	int ignoredPlayersCount = 0, sleepingPlayersCount = 0, onlinePlayersCount = 0;
+	
+	boolean useVanilla = true;
+	double vanillaPercentage = 1.0;
 	
 	private Main pl;
 	
@@ -45,8 +50,8 @@ public class Sleeping implements Listener {
 		ticks++;
 		if (ticks > 200)
 		{
-			update_sleepers();
-			try_skip();
+			updateSleepers();
+			trySkip();
 			ticks = 0;
 		}
 		
@@ -55,6 +60,11 @@ public class Sleeping implements Listener {
 		{
 			sendSleepInfo();
 			info_ticks = 0;
+		}
+		
+		if (useVanilla) // not necessary to update every tick; but there is not gamerule changed event
+		{
+			vanillaPercentage = Bukkit.getWorlds().get(0).getGameRuleValue(GameRule.PLAYERS_SLEEPING_PERCENTAGE) / 100.0;
 		}
 	}
 	
@@ -92,12 +102,13 @@ public class Sleeping implements Listener {
 	
 	private int get_min_sleeping(int all_players)
 	{
+		double percent = useVanilla ? vanillaPercentage : Config.step_percent;
 		return (int) Math.ceil(
 						Math.max(
 							1,
 							Math.min(
 								all_players - Config.step_count,
-								all_players * Config.step_percent
+								all_players * percent
 							)));
 	}
 	
@@ -106,8 +117,8 @@ public class Sleeping implements Listener {
 		public void run() { 
 			//for (Player p : pl.getServer().getOnlinePlayers())
 			//	System.out.println("sleep: "+p.getName()+" ("+p.isSleeping()+" : "+p.getSleepTicks()+" ticks)");
-			update_sleepers();
-			try_skip();
+			updateSleepers();
+			trySkip();
 		}
 	};
 	@EventHandler
@@ -135,7 +146,7 @@ public class Sleeping implements Listener {
 		return p.isSleeping() && p.getSleepTicks() >= SLEEP_TICKS;
 	}
 	
-	public void update_sleepers()
+	public void updateSleepers()
 	{
 		if (Config.FunctionsON.get("extendedSleep")) {
 			ignoredPlayersCount = 0;
@@ -150,18 +161,12 @@ public class Sleeping implements Listener {
 					ignoredPlayersCount++;
 				if (isDeepSleeping(p))
 					sleepingPlayersCount++;
-				
-				//compass
-				/*if (p.getBedSpawnLocation() != null)
-					p.setCompassTarget(p.getBedSpawnLocation());
-				else
-					p.setCompassTarget(p.getWorld().getSpawnLocation());*/
 			}
 		}
-		update_resting();
+		updateResting();
 	}
 	
-	public void try_skip()
+	public void trySkip()
 	{
 		if (sleepingPlayersCount >= get_min_sleeping(onlinePlayersCount-ignoredPlayersCount))
 		{
@@ -209,7 +214,7 @@ public class Sleeping implements Listener {
 		}
 	}
 	
-	private void update_resting() // anti-phantom
+	private void updateResting() // anti-phantom
 	{
 		for (Player p : pl.getServer().getOnlinePlayers())
 		{
