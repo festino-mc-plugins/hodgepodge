@@ -32,6 +32,7 @@ public class Sleeping implements Listener {
 	int info_ticks = 0;
 	public static final int SLEEP_TICKS = 99; // not 100 to be before the vanilla
 	public static final int INFO_TICKS = 10;
+	private static final int MAX_LIGHT_LEVEL = 0;
 	private static Random mob_spawn_random = new Random();
 	private enum Skip {day, night};
 	int ignoredPlayersCount = 0, sleepingPlayersCount = 0, onlinePlayersCount = 0;
@@ -88,7 +89,7 @@ public class Sleeping implements Listener {
 			Integer[] sleeping_ticks_sorted = sleeping_ticks.toArray(new Integer[0]);
 			Arrays.sort(sleeping_ticks_sorted);
 			min_ticks = sleeping_ticks_sorted[sleeping_players - min_players];
-			sleep_data = (SLEEP_TICKS / 20 - (min_ticks + 10) / 20) + "";
+			sleep_data = ((SLEEP_TICKS + 19) / 20 - (min_ticks + 10) / 20) + "";
 		}
 		else {
 			sleep_data = sleeping_players + "/" + min_players;
@@ -236,7 +237,7 @@ public class Sleeping implements Listener {
 				continue;
 			
 			Block bed_head = p.getLocation().getBlock();
-			//get 6 blocks, priority: side blocks of head, back head, side legs, front legs; condition: Utils.playerCanStay(b)+light<=7
+			//get 6 blocks, priority: side blocks of head, back head, side legs, front legs; condition: Utils.playerCanStay(b)+light<=0
 			//Not only Material.BEDs for sleep => 4 blocks near the head, but which priority?
 			
 			Block temp_place = test_blocks(bed_head, Utils.get_dir(p.getLocation()), day_time);
@@ -276,7 +277,7 @@ public class Sleeping implements Listener {
 	private boolean can_spawn_mob(Block b, Skip time) {
 		Biome biome = b.getBiome();
 		return biome != Biome.THE_VOID && b.getBiome() != Biome.MUSHROOM_FIELDS
-				&& UtilsType.playerCanStay(b) && (time == Skip.day ? b.getLightLevel() : b.getLightFromBlocks()) <= 7;
+				&& UtilsType.playerCanStay(b) && (time == Skip.day ? b.getLightLevel() : b.getLightFromBlocks()) <= MAX_LIGHT_LEVEL;
 	}
 	
 	private int time_spawnMob(int time) {
