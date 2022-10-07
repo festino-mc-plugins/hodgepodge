@@ -1,103 +1,26 @@
 package com.festp.utils;
 
-import java.lang.reflect.Field;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.UnsafeValues;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.ShulkerBox;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Turtle;
-import org.bukkit.entity.Vex;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
-import com.festp.DelayedTask;
-import com.festp.Main;
-import com.festp.TaskList;
-import com.festp.storages.Storage;
-import com.festp.storages.StorageBottomless;
-import com.festp.storages.StorageMultitype;
-
 public class Utils {
-	private static Main plugin;
-	private static UnsafeValues legacy;
-	private static Team team_no_collide;
-	private static final String BUKKIT_PACKAGE = "org.bukkit.craftbukkit.";
 	public static final double EPSILON = 0.0001;
-	
-	public static void setPlugin(Main pl) {
-		plugin = pl;
-		legacy = pl.getServer().getUnsafe();
-	}
-
-	public static Main getPlugin() {
-		return plugin;
-	}
-	
-	public static void printError(String msg) {
-		plugin.getLogger().severe(msg);
-	}
-
-	public static void onEnable()
-	{
-		//create no collide turtle team
-		String team_name = "HPTempNoCollide"; //HP is HodgePodge, limit of 16 characters
-		Server server = plugin.getServer();
-		Scoreboard sb = server.getScoreboardManager().getMainScoreboard();
-		team_no_collide = sb.getTeam(team_name);
-		if (team_no_collide == null)
-			team_no_collide = sb.registerNewTeam(team_name);
-		team_no_collide.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
-	}
-	public static void onDisable()
-	{
-		team_no_collide.unregister(); //if plugin will be removed anywhen
-	}
-	
-	public static void setNoCollide(Entity e, boolean val)
-	{
-		String entry = e.getUniqueId().toString();
-		if (val) {
-			if (!team_no_collide.hasEntry(entry))
-				team_no_collide.addEntry(entry);
-		} else
-			team_no_collide.removeEntry(entry);
-	}
-	
-	public static void noGravityTemp(LivingEntity e, int ticks)
-	{
-		e.removePotionEffect(PotionEffectType.LEVITATION);
-		if (ticks > 0)
-			e.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, ticks, 255));
-	}
-
-	public static Material from_legacy(MaterialData md) {
-		return legacy.fromLegacy(md);
-	}
 
 	
 	/** @return 3 if full, 0 if empty or invalid bd*/
@@ -166,82 +89,8 @@ public class Utils {
 		return stack;
 	}
 	
-	/** format: "entity.CraftHorse" or "org.bukkit.craftbukkit.v1_18_R1.entity.CraftHorse" */
-	public static Class<?> getBukkitClass(String name) {
-		if (!name.startsWith(BUKKIT_PACKAGE)) {
-			String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-		    name = BUKKIT_PACKAGE + version + "." + name;
-		}
-		
-		try {
-			return Class.forName(name);
-		} catch (ClassNotFoundException e) {
-			return null;
-		}
-	}
-	public static String getShortBukkitClass(Class<?> clazz) {
-		String fullName = clazz.getName();
-		if (!fullName.startsWith(BUKKIT_PACKAGE)) {
-			return fullName;
-		}
-		String name = fullName.substring(BUKKIT_PACKAGE.length());
-		return name.substring(name.indexOf(".") + 1);
-	}
-	
-	public static <T extends LivingEntity> T spawnBeacon(Location l, Class<T> entity_type, String beacon_id, boolean gravity) {
- 		T new_beacon =  l.getWorld().spawn(l, entity_type, (beacon) ->
- 		{
- 			if (entity_type == Vex.class)
- 				beacon.getEquipment().setItemInMainHand(null); // must be applied immediately
- 	 		
- 	 		beacon.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 100000000, 1, false, false));
- 	 		beacon.setInvulnerable(true);
- 	 		if (!gravity) {
- 	 	 		beacon.setAI(false);
- 	 	 		beacon.setGravity(false);
- 	 		}
- 	 		beacon.setSilent(true);
- 	 		beacon.setCollidable(false);
- 	 		
- 	 		if (beacon instanceof Turtle) {
- 	 			Turtle turtle = (Turtle)beacon;
- 	 			turtle.setBaby();
- 	 			turtle.setAgeLock(true);
- 	 		}
-
- 	 		if (beacon instanceof ArmorStand) {
- 	 			ArmorStand stand = (ArmorStand)beacon;
- 	 			stand.setVisible(false);
- 	 			stand.setSmall(true);
- 	 		}
- 	 		setBeaconData(beacon, beacon_id); // must be applied immediately
-        });
- 		
- 		return new_beacon;
-	}
-	public static void setBeaconData(LivingEntity beacon, String beacon_id)
-	{
-		ItemStack identificator = new ItemStack(Material.BARRIER); //to identify issues
-	 	identificator = NBTUtils.setData(identificator, beacon_id, "+");
- 		//if(beacon instanceof ArmorStand)
- 		beacon.getEquipment().setChestplate(identificator);
- 		//else
- 	 	//	beacon.getEquipment().setHelmet(identificator);
-	}
-	public static boolean hasBeaconData(LivingEntity beacon, String beacon_id)
-	{
-		ItemStack identificator = beacon.getEquipment().getChestplate();
-	 	return NBTUtils.hasDataField(identificator, beacon_id);
-	}
-	
-	public static boolean contains_all_of(String str, String... args) {
-		for(String s : args)
-			if(!str.contains(s))
-				return false;
-		return true;
-	}
-	
-	public static BlockFace get_dir(Location l) {
+	// used in Sleeping
+	public static BlockFace getDir(Location l) {
 		double yaw = ( l.getYaw() + 45f ); //yaw 0 - south, 90 - west
 		if(yaw >= 180f) yaw -= 360;
 		if(yaw < 0)
@@ -255,87 +104,6 @@ public class Utils {
 			else
 				return BlockFace.WEST;
 		
-	}
-	
-	// TODO REMOVE
-	public static Class getNMSClass(String className) {
-		String version = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-
-		Class c = null;
-		try {
-		    c = Class.forName(version + "." + className);
-		    return c;
-		} catch(Exception e) {
-		    e.printStackTrace();
-		    return null;
-		}
-	}
-	
-	public static Object getPrivateField(String fieldName, Class clazz, Object object)
-    {
-        Field field;
-        Object o = null;
-        try
-        {
-            field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            o = field.get(object);
-        }
-        catch(NoSuchFieldException e)
-        {
-            e.printStackTrace();
-        }
-        catch(IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-        return o;
-    }
- 
-	public static void setPrivateField(String fieldName, Class clazz, Object object, Object new_val)
-    {
-		if(clazz == null || object == null) return;
-		
-        Field field;
-        try
-        {
-        	//for(Field f : clazz.getDeclaredFields())
-        	//	System.out.println(f.getName()+" "+f.getType());
-            field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(object, new_val);
-        }
-        catch(NoSuchFieldException e)
-        {
-            e.printStackTrace();
-        }
-        catch(IllegalAccessException e)
-        {
-            e.printStackTrace();
-        }
-    }
-	
-	public static ItemStack resetName(ItemStack item) {
-		ItemMeta meta = item.getItemMeta();
-		meta.setDisplayName(new ItemStack(item.getType()).getItemMeta().getDisplayName());
-		item.setItemMeta(meta);
-		return item;
-	}
-	
-	public static String ItemStacks_toString(ItemStack[] stacks) {
-		String result = "[";
-		for(int i = 0; i < stacks.length; i++)
-		{
-			Storage st = Storage.getByItemStack(stacks[i]);
-			if(st != null)
-				result += st.toString();
-			else
-				result += stacks[i];
-			if(i != stacks.length-1)
-				result += ", ";
-		}
-		result += "]";
-		return result;
 	}
 	
 	public static BlockFace getLeftDirection(BlockFace forward) {
@@ -368,17 +136,6 @@ public class Utils {
 		}
 	}
 	
-	public static boolean contains(Object[] list, Object find) {
-		for (Object m : list)
-			if (m == find)
-				return true;
-		return false;
-	}
-
-	public static boolean equal_invs(Inventory inv1, Inventory inv2) {
-		return inv1.toString().endsWith(inv2.toString().substring(inv2.toString().length()-8));
-	}
-	
 	public static boolean isRenamed(ItemStack item) {
 		return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				&& !item.getItemMeta().getDisplayName().equals((new ItemStack(item.getType())).getItemMeta().getDisplayName());
@@ -406,15 +163,10 @@ public class Utils {
 	 * <b>Item</b> if at least one item was dropped*/
 	public static Item giveOrDrop(Inventory inv, ItemStack stack)
 	{
-		int amount = stack.getAmount();
-		amount -= StorageMultitype.grabItemStack_stacking(inv, stack);
-		if (amount == 0)
+		HashMap<Integer, ItemStack> res = inv.addItem(stack);
+		if (res.isEmpty())
 			return null;
-		amount -= StorageMultitype.grabItemStack_any(inv, stack, amount);
-		if (amount == 0)
-			return null;
-		stack.setAmount(amount);
-		return dropUngiven(inv.getLocation(), stack);
+		return dropUngiven(inv.getLocation(), res.get(0));
 	}
 	/** Can give items only to players.
 	 * @return <b>null</b> if the <b>stack</b> was only given<br>
@@ -430,89 +182,5 @@ public class Utils {
 		item.setVelocity(new Vector());
 		item.setPickupDelay(0);
 		return item;
-	}
-	
-	public static int countEmpty(ItemStack[] inv)
-	{
-		int empty = 0;
-		for (ItemStack is : inv)
-			if (is == null)
-				empty++;
-		return empty;
-	}
-	
-	public static <T> int indexOf(T needle, T[] haystack)
-	{
-	    for (int i=0; i<haystack.length; i++)
-	    {
-	        if (haystack[i] != null && haystack[i].equals(needle)
-	            || needle == null && haystack[i] == null) return i;
-	    }
-
-	    return -1;
-	}
-	public static <T> T next(T needle, T[] haystack)
-	{
-		int index = Utils.indexOf(needle, haystack);
-		if (index < 0)
-			return null;
-		return haystack[(index + 1) % haystack.length];
-	}
-	public static <T> T prev(T needle, T[] haystack)
-	{
-		int index = Utils.indexOf(needle, haystack);
-		if (index < 0)
-			return null;
-		return haystack[((index - 1) % haystack.length + haystack.length) % haystack.length];
-	}
-	
-	public static ItemStack setShulkerInventory(ItemStack shulker_box, Inventory inv)
-	{
-    	BlockStateMeta im = (BlockStateMeta)shulker_box.getItemMeta();
-    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
-    	shulker.getInventory().setContents(inv.getStorageContents());
-    	im.setBlockState(shulker);
-    	shulker_box.setItemMeta(im);
-    	return shulker_box;
-	}
-	public static Inventory getShulkerInventory(ItemStack shulker_box)
-	{
-    	BlockStateMeta im = (BlockStateMeta)shulker_box.getItemMeta();
-    	ShulkerBox shulker = (ShulkerBox) im.getBlockState();
-    	return shulker.getInventory();
-	}
-
-	public static void printStackTracePeak(Exception e, int n) {
-		String error = "";
-		StackTraceElement[] elems = e.getStackTrace();
-		for (int i = 0; i < elems.length && i < n; i++) {
-			error += elems[i].toString() + "\n";
-		}
-		printError(error);
-	}
-	
-	public static void delayUpdate(Inventory inv) {
-		DelayedTask task = new DelayedTask(1, new Runnable() {
-			@Override
-			public void run() {
-				StorageBottomless.update_item_counts(inv);
-				for (HumanEntity human : inv.getViewers()) {
-					((Player)human).updateInventory();
-				}
-				
-				// CAN'T PREVENT OFF HAND GLITCH! (InventoryClickEcent cancelling)
-				if (inv instanceof PlayerInventory) {
-					PlayerInventory pInv = (PlayerInventory) inv;
-					ItemStack item = pInv.getItemInOffHand();
-					/*if (item == null || UtilsType.isAir(item.getType())) {
-						pInv.setItemInOffHand(new ItemStack(Material.STONE));
-					} else {
-						pInv.setItemInOffHand(null);
-					}*/
-					pInv.setItemInOffHand(item);
-				}
-			}
-		});
-		TaskList.add(task);
 	}
 }

@@ -7,51 +7,66 @@ import org.bukkit.block.Barrel;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.ShulkerBox;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 
 import com.festp.utils.UtilsType;
 
 public class ClosedInventory {
-	private final UUID closed_inv_player;
-	private final Block closed_inv;
-	private final InventoryView closed_view;
-	private int closed_inv_ticks;
+	private final UUID player;
+	private final Block holder;
+	private final InventoryView invView;
+	private int ticks;
 	
-	public ClosedInventory(UUID closed_inv_player, int closed_inv_ticks, InventoryView view) {
-		this.closed_inv_player = closed_inv_player;
-		this.closed_view = view;
-		this.closed_inv = view.getTopInventory().getLocation().getBlock();
-		this.closed_inv_ticks = closed_inv_ticks;
+	public ClosedInventory(UUID closedInvPlayer, int closedInvTicks, InventoryView view) {
+		this.player = closedInvPlayer;
+		this.invView = view;
+		this.holder = view.getTopInventory().getLocation().getBlock();
+		this.ticks = closedInvTicks;
+	}
+
+	public void tick() {
+		ticks--;
 	}
 	
 	public int getTicks() {
-		return closed_inv_ticks;
+		return ticks;
 	}
 	
 	public InventoryView getView() {
-		return closed_view;
+		return invView;
 	}
 	
-	public boolean matchUUID(UUID swap_player) {
-		return swap_player.equals(closed_inv_player);
+	public boolean matchUUID(UUID playerUuid) {
+		return playerUuid.equals(player);
 	}
 	
 	public Inventory getInventory() {
-		Material block = closed_inv.getType();
+		Material block = holder.getType();
 		if(UtilsType.is_shulker_box(block)) {
-			return ((ShulkerBox)closed_inv.getState()).getInventory();
+			return ((ShulkerBox)holder.getState()).getInventory();
 		}
 		else if(block == Material.CHEST || block == Material.TRAPPED_CHEST) {
-			return ((Chest)closed_inv.getState()).getInventory();
+			return ((Chest)holder.getState()).getInventory();
 		}
 		else if(block == Material.BARREL) {
-			return ((Barrel)closed_inv.getState()).getInventory();
+			return ((Barrel)holder.getState()).getInventory();
 		}
 		else return null;
 	}
 
-	public void oneTick() {
-		closed_inv_ticks--;
+	public static boolean isSupported(InventoryType type) {
+		return type == InventoryType.SHULKER_BOX
+			    || type == InventoryType.CHEST
+			    || type == InventoryType.BARREL;
+	}
+
+	// TODO make configurable
+	public static boolean isDroppable(InventoryType type) {
+		return isSupported(type) &&
+				(type == InventoryType.SHULKER_BOX
+			    || type == InventoryType.CHEST
+			    || type == InventoryType.BARREL);
 	}
 }

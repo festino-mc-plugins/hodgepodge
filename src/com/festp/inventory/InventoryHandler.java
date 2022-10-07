@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_18_R1.potion.CraftPotionBrewer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -36,52 +35,47 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
+import com.festp.utils.DirtyUtils;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsType;
 import com.festp.utils.UtilsWorld;
 
 public class InventoryHandler implements Listener {
 	private enum ArmorSlot { BOOTS, LEGGINGS, CHESTPLATE, HELMET };
-	private List<ClosedInventory> closed_invs = new ArrayList<>();
-	private List<DroppedItem> dropped_items = new ArrayList<>();
-	
-	private List<Player> broken_tools_players = new ArrayList<>();
+	private List<ClosedInventory> closedInvs = new ArrayList<>();
+	private List<DroppedItem> droppedItems = new ArrayList<>();
 	
 	public void onTick() {
-		//drop inventories
-		for (int i = closed_invs.size()-1; i >= 0; i--)
+		// drop inventories
+		for (int i = closedInvs.size()-1; i >= 0; i--)
 		{
-			if (closed_invs.get(i).getTicks() <= 0)
+			if (closedInvs.get(i).getTicks() <= 0)
 			{
-				closed_invs.remove(i);
+				closedInvs.remove(i);
 				continue;
 			}
-			closed_invs.get(i).oneTick();
+			closedInvs.get(i).tick();
 		}
-		for (int i = dropped_items.size()-1; i >= 0; i--)
+		for (int i = droppedItems.size()-1; i >= 0; i--)
 		{
-			dropped_items.get(i).time--;
-			if (dropped_items.get(i).time < 0)
-				dropped_items.remove(i);
+			droppedItems.get(i).time--;
+			if (droppedItems.get(i).time < 0)
+				droppedItems.remove(i);
 		}
-		
-		broken_tools_players.clear();
 	}
 	
-	//remember shulker box / chest
+	// remember shulker box / chest
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent event)
 	{
-		 if(event.getInventory().getType() == InventoryType.SHULKER_BOX
-				 || event.getInventory().getType() == InventoryType.CHEST
-				 || event.getInventory().getType() == InventoryType.BARREL)
-		 {
-			 if(event.getInventory().getLocation() != null)
-				 closed_invs.add( new ClosedInventory(event.getPlayer().getUniqueId(), Config.max_closed_inv_ticks, event.getView()) );
-		 }
+		if (!ClosedInventory.isDroppable(event.getInventory().getType()))
+			return;
+		if (event.getInventory().getLocation() == null)
+			return;
+		closedInvs.add( new ClosedInventory(event.getPlayer().getUniqueId(), Config.maxClosedInvTicks, event.getView()) );
 	}
 	
-	//drop shulker box / chest
+	// drop shulker box / chest
 	@EventHandler
 	public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event)
 	{
@@ -89,11 +83,11 @@ public class InventoryHandler implements Listener {
 			return;
 		
 		ClosedInventory cinv = null;
-		for (int i = 0; i < closed_invs.size(); i++)
-			if (closed_invs.get(i).matchUUID(event.getPlayer().getUniqueId())) {
-				if (closed_invs.get(i).getTicks() != Config.max_closed_inv_ticks) {
-					cinv = closed_invs.get(i);
-					closed_invs.remove(i);
+		for (int i = 0; i < closedInvs.size(); i++)
+			if (closedInvs.get(i).matchUUID(event.getPlayer().getUniqueId())) {
+				if (closedInvs.get(i).getTicks() != Config.maxClosedInvTicks) {
+					cinv = closedInvs.get(i);
+					closedInvs.remove(i);
 					break;
 				}
 			}
@@ -106,6 +100,9 @@ public class InventoryHandler implements Listener {
 			ItemStack[] items = inv.getContents();
 			for (int i = 0; i < items.length; i++) {
 				ItemStack stack = items[i];
+				if (stack == null)
+					continue;
+				
 				InventoryClickEvent dropEvent;
 				if (stack.getAmount() == 1) // for storages
 					dropEvent = new InventoryClickEvent(cinv.getView(), SlotType.CONTAINER, i, ClickType.CONTROL_DROP, InventoryAction.DROP_ONE_SLOT);
@@ -121,7 +118,7 @@ public class InventoryHandler implements Listener {
 		}
 	}
 	
-	//armor equip
+	// armor equip
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onPlayerPickupItem(EntityPickupItemEvent event)
 	{
@@ -130,9 +127,9 @@ public class InventoryHandler implements Listener {
 		
 		Player player = (Player)event.getEntity();
 		
-		for (int i = dropped_items.size()-1; i >= 0; i--)
+		for (int i = droppedItems.size()-1; i >= 0; i--)
 		{
-			if (dropped_items.get(i).item == event.getItem() && dropped_items.get(i).p == player)
+			if (droppedItems.get(i).item == event.getItem() && droppedItems.get(i).p == player)
 			{
 				event.setCancelled(true);
 				return;
@@ -147,20 +144,20 @@ public class InventoryHandler implements Listener {
 		if (slot == null)
 			return;
 		
-		ItemStack current_item = getBySlot(player.getInventory(), slot);
-		int current_power = getEquipingPower(current_item);
-		int new_power = getEquipingPower(pickedup);
-		if (current_power == 0)
+		ItemStack currentItem = getBySlot(player.getInventory(), slot);
+		int currentPower = getEquipingPower(currentItem);
+		int newPower = getEquipingPower(pickedup);
+		if (currentPower == 0)
 			return;
 
 		boolean isEquiped = false, delete_item = false;
-		if (new_power > 0 && current_power > 0 && current_power < new_power) {
-			event.getItem().setItemStack(current_item);
+		if (newPower > 0 && currentPower > 0 && currentPower < newPower) {
+			event.getItem().setItemStack(currentItem);
 			setBySlot(player.getInventory(), slot, pickedup);
 			isEquiped = true;
 		}
 		
-		if (new_power >= 0 && current_power < 0) {
+		if (newPower >= 0 && currentPower < 0) {
 			setBySlot(player.getInventory(), slot, pickedup);
 			isEquiped = true;
 			delete_item = true;
@@ -178,68 +175,70 @@ public class InventoryHandler implements Listener {
 		}
 	}
 	
-	//quick transfer between players
+	// quick transfer between players
 	@EventHandler
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
 		//event.getItemDrop().setPickupDelay(0); - can't because of dropping player existing
-		dropped_items.add(new DroppedItem(event.getPlayer(), event.getItemDrop()));
+		droppedItems.add(new DroppedItem(event.getPlayer(), event.getItemDrop()));
 	}
 	
-	//empty bottles
+	// empty bottles
 	@EventHandler
 	public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
 		if(event.getItem().getType() == Material.POTION && ( event.getPlayer().getGameMode() == GameMode.SURVIVAL || event.getPlayer().getGameMode() == GameMode.ADVENTURE))
 		{
-			Inventory plinv = event.getPlayer().getInventory();
-			PotionMeta po = null;
-			for(int i=9;i<36;i++) {
-				if(plinv.getItem(i) != null && plinv.getItem(i).getType() == Material.GLASS_BOTTLE && plinv.getItem(i).getAmount() < Material.GLASS_BOTTLE.getMaxStackSize()) {
-					plinv.getItem(i).setAmount(plinv.getItem(i).getAmount()+1);
-
-					//event.getPlayer().addPotionEffects(Potion.fromItemStack(event.getItem()).getEffects());
-					//System.out.println(po+" "+( new CraftPotionBrewer() ).getEffects(po.getBasePotionData().getType(), po.getBasePotionData().isUpgraded(), po.getBasePotionData().isExtended()));
-					po = (PotionMeta)event.getItem().getItemMeta();
-					
+			Inventory inv = event.getPlayer().getInventory();
+			PotionMeta potionMeta = (PotionMeta)event.getItem().getItemMeta();
+			boolean slotWasFound = false;
+			// check bottles in deep inventory
+			for (int i = 9; i < 36; i++) {
+				if (isStackableBottle(inv.getItem(i))) {
+					inv.getItem(i).setAmount(inv.getItem(i).getAmount() + 1);
+					slotWasFound = true;
 					break;
 				}
 			}
-			if(po == null)
-			for(int i=0;i<9;i++) {
-				if(plinv.getItem(i) != null && plinv.getItem(i).getType() == Material.GLASS_BOTTLE && plinv.getItem(i).getAmount() < Material.GLASS_BOTTLE.getMaxStackSize()) {
-					plinv.getItem(i).setAmount(plinv.getItem(i).getAmount()+1);
-
-					po = (PotionMeta)event.getItem().getItemMeta();
-					
-					break;
+			if (!slotWasFound)
+				// check bottles in hotbar
+				for (int i = 0; i < 9; i++) {
+					if (isStackableBottle(inv.getItem(i))) {
+						inv.getItem(i).setAmount(inv.getItem(i).getAmount() + 1);
+						slotWasFound = true;
+						break;
+					}
 				}
-			}
-			if(po == null)
-			for(int i=9;i<36;i++) {
-				if(plinv.getItem(i) == null) {
-					plinv.setItem(i, new ItemStack(Material.GLASS_BOTTLE));
-
-					po = (PotionMeta)event.getItem().getItemMeta();
-					
-					break;
+			if (!slotWasFound)
+				// check empty in deep inventory
+				for (int i = 9; i < 36; i++) {
+					if (inv.getItem(i) == null) {
+						inv.setItem(i, new ItemStack(Material.GLASS_BOTTLE));
+						slotWasFound = true;
+						break;
+					}
 				}
-			}
 			
-			if(po != null) {
-				Collection<PotionEffect> pes = ( new CraftPotionBrewer() ).getEffects(po.getBasePotionData().getType(), po.getBasePotionData().isUpgraded(), po.getBasePotionData().isExtended());
-				for(PotionEffect penew : pes) {
+			if (slotWasFound) {
+				Collection<PotionEffect> pes = DirtyUtils.getPotionEffects(potionMeta);
+				for (PotionEffect penew : pes) {
 					PotionEffectType pecur = penew.getType();
-					for(PotionEffect peold : event.getPlayer().getActivePotionEffects())
+					for (PotionEffect peold : event.getPlayer().getActivePotionEffects())
 					{
-						if(peold.getType() == pecur && ( peold.getDuration() < penew.getDuration() || peold.getAmplifier() < penew.getAmplifier() ) ) {
+						if (peold.getType() == pecur && ( peold.getDuration() < penew.getDuration() || peold.getAmplifier() < penew.getAmplifier() ) ) {
 							event.getPlayer().removePotionEffect(pecur);
 						}
 					}
 				}
 				event.getPlayer().addPotionEffects( pes );
-				event.getPlayer().addPotionEffects( po.getCustomEffects() );
+				event.getPlayer().addPotionEffects( potionMeta.getCustomEffects() );
 				event.setItem(new ItemStack(Material.AIR));
 			}
+			// else leave empty bottle in hand
 		}
+	}
+	
+	private static boolean isStackableBottle(ItemStack stack)
+	{
+		return stack != null && stack.getType() == Material.GLASS_BOTTLE && stack.getAmount() < Material.GLASS_BOTTLE.getMaxStackSize();
 	}
 	
 	@EventHandler
@@ -264,7 +263,7 @@ public class InventoryHandler implements Listener {
 		}
 	}
 
-	//find same tool and replace
+	// find same tool and replace
 	@EventHandler
 	public void onPlayerItemBreak(PlayerItemBreakEvent event) {
 		PlayerInventory player_inv = event.getPlayer().getInventory();
@@ -285,21 +284,21 @@ public class InventoryHandler implements Listener {
 		replace_tool(player_inv, slot);
 	}
 	
-	//return true if tool will be replaced
+	// return true if tool will be replaced
 	private boolean replace_tool(PlayerInventory player_inv, int slot) {
 		Material m = player_inv.getItem(slot).getType();
 		boolean save_tool = player_inv.getItem(slot).hasItemMeta() && player_inv.getItem(slot).getItemMeta().getEnchantLevel(Enchantment.MENDING) > 0
 				|| Utils.isRenamed(player_inv.getItem(slot));
 		
 		int slot_new_tool = -1;
-		//from off hand
+		// from off hand
 		if (slot != player_inv.getSize()-1)
 			if (player_inv.getItem(player_inv.getSize()-1) != null && player_inv.getItem(player_inv.getSize()-1).getType() == m && ((Damageable)player_inv.getItem(slot).getItemMeta()).getDamage() < m.getMaxDurability()) {
 				slot_new_tool = player_inv.getSize()-1;
 			}
 
 		if (slot_new_tool < 0)
-			//from hotbar and from inventory
+			// from hotbar and from inventory
 			for (int i = 0; i < 36; i++) {
 				if (i != slot && player_inv.getItem(i) != null && player_inv.getItem(i).getType() == m && ((Damageable)player_inv.getItem(i).getItemMeta()).getDamage() < m.getMaxDurability()) {
 					slot_new_tool = i;

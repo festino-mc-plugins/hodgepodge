@@ -18,10 +18,6 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.festp.Main;
-import com.festp.tome.TomeItemHandler;
-import com.festp.tome.TomeItemHandler.TomeType;
-
 public class ItemCommand  implements CommandExecutor, TabCompleter {
 	
 	public final static String ITEM_COMMAND = "item";
@@ -130,18 +126,9 @@ public class ItemCommand  implements CommandExecutor, TabCompleter {
 			Material item_material;
 			ItemStack item;
 			// TODO FIX WORKAROUND
-			if (item_id.equalsIgnoreCase("minecart_tome") || item_id.equalsIgnoreCase("том_вагонетки")) {
-				item = TomeItemHandler.getTome(TomeType.MINECART);
-			} else if (item_id.equalsIgnoreCase("boat_tome") || item_id.equalsIgnoreCase("том_лодки")) {
-				item = TomeItemHandler.getTome(TomeType.BOAT);
-			} else if (item_id.equalsIgnoreCase("horse_tome") || item_id.equalsIgnoreCase("том_коня")) {
-				item = TomeItemHandler.getTome(TomeType.HORSE);
-			} else if (item_id.equalsIgnoreCase("custom_horse_tome") || item_id.equalsIgnoreCase("том_любого_коня")) {
-				item = TomeItemHandler.getTome(TomeType.CUSTOM_HORSE);
-			} else if (item_id.equalsIgnoreCase("all_tome") || item_id.equalsIgnoreCase("том_всего")) {
-				item = TomeItemHandler.getTome(TomeType.ALL);
-			} else if (item_id.equalsIgnoreCase("custom_all_tome") || item_id.equalsIgnoreCase("том_любого_всего")) {
-				item = TomeItemHandler.getTome(TomeType.CUSTOM_ALL);
+			if (item_id.equalsIgnoreCase("broken_name")) {
+				// for specific items
+				item = null;
 			} else {
 				item_material = getMaterial(item_id);
 				if (item_material == null) {

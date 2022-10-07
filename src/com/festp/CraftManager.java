@@ -1,17 +1,12 @@
-	package com.festp;
+package com.festp;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
-import org.bukkit.block.ShulkerBox;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,25 +19,12 @@ import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
-import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.inventory.RecipeChoice.MaterialChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.festp.dispenser.PumpManager;
-import com.festp.jukebox.NoteDiscCrafter;
-import com.festp.maps.MapCraftHandler;
-import com.festp.misc.LeashManager;
-import com.festp.storages.Storage;
-import com.festp.utils.NBTUtils;
-import com.festp.utils.Utils;
+import com.festp.utils.NbtUtils;
 import com.festp.utils.UtilsType;
-import com.festp.storages.StorageBottomless;
-import com.festp.storages.StorageMultitype;
-import com.festp.storages.StoragesFileManager;
-import com.festp.tome.TomeItemHandler;
 
 public class CraftManager implements Listener {
 	public enum CraftTag { KEEP_DATA, ONLY_SPECIFIC };
@@ -58,22 +40,18 @@ public class CraftManager implements Listener {
 	}
 	
 	public void addCrafts() {
+		addMainCrafts();
 		addFurnaceCrafts();
-		addSomeCrafts();
 		addStairsAndSlabsCrafts();
-		TomeItemHandler.addTomeCrafts(plugin);
-		MapCraftHandler.addCrafts(plugin);
-		NoteDiscCrafter.addCrafts(plugin);
-		plugin.stcraft.addStorageCrafts();
 	}
 	
-	public void giveRecipe(Player p, String recipe) {
+	private void giveRecipe(Player p, String recipe) {
 		Bukkit.getServer().dispatchCommand(p, "recipe give "+p.getName()+" "+recipe);
 	}
-	public void giveOwnRecipe(Player p, String recipe) {
+	private void giveOwnRecipe(Player p, String recipe) {
 		giveRecipe(p, plugin.getName().toLowerCase()+":"+recipe);
 	}
-	public void giveRecipe(HumanEntity player, NamespacedKey key) {
+	private void giveRecipe(HumanEntity player, NamespacedKey key) {
 		player.discoverRecipe(key);
 	}
 	
@@ -93,7 +71,7 @@ public class CraftManager implements Listener {
 	}
 	
 	@SuppressWarnings("deprecation")
-	private void addSomeCrafts() {
+	private void addMainCrafts() {
 		String name___torch_1 = "torch_from_fireball";
 		String name___redsand = "redsand_from_sand_and_redstone";
 		String name___clay_1 = "clay1";
@@ -104,8 +82,6 @@ public class CraftManager implements Listener {
 		String name___grass_1 = "grass_from_dirt";
 		String name___mycel_1 = "mycel_from_dirt_red";
 		String name___mycel_2 = "mycel_from_dirt_brown";
-		String name___pump_regular = "regular_pump";
-		String name___pump_advanced = "advanced_pump";
 		String name___borsch_1 = "borsch";
 		String name___chorus_1 = "chorus_from_flower";
 		String name___stick_1 = "stick_from_arrows";
@@ -124,8 +100,6 @@ public class CraftManager implements Listener {
     	NamespacedKey key___grass = new NamespacedKey(plugin, name___grass_1);
     	NamespacedKey key___mycel_1 = new NamespacedKey(plugin, name___mycel_1);
     	NamespacedKey key___mycel_2 = new NamespacedKey(plugin, name___mycel_2);
-    	NamespacedKey key___pump_regular = new NamespacedKey(plugin, name___pump_regular);
-    	NamespacedKey key___pump_advanced = new NamespacedKey(plugin, name___pump_advanced);
     	NamespacedKey key___borsch = new NamespacedKey(plugin, name___borsch_1);
     	NamespacedKey key___chorus = new NamespacedKey(plugin, name___chorus_1);
     	NamespacedKey key___stick_1 = new NamespacedKey(plugin, name___stick_1);
@@ -143,8 +117,6 @@ public class CraftManager implements Listener {
 		recipe_keys.add(key___grass);
 		recipe_keys.add(key___mycel_1);
 		recipe_keys.add(key___mycel_2);
-		recipe_keys.add(key___pump_regular);
-		recipe_keys.add(key___pump_advanced);
 		recipe_keys.add(key___borsch);
 		recipe_keys.add(key___chorus);
 		recipe_keys.add(key___stick_1);
@@ -206,48 +178,6 @@ public class CraftManager implements Listener {
     	server.addRecipe(mycel_from_dirt2);
     	
     	
-    	
-    	// long lead
-    	ItemStack lead_3 = new ItemStack(Material.LEAD, 1);
-    	lead_3 = NBTUtils.setData(lead_3, LeashManager.LENGTH_KEY, 30+""); // magic value
-    	ItemMeta lead_3_meta = lead_3.getItemMeta();
-    	lead_3_meta.setDisplayName("Long lead");
-    	lead_3.setItemMeta(lead_3_meta);
-    	lead_3 = applyTag(lead_3, CraftTag.ONLY_SPECIFIC);
-    	ShapelessRecipe lead_3x = new ShapelessRecipe(key___lead_3x, lead_3);
-    	lead_3x.addIngredient(3, Material.LEAD); // TO DO: cancel craft if there is long lead
-    	server.addRecipe(lead_3x);
-    	
-    	// pumps
-    	ItemStack reg_pump = new ItemStack(Material.BLAZE_ROD, 1);
-    	ItemMeta reg_pump_meta = reg_pump.getItemMeta();
-    	String RUS_reg_pump_name = "Обычная помпа", ENG_reg_pump_name = "Regular Pump";
-    	String RUS_reg_pump_lore = "Обычный модуль помпы для раздатчика", ENG_reg_pump_lore = "Regular pump module for dispenser (pumps water and lava)";
-    	reg_pump_meta.setDisplayName(RUS_reg_pump_name);
-    	reg_pump_meta.setLore(Arrays.asList(RUS_reg_pump_lore));
-    	reg_pump.setItemMeta(reg_pump_meta);
-    	reg_pump = applyTag(reg_pump, CraftTag.ONLY_SPECIFIC);
-    	ShapedRecipe regular_pump = new ShapedRecipe(key___pump_regular, reg_pump);
-    	regular_pump.shape(new String[]{"RPR", "PHP", "RPR"});
-    	regular_pump.setIngredient('R', Material.REDSTONE);
-    	regular_pump.setIngredient('P', Material.PISTON);
-    	regular_pump.setIngredient('H', Material.HOPPER);
-    	server.addRecipe(regular_pump);
-
-    	ItemStack top_pump = new ItemStack(Material.BLAZE_ROD, 1);
-    	ItemMeta top_pump_meta = top_pump.getItemMeta();
-    	String RUS_top_pump_name = "Продвинутая помпа", ENG_top_pump_name = "Advanced Pump";
-    	String RUS_top_pump_lore = "Продвинутый модуль помпы для раздатчика", ENG_top_pump_lore = "Advanced pump module for dispenser (pumps water and lava)";
-    	top_pump_meta.setDisplayName(RUS_top_pump_name);
-    	top_pump_meta.setLore(Arrays.asList(RUS_top_pump_lore));
-    	top_pump.setItemMeta(top_pump_meta);
-    	top_pump = applyTag(top_pump, CraftTag.ONLY_SPECIFIC);
-    	ShapedRecipe advanced_pump = new ShapedRecipe(key___pump_advanced, top_pump);
-    	advanced_pump.shape(new String[]{"RMR", "MSM", "RMR"});
-    	advanced_pump.setIngredient('R', Material.REDSTONE_BLOCK);
-    	advanced_pump.setIngredient('M', Material.BLAZE_ROD);
-    	advanced_pump.setIngredient('S', Material.NETHER_STAR);
-    	server.addRecipe(advanced_pump);
 
     	ShapelessRecipe pocket_borsch = new ShapelessRecipe(key___borsch, new ItemStack(Material.BEETROOT_SOUP, 1) );
     	pocket_borsch.addIngredient(1, Material.BEETROOT);
@@ -277,118 +207,32 @@ public class CraftManager implements Listener {
     	server.addRecipe(glass_item_frame);
 	}
 	
-	public static ItemStack applyTag(ItemStack item, CraftTag tag)
-	{
-		return NBTUtils.setData(item, tag.toString().toLowerCase(), "true");
-	}
-	
-	public static boolean hasTag(ItemStack item, CraftTag tag)
-	{
-		return NBTUtils.hasDataField(item, tag.toString().toLowerCase());
-	}
-	
-	public static ItemStack moveSpecificTags(ItemStack to, ItemStack from)
-	{
-		
-		return to;
-	}
-	
-	//test necessary item tags (in craft grid)
+	// test necessary item tags (in craft grid)
 	@EventHandler
     public void onPrepareItemCraft(PrepareItemCraftEvent event)
 	{
 		CraftingInventory ci = event.getInventory();
 		ItemStack[] matrix = ci.getMatrix();
-
-		for (int i = 0; i < matrix.length; i++) {
-			if (matrix[i] != null && hasTag(matrix[i], CraftTag.ONLY_SPECIFIC))
-			{
-				if (PumpManager.isPump(ci.getResult()))
-					break;
-				//try to find these recipes
-				ci.setResult(null);
-				return;
-			}
-		}
 		
-		//craft grid test
-		if (matrix.length == 9 && matrix[0] != null && matrix[1] != null && matrix[2] != null && matrix[3] != null
-				&& matrix[5] != null && matrix[6] != null && matrix[7] != null && matrix[8] != null) {
-			//Top pump module
-			if (matrix[0].getType().equals(Material.REDSTONE_BLOCK) && matrix[2].getType().equals(Material.REDSTONE_BLOCK)
-					&& matrix[6].getType().equals(Material.REDSTONE_BLOCK) && matrix[8].getType().equals(Material.REDSTONE_BLOCK)
-					&& matrix[1].getType().equals(Material.BLAZE_ROD) && matrix[3].getType().equals(Material.BLAZE_ROD)
-					&& matrix[5].getType().equals(Material.BLAZE_ROD) && matrix[7].getType().equals(Material.BLAZE_ROD)
-					&& matrix[4] != null && matrix[4].getType().equals(Material.NETHER_STAR))
-			{
-				if (matrix[1].hasItemMeta() && matrix[3].hasItemMeta() && matrix[5].hasItemMeta() && matrix[7].hasItemMeta()
-					&& matrix[1].getItemMeta().hasLore() && matrix[3].getItemMeta().hasLore() && matrix[5].getItemMeta().hasLore() && matrix[7].getItemMeta().hasLore()
-					&& ( Utils.contains_all_of(matrix[1].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[1].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
-					&& ( Utils.contains_all_of(matrix[3].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[3].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
-					&& ( Utils.contains_all_of(matrix[5].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[5].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") )
-					&& ( Utils.contains_all_of(matrix[7].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "помп", "обычн") || Utils.contains_all_of(matrix[7].getItemMeta().getLore().get(0).toLowerCase(Locale.ENGLISH), "pump", "regular") ))
-				{
-					//nothing to do
-				}
-				else
-				{
-					ci.setResult(null);
-				}
+		//borsch
+		if (ci.getResult() != null && ci.getResult().getType() == Material.BEETROOT_SOUP) {
+			boolean have_beetroot = false;
+			int bowl_count = 0, beetroot_stacks_count = 0;
+			for (int i = 0; i < matrix.length; i++) {
+				if (matrix[i] != null)
+					if (matrix[i].getType() == Material.BOWL)
+						bowl_count++;
+					else if (matrix[i].getType() == Material.BEETROOT) {
+						beetroot_stacks_count++;
+						if (matrix[i].getAmount() >= 6)
+							have_beetroot = true;
+						else if (beetroot_stacks_count != 1)
+							break;
+					}
 			}
-		}
-		//Uncraft storage
-		if (ci.getResult() != null && ci.getResult().getType() == Material.SHULKER_BOX)
-		{
-			int items = 0;
-			boolean have_storage = false, have_firework_star = false;
-			for (int i = 0; i < matrix.length; i++)
-				if (matrix[i] != null) {
-					items++;
-					if (Storage.isStorage(matrix[i]))
-						have_storage = true;
-					if (matrix[i].getType() == Material.FIREWORK_STAR)
-						have_firework_star = true;
-				}
-			if (have_storage && items != 1 || !have_storage && have_firework_star && items == 1)
+			if (bowl_count == 1 && beetroot_stacks_count == 1 && !have_beetroot) {
 				ci.setResult(null);
-		}
-		//Storages
-		if (Storage.isStorage(ci.getResult()))
-		{
-			int empty_boxes = 0, boxes = 0;
-			for (int i = 0; i < matrix.length; i++)
-				if (matrix[i] != null && UtilsType.is_shulker_box(matrix[i].getType()))
-				{
-					boxes++;
-					if (isShulkerBoxEmpty(matrix[i]))
-						empty_boxes++;
-				}
-			if (boxes != empty_boxes)
-				ci.setResult(null);
-		}
-		else {
-			//borsch
-			if (ci.getResult() != null && ci.getResult().getType() == Material.BEETROOT_SOUP) {
-				boolean have_beetroot = false;
-				int bowl_count = 0, beetroot_stacks_count = 0;
-				for (int i = 0; i < matrix.length; i++) {
-					if (matrix[i] != null)
-						if (matrix[i].getType() == Material.BOWL)
-							bowl_count++;
-						else if (matrix[i].getType() == Material.BEETROOT) {
-							beetroot_stacks_count++;
-							if (matrix[i].getAmount() >= 6)
-								have_beetroot = true;
-							else if (beetroot_stacks_count != 1)
-								break;
-						}
-				}
-				if (bowl_count == 1 && beetroot_stacks_count == 1 && !have_beetroot) {
-					ci.setResult(null);
-				}
 			}
-			//else if()
-			
 		}
 	}
 	
@@ -399,52 +243,17 @@ public class CraftManager implements Listener {
 			return;
 
 		ItemStack[] matrix = event.getInventory().getMatrix();
-		ItemStack craft_result = event.getCurrentItem();
-		if (hasTag(craft_result, CraftTag.KEEP_DATA))
-		{
-			ItemStack similar = null;
-			for (int i = 0; i < matrix.length; i++) {
-				if (matrix[i].getType() == craft_result.getType())
-				{
-					if (similar != null)
-					{
-						similar = null;
-						break;
-					}
-					similar = matrix[i];
-				}
-			}
-			if (similar != null)
-				craft_result = moveSpecificTags(craft_result, similar);
-		}
+		ItemStack craftResult = event.getCurrentItem();
 		
-		if( Storage.isStorage(craft_result) ) {
-			int id = StoragesFileManager.nextID++;
-			craft_result = Storage.setID(craft_result, id);
-			Storage st;
-			if(craft_result.getEnchantmentLevel(Enchantment.ARROW_INFINITE) > 0)
-				st = new StorageBottomless(id, plugin.mainworld.getFullTime(), StorageBottomless.UNDEFINED_MATERIAL);
-			else if(craft_result.getEnchantmentLevel(Enchantment.DIG_SPEED) > 0) {
-				int lvl = craft_result.getEnchantmentLevel(Enchantment.DIG_SPEED);
-				st = new StorageMultitype(id, plugin.mainworld.getFullTime(), lvl);
-			} else {
-				event.setCancelled(true);
-				return;
-			}
-			
-			st.saveToFile();
-			
-			event.setCurrentItem(st.getItemStack());
-		}
-		else if(craft_result.getType() == Material.BEETROOT_SOUP) {
-			//borsch
+		if (craftResult.getType() == Material.BEETROOT_SOUP) {
+			// borsch
 			int index_beetroot = -1707, index_bowl = -1707;
-			int count_beetroot_stacks = 0, count_bowl = 0;
+			int countBeetrootSlots = 0, countBowl = 0;
 			for (int i = 0; i < matrix.length; i++) {
 				if (matrix[i] != null)
 					if (matrix[i].getType() == Material.BOWL)
 					{
-						count_bowl++;
+						countBowl++;
 						if (index_bowl < 0)
 							index_bowl = i;
 						else 
@@ -452,24 +261,24 @@ public class CraftManager implements Listener {
 					}
 					else if (matrix[i].getType() == Material.BEETROOT)
 					{
-						count_beetroot_stacks++;
+						countBeetrootSlots++;
 						if (index_beetroot < 0 && matrix[i].getAmount() >= 6)
 							index_beetroot = i;
-						else if (count_beetroot_stacks != 1)
+						else if (countBeetrootSlots != 1)
 							break;
 					}
 			}
-			if (count_bowl == 1 && count_beetroot_stacks == 1)
+			if (countBowl == 1 && countBeetrootSlots == 1)
 			{
 				if (index_beetroot >= 0)
 				{
 					if (event.isShiftClick()) {
-						ItemStack[] player_inv = event.getWhoClicked().getInventory().getStorageContents();
+						ItemStack[] playerInv = event.getWhoClicked().getInventory().getStorageContents();
 						int max_crafts = Math.min(matrix[index_beetroot].getAmount()/6, matrix[index_bowl].getAmount());
 						int empty_count = 0;
-						for (int i = 0; i < player_inv.length; i++) {
-							if (player_inv[i] == null) {
-								player_inv[i] = new ItemStack(Material.BEETROOT_SOUP, 1);
+						for (int i = 0; i < playerInv.length; i++) {
+							if (playerInv[i] == null) {
+								playerInv[i] = new ItemStack(Material.BEETROOT_SOUP, 1);
 								empty_count++;
 								if (empty_count >= max_crafts)
 									break;
@@ -479,7 +288,7 @@ public class CraftManager implements Listener {
 						matrix[index_bowl].setAmount(matrix[index_bowl].getAmount()-empty_count);
 						matrix[index_beetroot].setAmount(matrix[index_beetroot].getAmount()-6*empty_count);
 						event.getInventory().setMatrix(matrix);
-						event.getWhoClicked().getInventory().setStorageContents(player_inv);
+						event.getWhoClicked().getInventory().setStorageContents(playerInv);
 					}
 					else {
 						matrix[index_beetroot].setAmount(matrix[index_beetroot].getAmount()-5);
@@ -493,17 +302,8 @@ public class CraftManager implements Listener {
 		}
 	}
 	
-	private boolean isShulkerBoxEmpty(ItemStack sb)
-	{
-		ItemStack[] inv = ((ShulkerBox)((BlockStateMeta) sb.getItemMeta()).getBlockState()).getInventory().getContents();
-		for (ItemStack is : inv)
-			if (is != null)
-				return false;
-		return true;
-	}
-	
 	private void addFurnaceCrafts() {
-		//remove vanilla recipes
+		// remove vanilla recipes
     	Iterator<Recipe> recipes = Bukkit.recipeIterator();
     	while (recipes.hasNext()) {
     		Recipe recipe = recipes.next();
@@ -514,39 +314,39 @@ public class CraftManager implements Listener {
     					recipes.remove();
     		}
     	}
-    	//add our armor smelting recipes
-    	Material[] input_items = {
+    	// add our armor smelting recipes
+    	Material[] inputItems = {
     			Material.IRON_BOOTS, Material.IRON_LEGGINGS, Material.IRON_CHESTPLATE, Material.IRON_HELMET,
     			Material.GOLDEN_BOOTS, Material.GOLDEN_LEGGINGS, Material.GOLDEN_CHESTPLATE, Material.GOLDEN_HELMET,
     			Material.CHAINMAIL_BOOTS, Material.CHAINMAIL_LEGGINGS, Material.CHAINMAIL_CHESTPLATE, Material.CHAINMAIL_HELMET,
     			Material.IRON_AXE, Material.IRON_HOE, Material.IRON_PICKAXE, Material.IRON_SHOVEL, Material.IRON_SWORD,
     			Material.GOLDEN_AXE, Material.GOLDEN_HOE, Material.GOLDEN_PICKAXE, Material.GOLDEN_SHOVEL, Material.GOLDEN_SWORD};
-    	Material[] output_items = {
+    	Material[] outputItems = {
     			Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET,
     			Material.GOLD_NUGGET, Material.GOLD_NUGGET, Material.GOLD_NUGGET, Material.GOLD_NUGGET,
     			Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET,
     			Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET, Material.IRON_NUGGET,
     			Material.GOLD_NUGGET, Material.GOLD_NUGGET, Material.GOLD_NUGGET, Material.GOLD_NUGGET, Material.GOLD_NUGGET};
-    	int[] output_counts = {
+    	int[] outputCounts = {
     			4, 7, 8, 5,
     			4, 7, 8, 5,
     			4, 7, 8, 5,
     			3, 2, 3, 1, 2,
     			3, 2, 3, 1, 2};
-    	for (int i = 0; i < input_items.length; i++)
+    	for (int i = 0; i < inputItems.length; i++)
     	{
-    		ItemStack output_stack = new ItemStack(output_items[i], output_counts[i]);
-    		String key = "furnace_" + input_items[i].toString().toLowerCase();
-    		NamespacedKey namespaced_key = new NamespacedKey(plugin, key);
-    		float exp = output_counts[i];
-    		int time = (output_counts[i] + 10) * 20 / 2;
-    		FurnaceRecipe nuggets_recipe = new FurnaceRecipe(namespaced_key, output_stack, input_items[i], exp, time);
+    		ItemStack output_stack = new ItemStack(outputItems[i], outputCounts[i]);
+    		String key = "furnace_" + inputItems[i].toString().toLowerCase();
+    		NamespacedKey namespacedKey = new NamespacedKey(plugin, key);
+    		float exp = outputCounts[i];
+    		int time = (outputCounts[i] + 10) * 20 / 2;
+    		FurnaceRecipe nuggets_recipe = new FurnaceRecipe(namespacedKey, output_stack, inputItems[i], exp, time);
         	server.addRecipe(nuggets_recipe);
     	}
 	}
 	
 	private void addStairsAndSlabsCrafts() {
-    	Material[] stairs_to_blocks = { Material.BRICK_STAIRS, Material.STONE_STAIRS,
+    	Material[] stairsToBlocks = { Material.BRICK_STAIRS, Material.STONE_STAIRS,
     			Material.ACACIA_STAIRS, Material.BIRCH_STAIRS, Material.DARK_OAK_STAIRS, Material.JUNGLE_STAIRS, Material.SPRUCE_STAIRS, Material.OAK_STAIRS,
     			Material.NETHER_BRICK_STAIRS, Material.RED_NETHER_BRICK_STAIRS, Material.PURPUR_STAIRS, Material.END_STONE_BRICK_STAIRS,
     			Material.DARK_PRISMARINE_STAIRS, Material.PRISMARINE_BRICK_STAIRS, Material.PRISMARINE_STAIRS,
@@ -556,7 +356,7 @@ public class CraftManager implements Listener {
     			Material.POLISHED_ANDESITE_STAIRS, Material.POLISHED_DIORITE_STAIRS, Material.POLISHED_GRANITE_STAIRS,
     			Material.QUARTZ_STAIRS, Material.RED_SANDSTONE_STAIRS, Material.SANDSTONE_STAIRS,
     			Material.SMOOTH_QUARTZ_STAIRS, Material.SMOOTH_RED_SANDSTONE_STAIRS, Material.SMOOTH_SANDSTONE_STAIRS };
-    	Material[] slabs_to_blocks = { Material.BRICK_SLAB, Material.STONE_SLAB,
+    	Material[] slabsToBlocks = { Material.BRICK_SLAB, Material.STONE_SLAB,
     			Material.ACACIA_SLAB, Material.BIRCH_SLAB, Material.DARK_OAK_SLAB, Material.JUNGLE_SLAB, Material.SPRUCE_SLAB, Material.OAK_SLAB,
     			Material.NETHER_BRICK_SLAB, Material.RED_NETHER_BRICK_SLAB, Material.PURPUR_SLAB, Material.END_STONE_BRICK_SLAB,
     			Material.DARK_PRISMARINE_SLAB, Material.PRISMARINE_BRICK_SLAB, Material.PRISMARINE_SLAB,
@@ -566,7 +366,7 @@ public class CraftManager implements Listener {
     			Material.POLISHED_ANDESITE_SLAB, Material.POLISHED_DIORITE_SLAB, Material.POLISHED_GRANITE_SLAB,
     			Material.QUARTZ_SLAB, Material.RED_SANDSTONE_SLAB, Material.SANDSTONE_SLAB,
     			Material.SMOOTH_QUARTZ_SLAB, Material.SMOOTH_RED_SANDSTONE_SLAB, Material.SMOOTH_SANDSTONE_SLAB };
-    	Material[] blocks_from_partial = { Material.BRICKS, Material.STONE,
+    	Material[] blocksFromPartial = { Material.BRICKS, Material.STONE,
     			Material.ACACIA_PLANKS, Material.BIRCH_PLANKS, Material.DARK_OAK_PLANKS, Material.JUNGLE_PLANKS, Material.SPRUCE_PLANKS, Material.OAK_PLANKS,
     			Material.NETHER_BRICKS, Material.RED_NETHER_BRICKS, Material.PURPUR_BLOCK, Material.END_STONE_BRICKS,
     			Material.DARK_PRISMARINE, Material.PRISMARINE_BRICKS, Material.PRISMARINE,
@@ -576,49 +376,47 @@ public class CraftManager implements Listener {
     			Material.POLISHED_ANDESITE, Material.POLISHED_DIORITE, Material.POLISHED_GRANITE,
     			Material.QUARTZ_BLOCK, Material.RED_SANDSTONE, Material.SANDSTONE,
     			Material.SMOOTH_QUARTZ, Material.SMOOTH_RED_SANDSTONE, Material.SMOOTH_SANDSTONE };
-    	//1 stair -> 1 block
-    	for (int i = 0; i < stairs_to_blocks.length; i++) {
-        	NamespacedKey temp_key = new NamespacedKey(plugin, "1stairs-"+gen_key_from_material(stairs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 1) );
-        	temp_recipe.addIngredient(1, stairs_to_blocks[i]);
-    		server.addRecipe(temp_recipe);
+    	// 1 stair -> 1 block
+    	for (int i = 0; i < stairsToBlocks.length; i++) {
+        	NamespacedKey temp_key = new NamespacedKey(plugin, "1stairs-"+gen_key_from_material(stairsToBlocks[i]));
+        	ShapelessRecipe tempRecipe = new ShapelessRecipe(temp_key, new ItemStack(blocksFromPartial[i], 1) );
+        	tempRecipe.addIngredient(1, stairsToBlocks[i]);
+    		server.addRecipe(tempRecipe);
     	}
-    	//2 slabs -> 1 block (except quartz, sandstoneS, stone bricks, purpur)
-    	for (int i = 0; i < slabs_to_blocks.length; i++) {
-    		if ( slabs_to_blocks[i] != Material.STONE_BRICK_SLAB && slabs_to_blocks[i] != Material.QUARTZ_SLAB
-    				&& slabs_to_blocks[i] != Material.SANDSTONE_SLAB && slabs_to_blocks[i] != Material.RED_SANDSTONE_SLAB
-    				&& slabs_to_blocks[i] != Material.PURPUR_SLAB && slabs_to_blocks[i] != Material.NETHER_BRICK_SLAB) {
-            	NamespacedKey temp_key = new NamespacedKey(plugin, "2slab-"+gen_key_from_material(slabs_to_blocks[i]));
-            	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 1) );
-            	temp_recipe.addIngredient(2, slabs_to_blocks[i]);
-        		server.addRecipe(temp_recipe);
+    	// 2 slabs -> 1 block (except quartz, sandstoneS, stone bricks, purpur)
+    	for (int i = 0; i < slabsToBlocks.length; i++) {
+    		if ( slabsToBlocks[i] != Material.STONE_BRICK_SLAB && slabsToBlocks[i] != Material.QUARTZ_SLAB
+    				&& slabsToBlocks[i] != Material.SANDSTONE_SLAB && slabsToBlocks[i] != Material.RED_SANDSTONE_SLAB
+    				&& slabsToBlocks[i] != Material.PURPUR_SLAB && slabsToBlocks[i] != Material.NETHER_BRICK_SLAB) {
+            	NamespacedKey tempKey = new NamespacedKey(plugin, "2slab-"+gen_key_from_material(slabsToBlocks[i]));
+            	ShapelessRecipe tempRecipe = new ShapelessRecipe(tempKey, new ItemStack(blocksFromPartial[i], 1) );
+            	tempRecipe.addIngredient(2, slabsToBlocks[i]);
+        		server.addRecipe(tempRecipe);
     		}
     	}
-    	//4 slabs -> 1 block
-    	for (int i = 0; i < slabs_to_blocks.length; i++) {
-        	NamespacedKey temp_key = new NamespacedKey(plugin, "4slab-"+gen_key_from_material(slabs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 2) );
-        	temp_recipe.addIngredient(4, slabs_to_blocks[i]);
-    		server.addRecipe(temp_recipe);
+    	// 4 slabs -> 1 block
+    	for (int i = 0; i < slabsToBlocks.length; i++) {
+        	NamespacedKey tempKey = new NamespacedKey(plugin, "4slab-"+gen_key_from_material(slabsToBlocks[i]));
+        	ShapelessRecipe tempRecipe = new ShapelessRecipe(tempKey, new ItemStack(blocksFromPartial[i], 2) );
+        	tempRecipe.addIngredient(4, slabsToBlocks[i]);
+    		server.addRecipe(tempRecipe);
     	}
-    	//6 slabs -> 1 block
-    	for (int i = 0; i < slabs_to_blocks.length; i++) {
-        	NamespacedKey temp_key = new NamespacedKey(plugin, "6slab-"+gen_key_from_material(slabs_to_blocks[i]));
-        	ShapelessRecipe temp_recipe = new ShapelessRecipe(temp_key, new ItemStack(blocks_from_partial[i], 3) );
-        	temp_recipe.addIngredient(6, slabs_to_blocks[i]);
-    		server.addRecipe(temp_recipe);
+    	// 6 slabs -> 1 block
+    	for (int i = 0; i < slabsToBlocks.length; i++) {
+        	NamespacedKey tempKey = new NamespacedKey(plugin, "6slab-"+gen_key_from_material(slabsToBlocks[i]));
+        	ShapelessRecipe tempRecipe = new ShapelessRecipe(tempKey, new ItemStack(blocksFromPartial[i], 3) );
+        	tempRecipe.addIngredient(6, slabsToBlocks[i]);
+    		server.addRecipe(tempRecipe);
     	}
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static ItemStack getInvisibleItemFrame() { // TODO add function to get any special plugin item
     	ItemStack glassItemFrame = new ItemStack(Material.ITEM_FRAME, 1);
     	ItemMeta meta = glassItemFrame.getItemMeta();
     	//meta.setDisplayName("Glass Item Frame");
     	meta.setLocalizedName("Стеклянная рамка");
     	glassItemFrame.setItemMeta(meta);
-    	Bukkit.getUnsafe().modifyItemStack(glassItemFrame, "{EntityTag:{Invisible:1b}}");
-    	return glassItemFrame;
+    	return NbtUtils.setInvisibleEntity(glassItemFrame);
 	}
 	
 	private String gen_key_from_material(Material m) {

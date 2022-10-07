@@ -15,7 +15,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.block.data.Orientable;
-import org.bukkit.craftbukkit.v1_18_R1.entity.CraftLivingEntity;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Bat;
 import org.bukkit.entity.Boat;
@@ -23,6 +22,7 @@ import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
@@ -33,6 +33,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.festp.Config;
@@ -42,7 +43,7 @@ import com.festp.utils.UtilsType;
 public class FeatureHandler implements Listener {
 	Main plugin;
 	Server server;
-	List<Player> test_spawn_in_portal = new ArrayList<>();
+	List<Player> testSpawnInPortal = new ArrayList<>();
 	private Random random = new Random();
 	
 	public FeatureHandler(Main plugin) {
@@ -60,12 +61,12 @@ public class FeatureHandler implements Listener {
 			for (Entity e : w.getEntitiesByClass(Boat.class))
 			{
 				if (e.getPassengers().size() == 0 && e.getLocation().getBlock().getType() == Material.NETHER_PORTAL)
-					tp_entity_from_portal(e);
+					tpEntityFromPortal(e);
 			}
 		}
-		for (int i = test_spawn_in_portal.size()-1; i >= 0; i--) {
-			Player p = test_spawn_in_portal.get(i);
-			if (p.isInsideVehicle()/* && event.getPlayer().getVehicle().getType() != EntityType.PLAYER*/) {
+		for (int i = testSpawnInPortal.size() - 1; i >= 0; i--) {
+			Player p = testSpawnInPortal.get(i);
+			if (p.isInsideVehicle()) {
 				List<Entity> pass = p.getVehicle().getPassengers();
 				if (pass.size() > 0) {
 					Entity e = pass.get(0);
@@ -76,14 +77,14 @@ public class FeatureHandler implements Listener {
 					}
 				}
 			}
-			tp_entity_from_portal(p);
+			tpEntityFromPortal(p);
 		}
-		test_spawn_in_portal.clear();
+		testSpawnInPortal.clear();
 	}
 	
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		test_spawn_in_portal.add(event.getPlayer());
+		testSpawnInPortal.add(event.getPlayer());
 	}
 	
 	@EventHandler
@@ -95,32 +96,32 @@ public class FeatureHandler implements Listener {
 			if (event.getBlock().getType().equals(Material.BROWN_MUSHROOM_BLOCK) || event.getBlock().getType().equals(Material.RED_MUSHROOM_BLOCK))
 			{
 				event.setCancelled(true);
-				int fortune_lvl = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+				int fortuneLevel = event.getPlayer().getInventory().getItemInMainHand().getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
 				Block block = event.getBlock();
-				double rand_res = random.nextDouble();
+				double randRes = random.nextDouble();
 				// 1: (2/3)x1 (1/3)x2 => 2: (2/4)x1 (1/4)x2 (1/4)x3 => 2: (2/5)x1 (1/5)x2 (1/5)x3 (1/5)x4
 				int mul = 1;
-				for (int i = 1; i < fortune_lvl + 1; i++)
+				for (int i = 1; i < fortuneLevel + 1; i++)
 				{
-					if ((fortune_lvl + 1) * rand_res / i < 1.0) {
+					if ((fortuneLevel + 1) * randRes / i < 1.0) {
 						mul = i;
 						break;
 					}
 				}
-				Collection<ItemStack> new_drops = block.getDrops();
+				Collection<ItemStack> newDrops = block.getDrops();
 				block.setType(Material.AIR);
-				for (ItemStack new_drop : new_drops)
+				for (ItemStack newDrop : newDrops)
 				{
-					if (new_drop.getType() == Material.AIR)
+					if (newDrop.getType() == Material.AIR)
 						continue;
-					int amount = new_drop.getAmount() * mul;
-					int max_amount = new_drop.getMaxStackSize();
+					int amount = newDrop.getAmount() * mul;
+					int maxAmount = newDrop.getMaxStackSize();
 					while (amount > 0)
 					{
-						int drop_amount = Math.min(max_amount, amount);
-						amount -= drop_amount;
-						new_drop.setAmount(drop_amount);
-						block.getWorld().dropItemNaturally(block.getLocation(), new_drop);
+						int dropAmount = Math.min(maxAmount, amount);
+						amount -= dropAmount;
+						newDrop.setAmount(dropAmount);
+						block.getWorld().dropItemNaturally(block.getLocation(), newDrop);
 					}
 				}
 			}
@@ -142,91 +143,95 @@ public class FeatureHandler implements Listener {
 	@EventHandler
 	public void onEntityDamage(EntityDamageEvent event)
 	{
-		if(event.getEntityType() == EntityType.PLAYER) {
-			EntityDamageEvent eve = (EntityDamageEvent) event;
-			int lvl = ((CraftLivingEntity)(eve.getEntity())).getPotionEffect(PotionEffectType.JUMP) == null ? 0 : ((CraftLivingEntity)(eve.getEntity())).getPotionEffect(PotionEffectType.JUMP).getAmplifier()+1;
-			if( eve.getCause().equals(EntityDamageEvent.DamageCause.FALL) && lvl > 0 )
-			{
-				eve.setDamage((eve.getDamage()+lvl)*Math.pow(Config.fallDamage, lvl));
-			}
-		}
+		if (event.getEntityType() != EntityType.PLAYER)
+			return;
+		if (!event.getCause().equals(EntityDamageEvent.DamageCause.FALL))
+			return;
+		PotionEffect jumpEffect = ((LivingEntity)(event.getEntity())).getPotionEffect(PotionEffectType.JUMP);
+		int lvl = jumpEffect == null ? 0 : jumpEffect.getAmplifier() + 1;
+		if (lvl <= 0)
+			return;
+		event.setDamage((event.getDamage() + lvl) * Math.pow(Config.fallDamage, lvl));
 	}
 	
 	private int dir(double x0) {
-		if((int)x0 == (int)(x0+0.75)) //neg x
+		if ((int)x0 == (int)(x0 + 0.75)) // neg x
 			return -1;
-		else if((int)x0 == (int)(x0+0.25)) //pos x
+		else if ((int)x0 == (int)(x0 + 0.25)) // pos x
 			return 1;
 		else
 			return 0;
 	}
 	
-	void tp_entity_from_portal(Entity e) {
+	void tpEntityFromPortal(Entity e) {
 		if (e instanceof Player && !((Player)e).isOnline()) return;
 
 		Location l = e.getLocation();
 		double x0 = l.getX(), z0 = l.getZ();
-		int dx_prior = dir(x0), dz_prior = dir(z0);
+		int dxPrior = dir(x0), dzPrior = dir(z0);
 
 		Block center = l.getBlock();
-		if (center.getType() == Material.NETHER_PORTAL || center.getRelative(dx_prior, 0, dz_prior).getType() == Material.NETHER_PORTAL
-				 || center.getRelative(dx_prior, 0, 0).getType() == Material.NETHER_PORTAL || center.getRelative(0, 0, dz_prior).getType() == Material.NETHER_PORTAL) {
-			Block b, tp_to = null;
+		boolean entityIsInPortal = center.getType() == Material.NETHER_PORTAL
+				|| center.getRelative(dxPrior, 0, 0).getType() == Material.NETHER_PORTAL
+				|| center.getRelative(0, 0, dzPrior).getType() == Material.NETHER_PORTAL
+				|| center.getRelative(dxPrior, 0, dzPrior).getType() == Material.NETHER_PORTAL;
+		if (entityIsInPortal) {
+			Block b, tpTo = null;
 			searching:
 			{
 				int dxT, dx, dz;
 				int dxStep = 1;
-				if (dx_prior < 0)
+				if (dxPrior < 0)
 					dxStep = -1;
-				for (int r = 0; r <= Config.portal_search_radius; r++) {
-					for (int dy = 0; dy <= r/2; dy++) {
+				for (int r = 0; r <= Config.portalSearchRadius; r++) {
+					for (int dy = 0; dy <= r / 2; dy++) {
 						int temp = r - dy;
 						for (dxT = -temp; dxT <= temp; dxT++) {
 							dx = dxT * dxStep;
 							dz = r - Math.abs(dx);
 							b = center.getRelative(dx, dy, dz);
-							if(is_valid_portal_tp(b)) {
-								tp_to = b;
+							if(isValidPortalTp(b)) {
+								tpTo = b;
 								break searching;
 							}
 							b = center.getRelative(dx, dy, -dz);
-							if (is_valid_portal_tp(b)) {
-								tp_to = b;
+							if (isValidPortalTp(b)) {
+								tpTo = b;
 								break searching;
 							}
 							b = center.getRelative(dx, -dy, dz);
-							if (is_valid_portal_tp(b)) {
-								tp_to = b;
+							if (isValidPortalTp(b)) {
+								tpTo = b;
 								break searching;
 							}
 							b = center.getRelative(dx, -dy, -dz);
-							if (is_valid_portal_tp(b)) {
-								tp_to = b;
+							if (isValidPortalTp(b)) {
+								tpTo = b;
 								break searching;
 							}
 						}
 					}
 				}
 			} // end of searching
-			if (tp_to == null) {
+			if (tpTo == null) {
 				// try paths from portal blocks - can't teleport on (.700, .701)
 			}
-			if (tp_to == null) {
-				tp_to = findFirstNonportal(center, BlockFace.UP);
+			if (tpTo == null) {
+				tpTo = findFirstNonportal(center, BlockFace.UP);
 			}
-			if (tp_to == null) {
+			if (tpTo == null) {
 				Orientable portal = (Orientable) center.getBlockData();
 				BlockFace dir = BlockFace.EAST;
 				if (portal.getAxis() == Axis.Z)
 					dir = BlockFace.SOUTH;
 				if (random.nextDouble() >= 0.5)
 					dir = dir.getOppositeFace();
-				tp_to = findFirstNonportal(center, dir);
+				tpTo = findFirstNonportal(center, dir);
 			}
-			if (tp_to != null) {
-				Location shift = tp_to.getLocation().subtract(center.getLocation()).multiply(-0.001);
+			if (tpTo != null) {
+				Location shift = tpTo.getLocation().subtract(center.getLocation()).multiply(-0.001);
 				shift.setY(0);
-				Location tp = tp_to.getLocation().add(shift).add(0.5, 0, 0.5);
+				Location tp = tpTo.getLocation().add(shift).add(0.5, 0, 0.5);
 				tp.setYaw(l.getYaw());
 				tp.setPitch(l.getPitch());
 				e.teleport(tp);
@@ -245,7 +250,7 @@ public class FeatureHandler implements Listener {
 		return start;
 	}
 	
-	private static boolean is_valid_portal_tp(Block b) {
+	private static boolean isValidPortalTp(Block b) {
 		return b.getType() != Material.NETHER_PORTAL && UtilsType.playerCanStay(b);
 	}
 	

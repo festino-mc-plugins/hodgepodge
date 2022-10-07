@@ -12,7 +12,6 @@ import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -26,10 +25,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.LeashHitch;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Turtle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -37,8 +33,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -50,46 +44,30 @@ import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;
 import com.festp.utils.UtilsType;
 
-public class InteractHandler implements Listener {
-
-	public static final String BEACON_SADDLE_ID = "saddlemob";
-	public static final Class<? extends LivingEntity> BEACON_SADDLE_CLASS = Turtle.class;
-	
+public class InteractHandler implements Listener
+{
 	public static final int CAULDRON_COOLDOWN = 6;
 	
 	//cauldrons to wash items
 	List<CooldownedCauldron> cauls = new ArrayList<>();
-	List<Item> world_items = new ArrayList<>();
-	List<LivingEntity> world_beacons = new ArrayList<>();
+	List<Item> worldItems = new ArrayList<>();
 
-	List<CooldownPlayer> left_rotate_cooldown = new ArrayList<>();
+	List<CooldownPlayer> leftRotateCooldown = new ArrayList<>();
 	
 	Main plugin;
 	Server server;
-	LeashManager leash_manager;
 	
-	public InteractHandler(Main pl, LeashManager lm) {
+	public InteractHandler(Main pl) {
 		this.plugin = pl;
 		this.server = pl.getServer();
-		this.leash_manager = lm;
-	}
-	
-	private LivingEntity spawnSaddleBeacon(Location l) {
-		return Utils.spawnBeacon(l, BEACON_SADDLE_CLASS, BEACON_SADDLE_ID, false);
-	}
-	public boolean isSaddleBeacon(LivingEntity e) {
-		return Utils.hasBeaconData(e, BEACON_SADDLE_ID);
-	}
-	public boolean isLeashBeacon(LivingEntity e) {
-		return Utils.hasBeaconData(e, LeashedPlayer.BEACON_ID);
 	}
 	
 	public void onTick()
 	{
-		for (int i = left_rotate_cooldown.size() - 1; i >= 0; i--) {
-			CooldownPlayer cp = left_rotate_cooldown.get(i);
-			if(!cp.tick()) {
-				left_rotate_cooldown.remove(i);
+		for (int i = leftRotateCooldown.size() - 1; i >= 0; i--) {
+			CooldownPlayer cp = leftRotateCooldown.get(i);
+			if (!cp.tick()) {
+				leftRotateCooldown.remove(i);
 			}
 		}
 		
@@ -101,12 +79,12 @@ public class InteractHandler implements Listener {
 			}
 		}
 
-		for (int i = world_items.size() - 1; i >= 0; i--)
+		for (int i = worldItems.size() - 1; i >= 0; i--)
 		{
-			Item item = world_items.get(i);
+			Item item = worldItems.get(i);
 			
 			if (!item.isValid()) {
-				world_items.remove(i);
+				worldItems.remove(i);
 				continue;
 			}
 			World w = item.getWorld();
@@ -131,48 +109,11 @@ public class InteractHandler implements Listener {
 						cauls.add(coolCauldron);
 		                
 						if (item.getItemStack().getAmount() <= 0)
-							world_items.remove(i);
+							worldItems.remove(i);
 					}
 				}
 			}
 		}
-		
-		List<LivingEntity> removed_beacons = new ArrayList<>();
-		for (LivingEntity beacon : world_beacons)
-		{
-			if (!beacon.isValid()) {
-				removed_beacons.add(beacon);
-				continue;
-			}
-			// saddled entities
-			if (isSaddleBeacon(beacon)) {
-				if (beacon.getPassengers().size() == 0 || beacon.getVehicle() == null)
-					beacon.remove();
-				else {
-					LivingEntity camel_player = (LivingEntity)beacon.getVehicle();
-					
-					if (camel_player.getEquipment().getHelmet() == null || camel_player.getEquipment().getHelmet().getType() != Material.SADDLE) // unwear saddle
-						beacon.remove();
-					else {
-						beacon.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue( camel_player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() );
-						beacon.setHealth( camel_player.getHealth() );
-					}
-				}
-			}
-			// leashed players
-			else if (isLeashBeacon(beacon)) {
-				if (!leash_manager.isWorkaround(beacon) || !beacon.isLeashed()) {
-					System.out.print("remove leash beacon");
-					beacon.getWorld().dropItem(beacon.getLocation(), new ItemStack(Material.LEAD, 1));
-					beacon.remove();
-				}
-			}
-		}
-		
-		for (LivingEntity beacon : removed_beacons)
-			world_beacons.remove(beacon);
-		
-		// System.out.print(world_beacons.size() +"   " + world_items.size());
 	}
 	
 	public Material getCauldroned(Material m)
@@ -208,19 +149,13 @@ public class InteractHandler implements Listener {
 		return isWashable(m);
 	}
 	
-	// loading new items(for cauldrons) and beacons(saddle/leash)
+	// loading new items(for cauldrons)
 	public void addEntity(Entity e)
 	{
 		if (e.getType() == EntityType.DROPPED_ITEM) {
 			Item dropped_item = (Item) e;
 			if (isWashable(dropped_item))
-				world_items.add(dropped_item);
-		}
-		if (BEACON_SADDLE_CLASS.isInstance(e)) {
-			LivingEntity beacon = (LivingEntity) e;
-			if (isSaddleBeacon(beacon)
-				|| isLeashBeacon(beacon))
-				world_beacons.add(beacon);
+				worldItems.add(dropped_item);
 		}
 	}
 	
@@ -235,36 +170,16 @@ public class InteractHandler implements Listener {
 			addEntity(e);
 	}
 	
-	/** Saddled players clocks, multi nametag block */
+	/** multi nametag block */
 	@EventHandler
 	public void onPlayerInteractEntity(PlayerInteractEntityEvent event)
 	{
 		if (event.isCancelled()) return;
 		
         Entity rightclicked = event.getRightClicked();
-        Player clicker = event.getPlayer();
-		
-        if (!isPassenger(rightclicked, clicker) && rightclicked instanceof LivingEntity)
-        {
-    	   ItemStack hat = ((LivingEntity)rightclicked).getEquipment().getHelmet();
-    	   if (rightclicked.getPassengers().size() == 0 && hat != null && hat.getType() == Material.SADDLE)
-    	   {
-        	   //ride on entity
-    		   LivingEntity temp = spawnSaddleBeacon(rightclicked.getLocation());
-        	   rightclicked.addPassenger(temp);
-        	   temp.addPassenger(clicker);
-        	   return;
-    	   }
-        }
        
         ItemStack hand = event.getPlayer().getInventory().getItemInMainHand() != null ? event.getPlayer().getInventory().getItemInMainHand()
     		   : (event.getPlayer().getInventory().getItemInOffHand() != null ? event.getPlayer().getInventory().getItemInOffHand() : null );
-       
-        boolean cancelled = leash_manager.click(rightclicked, event.getPlayer(), hand);
-        if (cancelled) {
-        	event.setCancelled(true);
-        	return;
-        }
         
         if (hand != null) {
         	if (hand.getType() == Material.NAME_TAG) {
@@ -273,26 +188,15 @@ public class InteractHandler implements Listener {
         	}
         }
     }
-	private boolean isPassenger(Entity target, Entity vehicle) {
-		for (Entity passenger : vehicle.getPassengers())
-			if (passenger == target)
-				return true;
-			else {
-				boolean loop = isPassenger(target, passenger);
-				if (loop)
-					return true;
-			}
-		return false;
-	}
 
-	/** cauldron clicks(item clearing), dirt->grass, block recoloring, rotating, bed linen, lasso */
+	/** cauldron clicks(item clearing), dirt->grass, block recoloring, rotating, bed linen */
 	@SuppressWarnings("deprecation")
 	@EventHandler//(ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event)
 	{
 		Player player = event.getPlayer();
 		if (event.isCancelled() && !(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_AIR)) return;
-		if (event.getAction() == Action.LEFT_CLICK_BLOCK && is_left_click_on_cooldown(player))
+		if (event.getAction() == Action.LEFT_CLICK_BLOCK && isOnLeftClickCooldown(player))
 			return;
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.hasBlock() && event.getClickedBlock().getType() == Material.CAKE) {
 			if (!player.isSneaking() && player.getFoodLevel() >= 20) {
@@ -464,7 +368,7 @@ public class InteractHandler implements Listener {
 				if (event.getAction() == Action.RIGHT_CLICK_BLOCK && RotatableBlock.rotate_attempt(clicked, player.isSneaking())
 						|| event.getAction() == Action.LEFT_CLICK_BLOCK && RotatableBlock.left_click_rotate_attempt(clicked, player.isSneaking())) {
 					if (event.getAction() == Action.LEFT_CLICK_BLOCK)
-						left_rotate_cooldown.add(new CooldownPlayer(player, Config.LEFT_ROTATE_COOLDOWN));
+						leftRotateCooldown.add(new CooldownPlayer(player, Config.LEFT_ROTATE_COOLDOWN));
 					int dur_lvl = event.getItem().getEnchantmentLevel(Enchantment.DURABILITY);
 					byte dur = (byte) ((Math.random()*(dur_lvl + 1)) > 1 ? 0 : 1);
 					event.getItem().setDurability((short) (event.getItem().getDurability()+dur));
@@ -477,55 +381,11 @@ public class InteractHandler implements Listener {
 				}
 			}
 		} // has both block and item
-
-		// TODO: cancel if clicked on leashed entity
-		// jump rope and lasso
-		if (event.getItem() != null && event.getItem().getType() == Material.LEAD) {
-			ItemStack hand = event.getItem();
-			ItemStack lead_drops = hand.clone();
-			lead_drops.setAmount(1);
-			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && UtilsType.isFence(event.getClickedBlock().getType())) {
-				
-				List <Entity> entities = player.getNearbyEntities(15, 15, 15);
-				for (Entity e : entities)
-					if (e instanceof LivingEntity && ((LivingEntity)e).isLeashed() && ((LivingEntity)e).getLeashHolder() == player)
-						return;
-				
-				event.setCancelled(true);
-				Location hitch_loc = event.getClickedBlock().getLocation();
-				LeashHitch hitch = LeashManager.spawnHitch(hitch_loc);
-				leash_manager.addLeashed(hitch, player, lead_drops);
-		    	if (player.getGameMode() != GameMode.CREATIVE)
-		    		hand.setAmount(hand.getAmount()-1);
-			}
-			else if (event.getAction() == Action.RIGHT_CLICK_AIR
-					|| event.getAction() == Action.RIGHT_CLICK_BLOCK && !UtilsType.isInteractable(event.getClickedBlock().getType())) {
-				leash_manager.throwLasso(player, lead_drops);
-		    	if (player.getGameMode() != GameMode.CREATIVE)
-		    		hand.setAmount(hand.getAmount()-1);
-			}
-			else if (event.getAction() == Action.LEFT_CLICK_AIR)
-			{
-				leash_manager.throwTargetLasso(player, lead_drops);
-		    	if (player.getGameMode() != GameMode.CREATIVE)
-		    		hand.setAmount(hand.getAmount()-1);
-			}
-		}
 	}
 	
-	@EventHandler
-	public void onPlayerQuit(PlayerQuitEvent event) {
-		leash_manager.removeByLeashHolder(event.getPlayer());
-	}
-
-	@EventHandler
-	public void onEntityUnleash(PlayerUnleashEntityEvent event) {
-		leash_manager.onUnleash(event);
-	}
-	
-	public boolean is_left_click_on_cooldown(Player p) {
-		for(int i = 0; i < left_rotate_cooldown.size(); i++) {
-			if(left_rotate_cooldown.get(i).getPlayer() == p)
+	public boolean isOnLeftClickCooldown(Player p) {
+		for(int i = 0; i < leftRotateCooldown.size(); i++) {
+			if(leftRotateCooldown.get(i).getPlayer() == p)
 				return true;
 		}
 		return false;

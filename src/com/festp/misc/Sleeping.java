@@ -103,12 +103,12 @@ public class Sleeping implements Listener {
 	
 	private int get_min_sleeping(int all_players)
 	{
-		double percent = useVanilla ? vanillaPercentage : Config.step_percent;
+		double percent = useVanilla ? vanillaPercentage : Config.maxSleeplessPercent;
 		return (int) Math.ceil(
 						Math.max(
 							1,
 							Math.min(
-								all_players - Config.step_count,
+								all_players - Config.maxSleeplessCount,
 								all_players * percent
 							)));
 	}
@@ -171,7 +171,7 @@ public class Sleeping implements Listener {
 	{
 		if (sleepingPlayersCount >= get_min_sleeping(onlinePlayersCount-ignoredPlayersCount))
 		{
-			if (pl.mainworld.getTime() > 12000) {
+			if (pl.mainWorld.getTime() > 12000) {
 				skipNight();
 			}
 			else {
@@ -187,30 +187,30 @@ public class Sleeping implements Listener {
 	}
 	
 	public void skipWeather() {
-		pl.mainworld.setStorm(false);
-		pl.mainworld.setThundering(false);
+		pl.mainWorld.setStorm(false);
+		pl.mainWorld.setThundering(false);
 	}
 	
 	public void skipNight() {
-		int skipped_time = 23980 - (int)pl.mainworld.getTime();
+		int skipped_time = 23980 - (int)pl.mainWorld.getTime();
 		int time = spawnMobTime(Skip.night, skipped_time);
 		if (time < skipped_time) {
-			pl.mainworld.setTime((int)pl.mainworld.getTime()+time);
+			pl.mainWorld.setTime((int)pl.mainWorld.getTime()+time);
 		}
 		else {
-			pl.mainworld.setTime(23980);
+			pl.mainWorld.setTime(23980);
 			skipWeather();
 		}
 	}
 	
 	public void skipDay() {
-		int skipped_time = 13780 - (int)pl.mainworld.getTime();
+		int skipped_time = 13780 - (int)pl.mainWorld.getTime();
 		int time = spawnMobTime(Skip.day, skipped_time);
 		if (time < skipped_time) {
-			pl.mainworld.setTime((int)pl.mainworld.getTime()+time);
+			pl.mainWorld.setTime((int)pl.mainWorld.getTime()+time);
 		}
 		else {
-			pl.mainworld.setTime(13780);
+			pl.mainWorld.setTime(13780);
 			skipWeather();
 		}
 	}
@@ -240,7 +240,7 @@ public class Sleeping implements Listener {
 			//get 6 blocks, priority: side blocks of head, back head, side legs, front legs; condition: Utils.playerCanStay(b)+light<=0
 			//Not only Material.BEDs for sleep => 4 blocks near the head, but which priority?
 			
-			Block temp_place = test_blocks(bed_head, Utils.get_dir(p.getLocation()), day_time);
+			Block temp_place = test_blocks(bed_head, Utils.getDir(p.getLocation()), day_time);
 			if (temp_place == null) continue;
 			
 			int temp_time = time_spawnMob(skipped_time);
@@ -311,19 +311,19 @@ public class Sleeping implements Listener {
 		if (UtilsType.stray_biome(spawn_place)) {
 			double random = mob_spawn_random.nextDouble();
 			if(random < 0.8)
-				pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.STRAY);
+				pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.STRAY);
 			else
-				pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.SKELETON);
+				pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.SKELETON);
 		}
 		else
-			pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.SKELETON);
+			pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.SKELETON);
 	}
 
 	public void spawnAnyZombie(Block spawn_place) {
 		if (UtilsType.husk_biome(spawn_place)) {
 			double random = mob_spawn_random.nextDouble();
 			if(random < 0.8)
-				pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.HUSK);
+				pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.HUSK);
 			else
 				spawnZombie(spawn_place);
 		}
@@ -334,9 +334,9 @@ public class Sleeping implements Listener {
 	public void spawnZombie(Block spawn_place) {
 		double random = mob_spawn_random.nextDouble();
 		if (random < 0.5)
-			pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.ZOMBIE);
+			pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.ZOMBIE);
 		else
-			pl.mainworld.spawnEntity(spawn_place.getLocation(), EntityType.ZOMBIE_VILLAGER);
+			pl.mainWorld.spawnEntity(spawn_place.getLocation(), EntityType.ZOMBIE_VILLAGER);
 	}
 
 }
