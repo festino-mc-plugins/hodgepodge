@@ -24,24 +24,12 @@ Main features can be divided into:
   • Boats teleport out of the portals, so boats do not get stuck in it and do not prevent players from entering.  
   • Fireworks fly vertically upwards and do not deflect. (controversial update, for mechanisms with the activation of something above)  
   • Dispensers can fill cauldrons by buckets.  
-  • Dispensers can feed animals in the block opposite the hole.  
-  • A player with a saddle on his head (/hat - see “Commands” in ThirdEye(my another plugin)) can sit on his head.  
-4) Gameplay changes:  
-  • You can leash players, but they may free themselves with sneaking.  
-  • Throwing lasso.  
-  • Climbing rope - player can tie himself to the fence and then lift up or down.  
-  • Pumps like IndustrialCraft and BuildCraft pumps, which are dispensers with a special core inside. To work requires nether fences as a pipe, empty buckets to fill and at least one block of fluid beneath.  
-  • Shared enderchests / enderchest groups. One enderchest inventory for several people. There are also channels without administrators and entry restrictions.  
-  • Storages - there are 2 types: bottomless (collect items of one type(Material), can grab items drom inventories, have GUI) and multitype (like shulker box that can be opened from inventory by click and can't die or despawn while dropped).  
-  • Tomes (summon minecarts, boats and horses)  
-  • Soul stones: ...  
-5) Craft changes: (all changes are added in CraftManager, but it should have its own config files)  
+  • Dispensers can feed animals in the block opposite the hole.   
+4) Craft changes: (all changes are added in CraftManager, but it should have its own config files)  
   • Clay craft.  
   • Sandstone into sand, redsand, slabs and stairs into blocks, pocket borsch, chorus from chorus flower and more.  
-6) Commands:  
-  • "/ec" or "/enderchest" — interaction with channels (groups) of ender chests (EC), full autocompletion on Tab.  
+5) Commands:  
   • "/item" — simplied /give, can give only tools, weapon and armor(damageable items), supports durability in percents and all the enchantments.  
-  • "/storage" - storage management.  
 
 * Also it can detect enchantments of required level(=, < and >) and item names. Syntax: "mc:" or "minecraft:" search as substring of SPIGOT MATERIAL(also exist "armor", "tool" and "all" filters), '&' for intersection, '|' for union of conditions, "n:" or "name:" detects name, "e:" or "ench:" detects enchantment. Example: "iron & shovel & dur=3 | diam & shov" will grab iron shovels with unbreaking 3 and any diamond shovels.  
 ** Hopper named "xp": when contains empty bottles, collects XP; once stored N xp turns bottle into xp bottle. Grab only bottles(even player can't put anything else). If you pick up all the bottles or destroy the hopper, it throws out the stored experience.
@@ -49,13 +37,9 @@ Main features can be divided into:
 (rus info: https://vk.com/@mine_surser-plugin-v1)
 
 TO DO:
-  • Rope to jump.  
   • Plugin metrics.  
   • Each function must be able to be turned on/off.  
   • Add multilanguage support.  
-  • New soul stone mechanic.    
-  • com.festp.Utils improvements (God object, which has 1.7k lines of code, but is this normal for Utils?)  
 
   • Food rebalance?  
   • Increase tripwire length.  
-  • ? Coming soon ?
