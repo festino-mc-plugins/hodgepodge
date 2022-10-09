@@ -3,7 +3,7 @@ package com.festp;
 // not so flexible, because it knows about every module, but therefore simple (global bucket ticks and index)
 public class Metrics {
 	
-	public static enum MetricCategory { TASK_LIST, SLEEPING, INTERACT_HANDLER, INVENTORY_HANDLER, FEATURE_HANDLER, EXP_HOPPERS }
+	public static enum MetricCategory { TASK_LIST, SLEEPING, INTERACT_HANDLER, INVENTORY_HANDLER, FEATURE_HANDLER, EXP_HOPPERS, DISPENSERS }
 
 	private static final int BUCKET_COUNT = 10;
 	private int currentBucket = 0;

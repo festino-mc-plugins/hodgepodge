@@ -20,8 +20,25 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class Utils {
-	public static final double EPSILON = 0.0001;
+	public static int VERSION;
+	
+	private Utils()
+	{
+		String[] split = Bukkit.getBukkitVersion().split("-")[0].split("\\.");
+		String majorVer = split[0]; //For 1.10 will be "1"
+		String minorVer = split[1]; //For 1.10 will be "10"
+		String minorVer2 = split.length > 2 ? split[2]: "0"; //For 1.10 will be "0", for 1.9.4 will be "4"
+		int vMajor = Integer.parseUnsignedInt(majorVer);
+		int vMinor = Integer.parseUnsignedInt(minorVer);
+		int vMinor2 = Integer.parseUnsignedInt(minorVer2);
+		VERSION = vMinor2 + vMinor * 100 + vMajor * 10000;
+	}
 
+	/** format is 11902 for 1.19.2, 10710 for 1.7.10*/
+	public static int GetVersion()
+	{
+		return VERSION;
+	}
 	
 	/** @return 3 if full, 0 if empty or invalid bd*/
 	public static double getCauldronLevel(BlockData bd) {
@@ -139,6 +156,13 @@ public class Utils {
 	public static boolean isRenamed(ItemStack item) {
 		return item.hasItemMeta() && item.getItemMeta().hasDisplayName()
 				&& !item.getItemMeta().getDisplayName().equals((new ItemStack(item.getType())).getItemMeta().getDisplayName());
+	}
+	
+	public static boolean contains(Object[] list, Object find) {
+		for (Object m : list)
+			if (m == find)
+				return true;
+		return false;
 	}
 	
 	/**@return <b>true</b> if the <b>stack</b> was given<br>

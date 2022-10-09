@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.festp.Metrics.MetricCategory;
 import com.festp.commands.CommandWorker;
 import com.festp.commands.ItemCommand;
+import com.festp.dispenser.DropActions;
 import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
@@ -82,6 +83,9 @@ public class Main extends JavaPlugin
     	craftManager.addCrafts();
     	pm.registerEvents(craftManager, this);
     	
+    	DropActions dropActions = new DropActions();
+    	pm.registerEvents(dropActions, this);
+    	
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
@@ -115,6 +119,11 @@ public class Main extends JavaPlugin
 					metrics.start(MetricCategory.EXP_HOPPERS);
 					//expHop.onTick();
 					metrics.end(MetricCategory.EXP_HOPPERS);
+
+					// fill cauldrons, feed animals
+					metrics.start(MetricCategory.DISPENSERS);
+					dropActions.onTick();
+					metrics.end(MetricCategory.DISPENSERS);
 				}
 			}, 0L, 1L);
 		
