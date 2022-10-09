@@ -90,10 +90,10 @@ public class DispenserCauldronFiller
 
 		if (!isLavaSnowVersion())
 			return null;
-		if (material == Material.LAVA_CAULDRON)
+		/*if (material == Material.LAVA_CAULDRON)
 			return Material.LAVA_BUCKET;
 		if (material == Material.POWDER_SNOW_CAULDRON)
-			return Material.POWDER_SNOW_BUCKET;
+			return Material.POWDER_SNOW_BUCKET;*/
 		return null;
 	}
 	
