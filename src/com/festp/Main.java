@@ -13,6 +13,7 @@ import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.misc.InteractHandler;
+import com.festp.misc.LinkRestorer;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.GlassItemFrameHandler;
 import com.festp.misc.Sleeping;
@@ -60,6 +61,9 @@ public class Main extends JavaPlugin
     	getCommand(CommandWorker.MAIN_COMMAND).setExecutor(commandWorker);
     	ItemCommand itemWorker = new ItemCommand();
     	getCommand(ItemCommand.ITEM_COMMAND).setExecutor(itemWorker);
+    	
+    	LinkRestorer lr = new LinkRestorer(this);
+    	pm.registerEvents(lr, this);
     	
     	Sleeping sleep = new Sleeping(this);
     	pm.registerEvents(sleep, this);
