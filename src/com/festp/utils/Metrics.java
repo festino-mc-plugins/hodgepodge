@@ -1,4 +1,4 @@
-package com.festp;
+package com.festp.utils;
 
 // not so flexible, because it knows about every module, but therefore simple (global bucket ticks and index)
 public class Metrics {

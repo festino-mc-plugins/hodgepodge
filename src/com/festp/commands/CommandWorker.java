@@ -10,7 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
 import com.festp.Config;
-import com.festp.Metrics;
+import com.festp.utils.Metrics;
 
 public class CommandWorker implements CommandExecutor, TabCompleter {
 	

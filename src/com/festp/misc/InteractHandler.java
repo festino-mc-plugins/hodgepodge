@@ -38,7 +38,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import com.festp.Config;
-import com.festp.CooldownPlayer;
 import com.festp.Main;
 import com.festp.utils.Utils;
 import com.festp.utils.UtilsColor;

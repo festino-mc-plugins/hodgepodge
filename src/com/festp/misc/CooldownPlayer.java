@@ -1,4 +1,4 @@
-package com.festp;
+package com.festp.misc;
 
 import org.bukkit.entity.Player;
 

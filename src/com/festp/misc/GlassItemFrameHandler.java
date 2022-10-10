@@ -1,4 +1,4 @@
-package com.festp;
+package com.festp.misc;
 
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -14,6 +14,8 @@ import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
 import org.bukkit.inventory.ItemStack;
+
+import com.festp.CraftManager;
 
 public class GlassItemFrameHandler implements Listener {
 

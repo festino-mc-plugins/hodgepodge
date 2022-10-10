@@ -6,7 +6,6 @@ import org.bukkit.World.Environment;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.festp.Metrics.MetricCategory;
 import com.festp.commands.CommandWorker;
 import com.festp.commands.ItemCommand;
 import com.festp.dispenser.DropActions;
@@ -15,7 +14,10 @@ import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.misc.InteractHandler;
 import com.festp.misc.FeatureHandler;
+import com.festp.misc.GlassItemFrameHandler;
 import com.festp.misc.Sleeping;
+import com.festp.utils.Metrics;
+import com.festp.utils.Metrics.MetricCategory;
 
 public class Main extends JavaPlugin
 {
