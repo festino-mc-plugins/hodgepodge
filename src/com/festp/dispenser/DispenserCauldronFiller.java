@@ -62,11 +62,10 @@ public class DispenserCauldronFiller
 		if (cauldron.getType() == Material.CAULDRON)
 			return true;
 		// cauldron is already full
-		if (Utils.getCauldronWater(cauldron) >= 0.99999)
+		if (isCauldron(cauldron.getType()) && Utils.getCauldronWater(cauldron) >= 0.99999)
 			return false;
-		return getBucket(cauldron) == itemMaterial;
+		return getBucket(cauldron.getType()) == itemMaterial;
 	}
-	
 	private boolean isValidBucket(ItemStack stack)
 	{
 		return stack != null && stack.getType() == liquidBucket;
@@ -82,9 +81,18 @@ public class DispenserCauldronFiller
 		return m == Material.LAVA_BUCKET || m == Material.POWDER_SNOW_BUCKET;
 	}
 	
-	private static Material getBucket(Block cauldron)
+	private static boolean isCauldron(Material m) {
+		if (m == Material.CAULDRON)
+			return true;
+		if (isEmptiableBucket(getBucket(m)))
+			return true;
+
+		return false;
+	}
+
+	
+	private static Material getBucket(Material material)
 	{
-		Material material = cauldron.getType();
 		if (material == Material.WATER_CAULDRON)
 			return Material.WATER_BUCKET;
 
