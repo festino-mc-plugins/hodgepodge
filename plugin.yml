@@ -10,13 +10,7 @@ main: com.festp.Main
 commands:
          hodge:
            description: Allows to reload config, get plugin info.
-         enderchest:
-           description: All interactions with shared enderchests. (may be need some permisions)
-           aliases: [ec]
          item:
            description: Give enchanted/renamed item. Simple convenient /give.
-           default: op
-         storage:
-           description: Provides storage management.
            default: op
 api-version: 1.14
