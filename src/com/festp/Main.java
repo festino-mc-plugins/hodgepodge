@@ -13,6 +13,7 @@ import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.misc.InteractHandler;
+import com.festp.misc.CrackingAnvilHandler;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.GlassItemFrameHandler;
 import com.festp.misc.Sleeping;
@@ -77,6 +78,9 @@ public class Main extends JavaPlugin
 
     	GlassItemFrameHandler glassItemFrames = new GlassItemFrameHandler();
     	pm.registerEvents(glassItemFrames, this);
+    	
+    	CrackingAnvilHandler anvilsHandler = new CrackingAnvilHandler();
+    	pm.registerEvents(anvilsHandler, this);
 
     	expHop = new ExpHoppers(getServer(), Main.getPath());
     	pm.registerEvents(expHop, this);
