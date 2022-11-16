@@ -556,6 +556,17 @@ public class UtilsType {
 		return false;
 	}
 	
+	public static boolean isAnvil(Material m) {
+		switch (m) {
+		case ANVIL:
+		case CHIPPED_ANVIL:
+		case DAMAGED_ANVIL:
+			return true;
+		default:
+			return false;
+		}
+	}
+	
 	public static boolean is_terracotta(Material m) {
 		if(is_colored_terracotta(m) || m.equals(Material.TERRACOTTA)) return true;
 		return false;
