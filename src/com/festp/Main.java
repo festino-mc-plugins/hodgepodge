@@ -129,8 +129,10 @@ public class Main extends JavaPlugin
 					metrics.start(MetricCategory.DISPENSERS);
 					dropActions.onTick();
 					metrics.end(MetricCategory.DISPENSERS);
-					
+
+					metrics.start(MetricCategory.CRACKING_ANVILS);
 					anvilsHandler.tick();
+					metrics.end(MetricCategory.CRACKING_ANVILS);
 				}
 			}, 0L, 1L);
 		
