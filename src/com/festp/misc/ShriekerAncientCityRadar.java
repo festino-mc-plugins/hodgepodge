@@ -11,10 +11,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.structure.Structure;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.util.StructureSearchResult;
 
 public class ShriekerAncientCityRadar
 {
@@ -67,6 +69,9 @@ public class ShriekerAncientCityRadar
 				continue;
 			
 			Location playerLoc = player.getLocation();
+			if (playerLoc.getWorld().getEnvironment() != Environment.NORMAL) // TODO dimension cache
+				continue;
+			
 			Location cityLoc = locations.get(playerLoc);
 			if (cityLoc == null) {
 				cityLoc = getNearestAncientCity(playerLoc);
@@ -97,7 +102,9 @@ public class ShriekerAncientCityRadar
 	}
 
 	private Location getNearestAncientCity(Location origin) {
-		return origin.getWorld().locateNearestStructure(origin, Structure.ANCIENT_CITY, (int) MAX_DISTANCE, false).getLocation();
+		StructureSearchResult res = origin.getWorld().locateNearestStructure(origin, Structure.ANCIENT_CITY, (int) MAX_DISTANCE, false);
+		//System.out.println("locate call: " + res.getLocation());
+		return res.getLocation();
 	}
 
 	private boolean hasShrieker(Player player) {
