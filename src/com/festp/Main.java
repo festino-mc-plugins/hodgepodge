@@ -13,6 +13,7 @@ import com.festp.inventory.ExpHoppers;
 import com.festp.inventory.InventoryHandler;
 import com.festp.inventory.SortHoppers;
 import com.festp.misc.InteractHandler;
+import com.festp.misc.ShriekerAncientCityRadar;
 import com.festp.misc.CrackingAnvilHandler;
 import com.festp.misc.FeatureHandler;
 import com.festp.misc.GlassItemFrameHandler;
@@ -91,6 +92,8 @@ public class Main extends JavaPlugin
     	DropActions dropActions = new DropActions();
     	pm.registerEvents(dropActions, this);
     	
+    	ShriekerAncientCityRadar ancientCityRadar = new ShriekerAncientCityRadar();
+    	
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this,
 			new Runnable() {
 				public void run() {
@@ -133,6 +136,10 @@ public class Main extends JavaPlugin
 					metrics.start(MetricCategory.CRACKING_ANVILS);
 					anvilsHandler.tick();
 					metrics.end(MetricCategory.CRACKING_ANVILS);
+
+					metrics.start(MetricCategory.ANCIENT_CITY_RADAR);
+					ancientCityRadar.tick();
+					metrics.end(MetricCategory.ANCIENT_CITY_RADAR);
 				}
 			}, 0L, 1L);
 		
