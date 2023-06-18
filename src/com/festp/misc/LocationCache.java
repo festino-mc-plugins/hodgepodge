@@ -24,7 +24,7 @@ public class LocationCache {
 		}
 	}
 	
-	private static final double STICK_DISTANCE_SQUARED = 64 * 64;
+	private static final double STICK_DISTANCE_SQUARED = 128 * 128;
 	private static final double SAMPLE_SIZE = 64; // TODO must depend on player count (?)
 	
 	private final List<LocationPair> samples = new ArrayList<>();
